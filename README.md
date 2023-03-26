@@ -1,15 +1,19 @@
-# Welcome to your CDK TypeScript project
+# Leetbot AWS
 
-You should explore the contents of this project. It demonstrates a CDK app with an instance of a stack (`LeetbotAwsStack`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+## Deployment Troubleshooting
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+### No bucket named `xyz`. Is account `123` bootstrapped?
 
-## Useful commands
+Fix this by doing the following:
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+1. Log in to the AWS Management Console and navigate to Cloudformation.
+2. Delete the `CDKToolkit` stack.
+3. Run `npx cdk bootstrap`. 
+ 
+Deployment should work now.
+
+## Resources
+
+[EventBridge Scheduler to start and stop EC2 instances](https://serverlessland.com/patterns/eventbridge-schedule-to-ec2-cdk)
+
+> Simple pattern that starts and stops given EC2 instances based on time of day, timezone and days of week
