@@ -49,3 +49,7 @@ Finally, re-bootstrap the environment with `npm run aws:bootstrap`. Deployment s
 [How to start/stop AWS EC2 instances automatically](https://purple.telstra.com/blog/start-stop-aws-ec2-instances-automatically)
 
 > In this article, I'm going to show you how to start/stop EC2 instances. I'll code all the required steps in AWS CDK so you can easily integrate it into your existing stack if you're using AWS CDK.
+
+[Fargate Docker Starter](https://github.com/markusl/cdk-fargate-docker-starter)
+
+> This repository shows an example of how to deploy a simple docker image to a Fargate cluster using AWS CDK.
