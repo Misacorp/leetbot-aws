@@ -12,7 +12,15 @@ Leetbot needs to sit in a Discord server every day within the time window `]13:3
 
 ## Development
 
+The stack itself is located in the `lib` directory.
 
+## Deployment
+
+> If you are using [aws-vault](https://github.com/99designs/aws-vault), prefix pretty much every command here with `aws-vault exec <your-role-name> -- <command>`
+
+Run ```npm run aws:deploy``` to deploy the application.
+
+Each `CfnOutput` will be saved to a `cdk-outputs.json` file, should you need to reference them.
 
 ## Deployment Troubleshooting
 
