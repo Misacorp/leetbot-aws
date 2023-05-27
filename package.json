@@ -12,7 +12,9 @@
     "lint": "eslint --ext .js,.ts .",
     "aws:unbootstrap": "aws cloudformation delete-stack --stack-name CDKToolkit",
     "aws:bootstrap": "npx cdk bootstrap",
-    "aws:deploy": "npx cdk deploy --outputs-file cdk-outputs.json"
+    "aws:deploy": "npx cdk deploy --outputs-file cdk-outputs.json",
+    "aws:destroy": "npx cdk destroy",
+    "aws:push-image": "ecs-cli push hello-world"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
