@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps } from "aws-cdk-lib";
+import { CfnOutput, Duration, Stack, StackProps } from "aws-cdk-lib";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as sqs from "aws-cdk-lib/aws-sqs";
@@ -18,5 +18,11 @@ export class LeetbotAwsStack extends Stack {
     const topic = new sns.Topic(this, "LeetbotAwsTopic");
 
     topic.addSubscription(new subs.SqsSubscription(queue));
+
+    // eslint-disable-next-line no-new
+    new CfnOutput(this, "SQSQueueUrl", {
+      description: "SQS queue URL",
+      value: queue.queueUrl,
+    });
   }
 }

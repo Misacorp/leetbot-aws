@@ -11,7 +11,8 @@
     "cdk": "cdk",
     "lint": "eslint --ext .js,.ts .",
     "aws:unbootstrap": "aws cloudformation delete-stack --stack-name CDKToolkit",
-    "aws:bootstrap": "npx cdk bootstrap"
+    "aws:bootstrap": "npx cdk bootstrap",
+    "aws:deploy": "npx cdk deploy --outputs-file cdk-outputs.json"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
