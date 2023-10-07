@@ -2,23 +2,59 @@
 
 Leetbot in the cloud.
 
-## Architecture
+<!-- TOC -->
+
+- [Leetbot AWS](#leetbot-aws)
+- [Architecture](#architecture)
+- [Development](#development)
+- [Deployment](#deployment)
+  - [Deployment Troubleshooting](#deployment-troubleshooting)
+    - [No bucket named `xyz`. Is account `123` bootstrapped?](#no-bucket-named-xyz-is-account-123-bootstrapped)
+      - [Option 1: CLI](#option-1-cli)
+      - [Option 2: AWS Management Console](#option-2-aws-management-console)
+  - [Resources](#resources)
+  <!-- TOC -->
+
+# Architecture
 
 Leetbot needs to sit in a Discord server every day within the time window `]13:36, 13:39[`. This could be accomplished in a few different ways including
 
 1. Running an EC2 instance for those 3 minutes.
-2. Running a Lambda for those 3 minutes.
+2. ✅ Running a Lambda for those 3 minutes. (Current implementation)
 3. Starting a Fargate container for those 3 minutes.
 
-## Development
+## Lambda Layers
+
+The Discord SDK is installed on a Lambda Layer in `lib/constructs/DiscordSdkLambdaLayer.ts`. For each Lambda function that wants to use the Discord API, the Layer should be given in the function definition.
+
+```ts
+new NodejsFunction(this, "MyNodejsFunction", {
+  layers: [
+    lambda.LayerVersion.fromLayerVersionArn(
+      this,
+      "ImportedDiscordSdkLambdaLayer",
+      props.layer.layer.layerVersionArn,
+    ),
+  ],
+  // ...other NodejsFunction configuration...
+});
+```
+
+The Discord SDK can then be used in each Lambda handler from `/opt/nodejs/discordSdkLayer`. This is because Lambda functions mount their layers in the `/opt` directory.
+
+```ts
+import { discordSdkLayer } from "/opt/nodejs/discordSdkLayer";
+```
+
+# Development
 
 The stack itself is located in the `lib` directory.
 
-## Deployment
+# Deployment
 
 > If you are using [aws-vault](https://github.com/99designs/aws-vault), prefix pretty much every command here with `aws-vault exec <your-role-name> -- <command>`
 
-Run ```npm run aws:deploy``` to deploy the application.
+Run `npm run aws:deploy` to deploy the application.
 
 Each `CfnOutput` will be saved to a `cdk-outputs.json` file, should you need to reference them.
 
