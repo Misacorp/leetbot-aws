@@ -1,36 +1,32 @@
-import { CfnOutput, Duration, Stack, StackProps } from "aws-cdk-lib";
-import * as sns from "aws-cdk-lib/aws-sns";
-import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
-import * as sqs from "aws-cdk-lib/aws-sqs";
+import { Stack, StackProps, Tags } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import createFargateServices from "../bin/createFargateServices";
-
-const createTestStack = (stack: Stack): void => {
-  const queue = new sqs.Queue(stack, "LeetbotAwsQueue", {
-    visibilityTimeout: Duration.seconds(300),
-  });
-
-  const topic = new sns.Topic(stack, "LeetbotAwsTopic");
-
-  topic.addSubscription(new subs.SqsSubscription(queue));
-
-  // eslint-disable-next-line no-new
-  new CfnOutput(stack, "SQSQueueUrl", {
-    description: "SQS queue URL",
-    value: queue.queueUrl,
-  });
-};
+import { DiscordSdkLambdaLayer } from "./constructs/DiscordSdkLambdaLayer";
+import { DiscordBot } from "./constructs/DiscordBot";
 
 /**
- * Main Cloudformation stack
+ * Main CloudFormation stack
  */
 export class LeetbotAwsStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Test stack temporarily used to see if stuff happens
-    createTestStack(this);
+    this.setTags();
 
-    createFargateServices(this);
+    const layer = new DiscordSdkLambdaLayer(
+      this,
+      "DiscordLambdaLayerConstruct",
+    );
+
+    new DiscordBot(this, "DiscordBot", {
+      layer,
+    });
   }
+
+  /**
+   * Sets stack tags according to an agreed-upon convention
+   */
+  private setTags = () => {
+    Tags.of(this).add("Owner", "misa.jokisalo@knowit.fi");
+    Tags.of(this).add("Solution", "leetbot-aws");
+  };
 }

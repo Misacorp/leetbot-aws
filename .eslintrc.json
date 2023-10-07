@@ -21,6 +21,20 @@
     "@typescript-eslint/no-unused-vars": "error",
     "import/prefer-default-export": "off"
   },
+  "overrides": [
+    {
+      "files": ["bin/**/*.ts", "lib/**/*.ts"],
+      "rules": {
+        "no-new": "off"
+      }
+    },
+    {
+      "files": ["src/leetbot/**/*.ts"],
+      "rules": {
+        "import/no-absolute-path": "off"
+      }
+    }
+  ],
   "settings": {
     "import/resolver": {
       "typescript": {
