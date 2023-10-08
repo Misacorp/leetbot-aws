@@ -31,7 +31,8 @@
     {
       "files": ["src/leetbot/**/*.ts"],
       "rules": {
-        "import/no-absolute-path": "off"
+        "import/no-absolute-path": "off",
+        "no-console": "off"
       }
     }
   ],
