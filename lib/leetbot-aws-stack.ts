@@ -1,24 +1,28 @@
 import { Stack, StackProps, Tags } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { DiscordSdkLambdaLayer } from "./constructs/DiscordSdkLambdaLayer";
+import { DiscordLambdaLayer } from "./constructs/DiscordLambdaLayer";
 import { DiscordBot } from "./constructs/DiscordBot";
 
 /**
  * Main CloudFormation stack
  */
 export class LeetbotAwsStack extends Stack {
+  private readonly discordLambdaLayer: DiscordLambdaLayer;
+
+  private readonly discordBot: DiscordBot;
+
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     this.setTags();
 
-    const layer = new DiscordSdkLambdaLayer(
+    this.discordLambdaLayer = new DiscordLambdaLayer(
       this,
       "DiscordLambdaLayerConstruct",
     );
 
-    new DiscordBot(this, "DiscordBot", {
-      layer,
+    this.discordBot = new DiscordBot(this, "DiscordBot", {
+      layer: this.discordLambdaLayer,
     });
   }
 

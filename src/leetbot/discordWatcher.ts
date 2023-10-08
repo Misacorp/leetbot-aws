@@ -1,9 +1,9 @@
-import type { Context } from "aws-lambda";
-import { Client, Events, IntentsBitField } from "/opt/nodejs/discordSdkLayer";
+import type { Context, ScheduledEvent } from "aws-lambda";
+import { Client, Events, IntentsBitField } from "/opt/nodejs/discord";
 import keepAlive from "./util/keepAlive";
 import { getSecret } from "./util/secrets";
 
-export const handler = async (event: unknown, context: Context) => {
+export const handler = async (_: ScheduledEvent, context: Context) => {
   // Get Discord bot token
   const token = await getSecret(process.env.TOKEN_SECRET_ID!);
 
