@@ -21,8 +21,8 @@
     "typeRoots": ["./node_modules/@types"],
     "baseUrl": "./",
     "paths": {
-      "/opt/nodejs/discordSdkLayer": [
-        "src/layers/discordSdk/nodejs/discordSdkLayer"
+      "/opt/nodejs/discord": [
+        "src/layers/discord/nodejs/discord"
       ]
     }
   },
