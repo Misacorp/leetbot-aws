@@ -2,7 +2,7 @@
   "name": "leetbot-aws",
   "version": "0.1.0",
   "bin": {
-    "leetbot-aws": "bin/leetbot-aws.js"
+    "leetbot-aws": "bin/leetbot-aws.ts"
   },
   "scripts": {
     "build": "rm -rf ./dist && tsc",
@@ -11,6 +11,7 @@
     "lint": "eslint --ext .js,.ts .",
     "aws:bootstrap": "npx cdk bootstrap",
     "aws:unbootstrap": "aws cloudformation delete-stack --stack-name CDKToolkit",
+    "aws:synth": "npm run build && npx cdk synth",
     "aws:deploy": "npm run build && npx cdk deploy --outputs-file cdk-outputs.json",
     "aws:destroy": "npx cdk destroy"
   },
@@ -38,7 +39,6 @@
     "@aws-sdk/client-secrets-manager": "^3.427.0",
     "@types/aws-lambda": "^8.10.123",
     "aws-cdk-lib": "2.99.1",
-    "constructs": "^10.2.70",
-    "discord.js": "^14.13.0"
+    "constructs": "^10.2.70"
   }
 }

@@ -5,8 +5,9 @@ Leetbot in the cloud.
 <!-- TOC -->
 
 - [Leetbot AWS](#leetbot-aws)
-- [Architecture](#architecture)
 - [Development](#development)
+- [Architecture](#architecture)
+  - [Lambda Layers](#lambda-layers)
 - [Deployment](#deployment)
   - [Deployment Troubleshooting](#deployment-troubleshooting)
     - [No bucket named `xyz`. Is account `123` bootstrapped?](#no-bucket-named-xyz-is-account-123-bootstrapped)
@@ -14,6 +15,16 @@ Leetbot in the cloud.
       - [Option 2: AWS Management Console](#option-2-aws-management-console)
   - [Resources](#resources)
   <!-- TOC -->
+
+# Development
+
+Start by installing dependencies for both the main application and the Discord Lambda layer
+
+```shell
+npm install && npm install --prefix src/layers/discordSdk/nodejs
+```
+
+The CDK stack itself is located in the `lib` directory.
 
 # Architecture
 
@@ -29,13 +40,7 @@ The Discord SDK is installed on a Lambda Layer in `lib/constructs/DiscordSdkLamb
 
 ```ts
 new NodejsFunction(this, "MyNodejsFunction", {
-  layers: [
-    lambda.LayerVersion.fromLayerVersionArn(
-      this,
-      "ImportedDiscordSdkLambdaLayer",
-      props.layer.layer.layerVersionArn,
-    ),
-  ],
+  layers: [props.layer],
   // ...other NodejsFunction configuration...
 });
 ```
@@ -45,10 +50,6 @@ The Discord SDK can then be used in each Lambda handler from `/opt/nodejs/discor
 ```ts
 import { discordSdkLayer } from "/opt/nodejs/discordSdkLayer";
 ```
-
-# Development
-
-The stack itself is located in the `lib` directory.
 
 # Deployment
 

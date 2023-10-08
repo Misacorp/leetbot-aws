@@ -19,10 +19,12 @@
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
     "typeRoots": ["./node_modules/@types"],
-    "outDir": "./dist",
+    "baseUrl": "./",
     "paths": {
-      "/opt/nodejs/discordSdkLayer": ["./src/discordSdk/layer/nodejs/discordSdkLayer"]
+      "/opt/nodejs/discordSdkLayer": [
+        "src/layers/discordSdk/nodejs/discordSdkLayer"
+      ]
     }
   },
-  "exclude": ["node_modules", "cdk.out", "dist", "test"]
+  "exclude": ["node_modules", "**/node_modules/*", "cdk.out", "dist", "test"]
 }
