@@ -6,10 +6,10 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import type { DiscordSdkLambdaLayer } from "./DiscordSdkLambdaLayer";
+import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 
 interface Props {
-  layer: DiscordSdkLambdaLayer;
+  layer: LayerVersion;
 }
 
 export class DiscordBot extends Construct {
@@ -36,13 +36,11 @@ export class DiscordBot extends Construct {
       timeout: Duration.seconds(30),
       memorySize: 128,
       logRetention: RetentionDays.ONE_DAY,
-      layers: [
-        lambda.LayerVersion.fromLayerVersionArn(
-          this,
-          "ImportedDiscordSdkLambdaLayer",
-          props.layer.layer.layerVersionArn,
-        ),
-      ],
+      bundling: {
+        minify: false,
+        externalModules: ["@aws-sdk/*", "discord.js"],
+      },
+      layers: [props.layer],
       environment: {
         TOKEN_SECRET_ID: secret.secretName,
       },
