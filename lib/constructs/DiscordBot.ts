@@ -1,7 +1,7 @@
 import path from "path";
-import { Duration } from "aws-cdk-lib";
-import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -21,6 +21,7 @@ export class DiscordBot extends Construct {
     // Create a place in AWS Secrets Manager to store our bot token
     const secret = new secretsmanager.Secret(this, "DiscordBotToken", {
       description: "Discord bot token secret",
+      removalPolicy: RemovalPolicy.DESTROY, // TODO: Change when moving away from the AWS sandbox account
     });
 
     new cdk.CfnOutput(this, "DiscordBotTokenArn", {
@@ -29,9 +30,10 @@ export class DiscordBot extends Construct {
 
     this.testFunction = new NodejsFunction(this, "TestFunction", {
       runtime: lambda.Runtime.NODEJS_18_X,
+      architecture: lambda.Architecture.ARM_64,
       entry: path.join(__dirname, "../../src/leetbot/testLambda.ts"),
       handler: "handler",
-      timeout: Duration.seconds(10),
+      timeout: Duration.seconds(30),
       memorySize: 128,
       logRetention: RetentionDays.ONE_DAY,
       layers: [
