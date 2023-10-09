@@ -13,7 +13,7 @@ interface Props {
 }
 
 export class DiscordBot extends Construct {
-  private readonly testFunction: NodejsFunction;
+  public readonly discordWatcher: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -28,14 +28,14 @@ export class DiscordBot extends Construct {
       value: secret.secretArn,
     });
 
-    this.testFunction = new NodejsFunction(this, "TestFunction", {
+    this.discordWatcher = new NodejsFunction(this, "DiscordWatcher", {
       runtime: lambda.Runtime.NODEJS_18_X,
       architecture: lambda.Architecture.ARM_64,
       entry: path.join(__dirname, "../../src/leetbot/discordWatcher.ts"),
       handler: "handler",
-      timeout: Duration.seconds(30),
+      timeout: Duration.seconds(195), // 3 mins 15 seconds
       memorySize: 128,
-      logRetention: RetentionDays.ONE_DAY,
+      logRetention: RetentionDays.THREE_DAYS,
       bundling: {
         minify: false,
         externalModules: ["@aws-sdk/*", "discord.js"],
@@ -47,6 +47,6 @@ export class DiscordBot extends Construct {
       description: "Test function that uses a Lambda layer",
     });
 
-    secret.grantRead(this.testFunction);
+    secret.grantRead(this.discordWatcher);
   }
 }
