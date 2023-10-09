@@ -2,6 +2,7 @@ import { Stack, StackProps, Tags } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { DiscordLambdaLayer } from "./constructs/DiscordLambdaLayer";
 import { DiscordBot } from "./constructs/DiscordBot";
+import { EventScheduler } from "./constructs/EventScheduler";
 
 /**
  * Main CloudFormation stack
@@ -10,6 +11,8 @@ export class LeetbotAwsStack extends Stack {
   private readonly discordLambdaLayer: DiscordLambdaLayer;
 
   private readonly discordBot: DiscordBot;
+
+  private readonly scheduler: EventScheduler;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -23,6 +26,10 @@ export class LeetbotAwsStack extends Stack {
 
     this.discordBot = new DiscordBot(this, "DiscordBot", {
       layer: this.discordLambdaLayer,
+    });
+
+    this.scheduler = new EventScheduler(this, "EventScheduler", {
+      target: this.discordBot.discordWatcher,
     });
   }
 
