@@ -90,3 +90,6 @@ Finally, re-bootstrap the environment with `npm run aws:bootstrap`. Deployment s
 [Fargate Docker Starter](https://github.com/markusl/cdk-fargate-docker-starter)
 
 > This repository shows an example of how to deploy a simple docker image to a Fargate cluster using AWS CDK.
+
+[AWS CDK Lambda Layers](https://bobbyhadz.com/blog/aws-cdk-lambda-layers)
+
