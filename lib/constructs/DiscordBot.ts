@@ -33,7 +33,7 @@ export class DiscordBot extends Construct {
       architecture: lambda.Architecture.ARM_64,
       entry: path.join(__dirname, "../../src/leetbot/discordWatcher.ts"),
       handler: "handler",
-      timeout: Duration.seconds(195), // 3 mins 15 seconds
+      timeout: Duration.minutes(5),
       memorySize: 128,
       logRetention: RetentionDays.THREE_DAYS,
       bundling: {

@@ -45,7 +45,7 @@ export class EventScheduler extends Construct {
         mode: "OFF",
       },
       // Run every day at 13:36 Helsinki time
-      scheduleExpression: "cron(36 13 * * ? *)",
+      scheduleExpression: "cron(35 13 * * ? *)",
       scheduleExpressionTimezone: "Europe/Helsinki",
       target: {
         arn: props.target.functionArn,
