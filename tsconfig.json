@@ -21,9 +21,8 @@
     "typeRoots": ["./node_modules/@types"],
     "baseUrl": "./",
     "paths": {
-      "/opt/nodejs/discord": [
-        "src/layers/discord/nodejs/discord"
-      ]
+      "/opt/nodejs/discord": ["src/layers/discord/nodejs/discord"],
+      "/opt/nodejs/date-fns": ["src/layers/date-fns/nodejs/date-fns"]
     }
   },
   "exclude": ["node_modules", "**/node_modules/*", "cdk.out", "dist", "test"]

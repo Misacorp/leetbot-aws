@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
+    "test:watch": "jest --watch",
     "cdk": "cdk",
     "lint": "eslint --ext .js,.ts .",
     "aws:bootstrap": "npx cdk bootstrap",

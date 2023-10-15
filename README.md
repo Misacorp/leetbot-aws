@@ -36,7 +36,10 @@ Leetbot needs to sit in a Discord server every day within the time window `]13:3
 
 ## Lambda Layers
 
-The Discord SDK is installed on a Lambda Layer in `lib/constructs/DiscordLambdaLayer.ts`. For each Lambda function that wants to use the Discord API, the Layer should be given in the function definition.
+The Discord SDK, moment.js,
+and possibly other libraries are installed on Lambda layers in `lib/constructs/LambdaLayers.ts`.
+For each Lambda function that wants to use, for example,
+the Discord API, the Layer should be given in the function definition.
 
 ```ts
 new NodejsFunction(this, "MyNodejsFunction", {
@@ -45,11 +48,13 @@ new NodejsFunction(this, "MyNodejsFunction", {
 });
 ```
 
-The Discord SDK can then be used in each Lambda handler from `/opt/nodejs/discord`. This is because Lambda functions mount their layers in the `/opt` directory.
+The Discord SDK (or other layers) can then be used in each Lambda handler from `/opt/nodejs/discord`. This is because Lambda functions mount their layers in the `/opt` directory.
 
 ```ts
 import discord from "/opt/nodejs/discord";
 ```
+
+When adding more layers, update `tsconfig.json` with a matching path to that layer.
 
 # Deployment
 
@@ -92,4 +97,3 @@ Finally, re-bootstrap the environment with `npm run aws:bootstrap`. Deployment s
 > This repository shows an example of how to deploy a simple docker image to a Fargate cluster using AWS CDK.
 
 [AWS CDK Lambda Layers](https://bobbyhadz.com/blog/aws-cdk-lambda-layers)
-

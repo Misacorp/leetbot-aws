@@ -3,13 +3,13 @@ import * as cdk from "aws-cdk-lib";
 import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import type { LayerVersion } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
+import type { LambdaLayers } from "./LambdaLayers";
 
 interface Props {
-  layer: LayerVersion;
+  layers: LambdaLayers;
 }
 
 /**
@@ -54,13 +54,13 @@ export class DiscordBot extends Construct {
       entry: path.join(__dirname, "../../src/leetbot/discordWatcher.ts"),
       handler: "handler",
       timeout: cdk.Duration.seconds(60 * 4 + 15),
-      memorySize: 128,
+      memorySize: 256,
       logRetention: RetentionDays.THREE_DAYS,
       bundling: {
         minify: false,
         externalModules: ["@aws-sdk/*", "discord.js"],
       },
-      layers: [props.layer],
+      layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
       environment: {
         TOKEN_SECRET_ID: secret.secretName,
         QUEUE_URL: this.discordBotOutQueue.queueUrl,

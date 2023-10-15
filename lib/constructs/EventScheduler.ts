@@ -5,6 +5,8 @@ import type { Function } from "aws-cdk-lib/aws-lambda";
 
 interface Props {
   target: Function;
+  scheduleExpression: string;
+  scheduleExpressionTimezone: string;
 }
 
 /**
@@ -44,9 +46,8 @@ export class EventScheduler extends Construct {
       flexibleTimeWindow: {
         mode: "OFF",
       },
-      // Run every day at 13:36 Helsinki time
-      scheduleExpression: "cron(35 13 * * ? *)",
-      scheduleExpressionTimezone: "Europe/Helsinki",
+      scheduleExpression: props.scheduleExpression,
+      scheduleExpressionTimezone: props.scheduleExpressionTimezone,
       target: {
         arn: props.target.functionArn,
         roleArn: this.role.roleArn,
