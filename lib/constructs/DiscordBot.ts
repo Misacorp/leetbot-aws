@@ -65,7 +65,8 @@ export class DiscordBot extends Construct {
         TOKEN_SECRET_ID: secret.secretName,
         QUEUE_URL: this.discordBotOutQueue.queueUrl,
       },
-      description: "Test function that uses a Lambda layer",
+      description:
+        "Starts a Discord bot to read all messages. Use the `timeoutOverrideMs` event to override execution time.",
     });
 
     // Grant Lambda the permissions it needs
