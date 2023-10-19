@@ -108,69 +108,69 @@ describe("dateTime", () => {
 
   describe("isLeet", () => {
     it("should detect leet at 13:37:00.000", () => {
-      // Summer time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 37, 0, 0));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 37, 0, 0));
       const epoch = toEpoch(date);
 
       expect(isLeet(epoch)).toBeTruthy();
     });
 
     it("should detect leet at 13:37:59.999", () => {
-      // Winter time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 37, 59, 999));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 37, 59, 999));
       const epoch = toEpoch(date);
 
       expect(isLeet(epoch)).toBeTruthy();
     });
 
     it("should not detect leet at 13:38:00.000", () => {
-      // Winter time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 38, 0, 0));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 38, 0, 0));
       const epoch = toEpoch(date);
 
-      expect(isLeet(epoch)).toBeTruthy();
+      expect(isLeet(epoch)).toBeFalsy();
     });
 
     it("should not detect leet at 13:36:59.999", () => {
-      // Winter time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 36, 59, 999));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 36, 59, 999));
       const epoch = toEpoch(date);
 
-      expect(isLeet(epoch)).toBeTruthy();
+      expect(isLeet(epoch)).toBeFalsy();
     });
   });
 
   describe("isLeeb", () => {
     it("should detect leeb at 13:38:00.000", () => {
-      // Summer time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 38, 0, 0));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 38, 0, 0));
       const epoch = toEpoch(date);
 
       expect(isLeeb(epoch)).toBeTruthy();
     });
 
     it("should detect leet at 13:38:59.999", () => {
-      // Winter time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 38, 59, 999));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 38, 59, 999));
       const epoch = toEpoch(date);
 
       expect(isLeeb(epoch)).toBeTruthy();
     });
 
     it("should not detect leeb at 13:39:00.000", () => {
-      // Winter time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 39, 0, 0));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 39, 0, 0));
       const epoch = toEpoch(date);
 
-      expect(isLeeb(epoch)).toBeTruthy();
+      expect(isLeeb(epoch)).toBeFalsy();
     });
 
     it("should not detect leeb at 13:37:59.999", () => {
-      // Winter time, +2 hour offset
-      const date = new Date(Date.UTC(2023, 6, 1, 11, 37, 59, 999));
+      // Summer time, +3 hour offset
+      const date = new Date(Date.UTC(2023, 6, 1, 10, 37, 59, 999));
       const epoch = toEpoch(date);
 
-      expect(isLeeb(epoch)).toBeTruthy();
+      expect(isLeeb(epoch)).toBeFalsy();
     });
   });
 });
