@@ -1,7 +1,8 @@
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  testEnvironment: "node",
-  preset: "ts-jest",
+  preset: 'ts-jest',
   resolver: "ts-jest-resolver",
+  testEnvironment: 'node',
   roots: ["<rootDir>/test", "<rootDir>/src"],
   testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
   transform: {
