@@ -23,7 +23,16 @@
     "paths": {
       "/opt/nodejs/discord": ["src/layers/discord/nodejs/discord"],
       "/opt/nodejs/date-fns": ["src/layers/date-fns/nodejs/date-fns"]
-    }
+    },
+    "allowJs": false
   },
-  "exclude": ["node_modules", "**/node_modules/*", "cdk.out", "dist", "test"]
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*",
+    "cdk.out",
+    "dist",
+    "test",
+    "src/**/*.test.ts",
+    "jest.config.ts"
+  ]
 }

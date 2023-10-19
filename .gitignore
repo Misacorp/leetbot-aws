@@ -1,7 +1,8 @@
 *.js
-!jest.config.js
+!jest.config.ts
 *.d.ts
 node_modules
+dist
 !dist/layer/nodejs/node_modules
 
 # CDK outputs file
