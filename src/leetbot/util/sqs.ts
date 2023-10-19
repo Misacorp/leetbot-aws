@@ -1,4 +1,8 @@
-import { SQSClient } from "@aws-sdk/client-sqs";
+import {
+  SQSClient,
+  SendMessageCommand,
+  type SendMessageCommandInput,
+} from "@aws-sdk/client-sqs";
 
 interface Props {
   region: string | undefined;
@@ -6,7 +10,11 @@ interface Props {
 
 let sqsClient: SQSClient;
 
-const getSqsClient = ({ region }: Props) => {
+/**
+ * Creates an SQS client or returns one that exists.
+ * @param region
+ */
+export const getSqsClient = ({ region = process.env.AWS_REGION }: Props) => {
   if (sqsClient) return sqsClient;
 
   // Create SQS client
@@ -24,4 +32,19 @@ const getSqsClient = ({ region }: Props) => {
   return sqsClient;
 };
 
-export { getSqsClient };
+/**
+ * Sends a message to an SQS queue.
+ * Recovers from errors.
+ * @param payload SendMessage command input
+ */
+export const sendMessage = async (payload: SendMessageCommandInput) => {
+  try {
+    // Send the message forward
+    await sqsClient.send(new SendMessageCommand(payload));
+
+    return true;
+  } catch (err) {
+    console.error("Unable to send SQS message due to an error", err);
+    return false;
+  }
+};

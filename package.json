@@ -41,6 +41,7 @@
     "@aws-sdk/client-sqs": "^3.427.0",
     "@types/aws-lambda": "^8.10.123",
     "aws-cdk-lib": "2.99.1",
-    "constructs": "^10.2.70"
+    "constructs": "^10.2.70",
+    "ts-jest-resolver": "^2.0.1"
   }
 }

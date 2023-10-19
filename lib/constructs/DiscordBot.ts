@@ -58,7 +58,12 @@ export class DiscordBot extends Construct {
       logRetention: RetentionDays.THREE_DAYS,
       bundling: {
         minify: false,
-        externalModules: ["@aws-sdk/*", "discord.js"],
+        externalModules: [
+          "@aws-sdk/*",
+          "discord.js",
+          "date-fns",
+          "date-fns-tz",
+        ],
       },
       layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
       environment: {

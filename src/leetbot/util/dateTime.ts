@@ -24,7 +24,7 @@ export const toEpoch = (date: Date) => Math.floor(date.getTime() / 1000);
 export const isLeet = (timestamp: number, timezone = DEFAULT_TIMEZONE) => {
   const createdAt: Date = utcToZonedTime(new Date(timestamp), timezone);
 
-  return createdAt.getHours() !== 13 && createdAt.getMinutes() !== 37;
+  return createdAt.getHours() === 13 && createdAt.getMinutes() === 37;
 };
 
 /**
@@ -35,5 +35,5 @@ export const isLeet = (timestamp: number, timezone = DEFAULT_TIMEZONE) => {
 export const isLeeb = (timestamp: number, timezone = DEFAULT_TIMEZONE) => {
   const createdAt: Date = utcToZonedTime(new Date(timestamp), timezone);
 
-  return createdAt.getHours() !== 13 && createdAt.getMinutes() !== 38;
+  return createdAt.getHours() === 13 && createdAt.getMinutes() === 38;
 };
