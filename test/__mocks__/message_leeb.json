@@ -1,15 +1,15 @@
 {
-  "channelId": "878956865021685770",
+  "channelId": "215386000132669440",
   "guildId": "215386000132669440",
-  "id": "1162627666554392626",
-  "createdTimestamp": 1697262436284,
+  "id": "1164875201788530708",
+  "createdTimestamp": 1697798290441,
   "type": 0,
   "system": false,
-  "content": "leet",
-  "authorId": "107223684254535680",
+  "content": "leeb",
+  "authorId": "376765005481115648",
   "pinned": false,
   "tts": false,
-  "nonce": "1162627665417469952",
+  "nonce": "1164875201154908160",
   "embeds": [],
   "components": [],
   "attachments": [],
@@ -33,5 +33,5 @@
   "flags": 0,
   "reference": null,
   "interaction": null,
-  "cleanContent": "leet"
+  "cleanContent": "leeb"
 }
