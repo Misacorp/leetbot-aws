@@ -1,4 +1,10 @@
-import { isLeeb, isLeet, toEpoch, utcToZonedTime } from "./dateTime";
+import { isLeeb, isLeet, utcToZonedTime } from "./dateTime";
+import leetMessageJson from "../../../test/__mocks__/message_leet.json";
+import leebMessageJson from "../../../test/__mocks__/message_leeb.json";
+import { type Message } from "/opt/nodejs/discord";
+
+const leetMessage: Message = leetMessageJson as unknown as Message;
+const leebMessage: Message = leebMessageJson as unknown as Message;
 
 describe("dateTime", () => {
   describe("Timezone conversion: utcToZonedTime()", () => {
@@ -94,23 +100,17 @@ describe("dateTime", () => {
     });
   });
 
-  describe("toEpoch", () => {
-    it("should convert a date to an epoch (1)", () => {
-      const date = new Date(Date.UTC(2023, 0, 1, 0, 0, 0, 0));
-      expect(toEpoch(date)).toEqual(1672531200);
-    });
-
-    it("should convert a date to an epoch (2)", () => {
-      const date = new Date(Date.UTC(1990, 6, 15, 19, 40, 55, 0));
-      expect(toEpoch(date)).toEqual(648070855);
-    });
-  });
-
   describe("isLeet", () => {
+    it("should detect leet from a Discord message sent at 13:37", () => {
+      const epoch = leetMessage.createdTimestamp;
+
+      expect(isLeet(epoch)).toBeTruthy();
+    });
+
     it("should detect leet at 13:37:00.000", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 37, 0, 0));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeet(epoch)).toBeTruthy();
     });
@@ -118,7 +118,7 @@ describe("dateTime", () => {
     it("should detect leet at 13:37:59.999", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 37, 59, 999));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeet(epoch)).toBeTruthy();
     });
@@ -126,7 +126,7 @@ describe("dateTime", () => {
     it("should not detect leet at 13:38:00.000", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 38, 0, 0));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeet(epoch)).toBeFalsy();
     });
@@ -134,17 +134,23 @@ describe("dateTime", () => {
     it("should not detect leet at 13:36:59.999", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 36, 59, 999));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeet(epoch)).toBeFalsy();
     });
   });
 
   describe("isLeeb", () => {
+    it("should detect leeb from a Discord message sent at 13:38", () => {
+      const epoch = leebMessage.createdTimestamp;
+
+      expect(isLeeb(epoch)).toBeTruthy();
+    });
+
     it("should detect leeb at 13:38:00.000", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 38, 0, 0));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeeb(epoch)).toBeTruthy();
     });
@@ -152,7 +158,7 @@ describe("dateTime", () => {
     it("should detect leet at 13:38:59.999", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 38, 59, 999));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeeb(epoch)).toBeTruthy();
     });
@@ -160,7 +166,7 @@ describe("dateTime", () => {
     it("should not detect leeb at 13:39:00.000", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 39, 0, 0));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeeb(epoch)).toBeFalsy();
     });
@@ -168,7 +174,7 @@ describe("dateTime", () => {
     it("should not detect leeb at 13:37:59.999", () => {
       // Summer time, +3 hour offset
       const date = new Date(Date.UTC(2023, 6, 1, 10, 37, 59, 999));
-      const epoch = toEpoch(date);
+      const epoch = date.getTime();
 
       expect(isLeeb(epoch)).toBeFalsy();
     });
