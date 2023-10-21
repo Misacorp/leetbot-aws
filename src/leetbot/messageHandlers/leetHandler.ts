@@ -1,20 +1,15 @@
-import { Message } from "/opt/nodejs/discord";
 import { isLeet } from "../util/dateTime";
 import { findEmoji } from "../util/emoji";
-import { sendMessage } from "../util/sqs";
+import type { MessageHandlerProps } from "../../types";
+import { isTestEvent } from "../util/lambda";
+import { sendMessageToDiscordSqs } from "./sendMessageToDiscordSqs";
 
 /**
  * Handles LEET messages
- * @param message   Message
- * @param queueUrl  SQS queue URL to which messages will be sent
+ * @param message  Message
+ * @param event    Lambda event
  */
-export const leetHandler = async (
-  message: Pick<
-    Message,
-    "createdTimestamp" | "react" | "guild" | "id" | "author" | "content"
-  >,
-  queueUrl: string,
-) => {
+export const leetHandler = async ({ message, event }: MessageHandlerProps) => {
   // Find LEET emoji
   const leetEmoji = findEmoji(message.guild, "leet");
 
@@ -29,21 +24,14 @@ export const leetHandler = async (
   const content = message.content.trim().toLowerCase();
 
   if (content === "leet" || content === leetEmoji.toString()) {
-    if (!isLeet(message.createdTimestamp)) {
+    // Verify timestamp. A test event can bypass this check.
+    const alwaysAllowLeet = isTestEvent(event) && event.alwaysAllowLeet;
+    if (!isLeet(message.createdTimestamp) && !alwaysAllowLeet) {
       return;
     }
 
-    // Send the message forward
-    const success = await sendMessage({
-      MessageBody: JSON.stringify(message),
-      QueueUrl: queueUrl,
-      MessageDeduplicationId: message.id,
-      MessageGroupId: message.author.id,
-    });
-
-    // React with a warning emoji if SQS sending failed
+    const success = await sendMessageToDiscordSqs(message, event);
     if (!success) {
-      await message.react("⚠️");
       return;
     }
 

@@ -1,4 +1,5 @@
 import type { Context, ScheduledEvent } from "aws-lambda";
+import type { TestEvent } from "../../types";
 
 // How long to leave for the function to log out of Discord and exit
 const EXIT_THRESHOLD = 4000;
@@ -9,7 +10,7 @@ const EXIT_THRESHOLD = 4000;
  * @param context Lambda execution context
  */
 const keepAlive = async (
-  event: ScheduledEvent | { timeoutOverrideMs?: number },
+  event: ScheduledEvent | TestEvent,
   context: Context,
 ) => {
   // Allow overriding the time this function runs for.
@@ -25,3 +26,14 @@ const keepAlive = async (
 };
 
 export default keepAlive;
+
+/**
+ * Determines if the event argument of a Lambda function was a test event.
+ * @param event Event
+ */
+export const isTestEvent = (event: any): event is TestEvent =>
+  event.timeoutOverrideMs !== undefined ||
+  event.alwaysAllowLeet !== undefined ||
+  event.alwaysAllowLeeb !== undefined ||
+  event.alwaysAllowFailedLeet !== undefined ||
+  event.sendMessageToSqs !== undefined;

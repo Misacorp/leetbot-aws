@@ -1,23 +1,24 @@
 import type { Context, ScheduledEvent } from "aws-lambda";
 import { Client, Events, IntentsBitField } from "/opt/nodejs/discord";
-import keepAlive from "./util/keepAlive";
+import keepAlive from "./util/lambda";
 import { getSecret } from "./util/secrets";
 import { leetHandler } from "./messageHandlers/leetHandler";
 import { leebHandler } from "./messageHandlers/leebHandler";
 import { failedLeetHandler } from "./messageHandlers/failedLeetHandler";
 import { unrelatedHandler } from "./messageHandlers/unrelatedHandler";
+import type { MessageHandlerProps, TestEvent } from "../types";
 
-const messageHandlers = [
+const messageHandlers: ((props: MessageHandlerProps) => Promise<void>)[] = [
   leetHandler,
   leebHandler,
   failedLeetHandler,
   unrelatedHandler,
 ];
 
-export const handler = async (event: ScheduledEvent, context: Context) => {
-  // SQS setup
-  const queueUrl = process.env.QUEUE_URL!;
-
+export const handler = async (
+  event: ScheduledEvent | TestEvent,
+  context: Context,
+) => {
   // Get Discord bot token
   const token = await getSecret(process.env.TOKEN_SECRET_ID!);
 
@@ -45,7 +46,7 @@ export const handler = async (event: ScheduledEvent, context: Context) => {
     // Run the message through all message handlers simultaneously
     await Promise.all(
       messageHandlers.map((messageHandler) =>
-        messageHandler(message, queueUrl),
+        messageHandler({ message, event }),
       ),
     );
   });

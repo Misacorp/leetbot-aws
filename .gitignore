@@ -1,6 +1,7 @@
 *.js
 !jest.config.ts
 *.d.ts
+!src/types.d.ts
 node_modules
 dist
 !dist/layer/nodejs/node_modules

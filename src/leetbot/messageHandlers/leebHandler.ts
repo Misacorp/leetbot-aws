@@ -1,14 +1,16 @@
-import { Message } from "/opt/nodejs/discord";
 import { findEmoji } from "../util/emoji";
-import { sendMessage } from "../util/sqs";
 import { isLeeb } from "../util/dateTime";
+import type { MessageHandlerProps } from "../../types";
+import { isTestEvent } from "../util/lambda";
+import { sendMessageToDiscordSqs } from "./sendMessageToDiscordSqs";
 
 /**
  * Handles LEEB messages
  * @param message   Message
  * @param queueUrl  SQS queue URL to which messages will be sent
+ * @param event     Lambda event
  */
-export const leebHandler = async (message: Message, queueUrl: string) => {
+export const leebHandler = async ({ message, event }: MessageHandlerProps) => {
   // Find LEEB emoji
   const leebEmoji = findEmoji(message.guild, "leeb");
 
@@ -23,21 +25,14 @@ export const leebHandler = async (message: Message, queueUrl: string) => {
   const content = message.content.trim().toLowerCase();
 
   if (content === "leeb" || content === leebEmoji.toString()) {
-    if (!isLeeb(message.createdTimestamp)) {
+    // Verify timestamp. A test event can bypass this check.
+    const alwaysAllowLeeb = isTestEvent(event) && event.alwaysAllowLeeb;
+    if (!isLeeb(message.createdTimestamp) && !alwaysAllowLeeb) {
       return;
     }
 
-    // Send the message forward
-    const success = await sendMessage({
-      MessageBody: JSON.stringify(message),
-      QueueUrl: queueUrl,
-      MessageDeduplicationId: message.id,
-      MessageGroupId: message.author.id,
-    });
-
-    // React with a warning emoji if SQS sending failed
+    const success = await sendMessageToDiscordSqs(message, event);
     if (!success) {
-      await message.react("⚠️");
       return;
     }
 
