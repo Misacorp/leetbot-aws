@@ -28,15 +28,71 @@ The CDK stack itself is located in the `lib` directory.
 
 # Architecture
 
-Leetbot needs to sit in a Discord server every day within the time window `]13:36, 13:39[`. This could be accomplished in a few different ways including
+Leetbot needs to sit in a Discord server every day within the time window `]13:36, 13:39[`. This is accomplished with a Lambda that keeps itself alive for the duration. An EventBridge scheduled event invokes that Lambda at the same time on each day and even takes daylight savings into account.
 
-1. Running an EC2 instance for those 3 minutes.
-2. ✅ Running a Lambda for those 3 minutes. (Current implementation)
-3. Starting a Fargate container for those 3 minutes.
+```mermaid
+%%{init: {'theme':'dark'}}%%
+flowchart TD
+    Discord((Discord))
+    subgraph DiscordBot
+        EventBridge
+          BotLambda{{
+            discordWatcher
+            Lambda
+          }}
+        SQS
+        QueueReader{{
+          createMessage
+          Lambda
+        }}
+    end
+
+    EventBridge -- Starts --> BotLambda
+    Discord -- discord.js --> BotLambda
+    BotLambda -. Keeps alive .-> BotLambda
+    BotLambda -- "Sends relevant<br />messages to" --> SQS
+
+    subgraph LeetApi
+        Table[(Table)]
+        GetUsers{{
+            getUsers
+            Lambda
+        }}
+        GetServer{{
+            getServer
+            Lambda
+        }}
+        GetUserMessages{{
+            getUserMessages
+            Lambda
+        }}
+        API{API Gateway}
+    end
+
+    SQS -- Reads --> QueueReader
+    QueueReader -- Writes --> Table
+    Table <--> GetUsers
+    Table <--> GetServer
+    Table <--> GetUserMessages
+    GetUsers <--> API
+    GetServer <--> API
+    GetUserMessages <--> API
+    
+    API <--> Client
+    
+    classDef discord stroke:#55f,fill:#224,stroke-dasharray:4px;
+    classDef dynamo stroke:#a7f,fill:#213;
+    classDef lambda stroke:#fa0,fill:#320;
+    classDef sqs stroke:#fda,fill:#430;
+    class BotLambda,GetUsers,GetServer,GetUserMessages,QueueReader lambda
+    class Table dynamo
+    class Discord discord
+    class SQS sqs
+```
 
 ## Lambda Layers
 
-The Discord SDK, moment.js,
+The Discord SDK, date-fns,
 and possibly other libraries are installed on Lambda layers in `lib/constructs/LambdaLayers.ts`.
 For each Lambda function that wants to use, for example,
 the Discord API, the Layer should be given in the function definition.
