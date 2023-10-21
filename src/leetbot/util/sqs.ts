@@ -5,20 +5,24 @@ import {
 } from "@aws-sdk/client-sqs";
 
 interface Props {
-  region: string | undefined;
+  region?: string;
 }
 
 let sqsClient: SQSClient;
 
 /**
- * Creates an SQS client or returns one that exists.
- * @param region
+ * Creates an SQS client or returns one that exists
  */
-export const getSqsClient = ({ region = process.env.AWS_REGION }: Props) => {
-  if (sqsClient) return sqsClient;
+export const getSqsClient = (props?: Props) => {
+  if (sqsClient) {
+    console.info("Using existing SQS client");
+    return sqsClient;
+  }
+
+  console.info("No SQS client. Creating a new one...");
 
   // Create SQS client
-  let awsRegion = region;
+  let awsRegion = props?.region ?? process.env.AWS_REGION;
   const defaultRegion = "eu-north-1";
   if (!awsRegion) {
     console.warn(
@@ -40,7 +44,7 @@ export const getSqsClient = ({ region = process.env.AWS_REGION }: Props) => {
 export const sendMessage = async (payload: SendMessageCommandInput) => {
   try {
     // Send the message forward
-    await sqsClient.send(new SendMessageCommand(payload));
+    await getSqsClient().send(new SendMessageCommand(payload));
 
     return true;
   } catch (err) {

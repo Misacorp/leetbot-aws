@@ -1,12 +1,12 @@
-import { Message } from "/opt/nodejs/discord";
 import { isLeeb, isLeet } from "../util/dateTime";
 import { findEmoji } from "../util/emoji";
+import type { MessageHandlerProps } from "../../types";
 
 /**
  * Handles LEET and LEEB messages when they are not sent at the correct time
  * @param message  Message
  */
-export const unrelatedHandler = async (message: Message) => {
+export const unrelatedHandler = async ({ message }: MessageHandlerProps) => {
   // Find LEET emoji
   const leetEmoji = findEmoji(message.guild, "leet");
   const leebEmoji = findEmoji(message.guild, "leeb");
