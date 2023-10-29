@@ -3,18 +3,20 @@
 Leetbot in the cloud.
 
 <!-- TOC -->
-
-- [Leetbot AWS](#leetbot-aws)
-- [Development](#development)
-- [Architecture](#architecture)
-  - [Lambda Layers](#lambda-layers)
-- [Deployment](#deployment)
-  - [Deployment Troubleshooting](#deployment-troubleshooting)
-    - [No bucket named `xyz`. Is account `123` bootstrapped?](#no-bucket-named-xyz-is-account-123-bootstrapped)
-      - [Option 1: CLI](#option-1-cli)
-      - [Option 2: AWS Management Console](#option-2-aws-management-console)
-  - [Resources](#resources)
-  <!-- TOC -->
+* [Leetbot AWS](#leetbot-aws)
+* [Development](#development)
+* [Architecture](#architecture)
+  * [Lambda Layers](#lambda-layers)
+* [Deployment](#deployment)
+  * [Deployment Troubleshooting](#deployment-troubleshooting)
+    * [No bucket named `xyz`. Is account `123` bootstrapped?](#no-bucket-named-xyz-is-account-123-bootstrapped)
+      * [Option 1: CLI](#option-1-cli)
+      * [Option 2: AWS Management Console](#option-2-aws-management-console)
+  * [Resources](#resources)
+* [Scripts](#scripts)
+  * [Set Discord Bot Token](#set-discord-bot-token)
+  * [Start Discord Bot](#start-discord-bot)
+<!-- TOC -->
 
 # Development
 
@@ -153,3 +155,28 @@ Finally, re-bootstrap the environment with `npm run aws:bootstrap`. Deployment s
 > This repository shows an example of how to deploy a simple docker image to a Fargate cluster using AWS CDK.
 
 [AWS CDK Lambda Layers](https://bobbyhadz.com/blog/aws-cdk-lambda-layers)
+
+
+# Scripts
+
+Some scripts are included to help set up and test the application. They are located in the `scripts` folder.
+
+## Set Discord Bot Token
+
+This script sets the AWS Secrets Manager value for the Discord bot's token. Usage:
+
+
+```shell
+./scrips/setBotToken.sh <bot_token> <aws_profile> 
+```
+
+## Start Discord Bot
+
+This script starts the Discord bot by invoking the Discord Watcher Lambda function. You can supply test event parameters to, for example, reduce the run time of the Lambda, or allow customized behavior. See the `TestEvent` interface  in `types.d.ts` for all the options.
+
+```shell
+./scripts/invokeDiscordWatcher.sh <json_payload> <aws_profile>
+
+# Example:
+# ./scripts/invokeDiscordWatcher.sh '{"timeoutOverrideMs": 12000}' sandbox
+```
