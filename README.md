@@ -1,6 +1,8 @@
 # Leetbot AWS
 
-Leetbot in the cloud.
+Leetbot in the cloud. See the [project dashboard](https://github.com/users/Misacorp/projects/1/views/1).
+
+---
 
 <!-- TOC -->
 * [Leetbot AWS](#leetbot-aws)

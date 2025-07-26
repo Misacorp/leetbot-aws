@@ -4,9 +4,9 @@
  * Unix timestamps like `1697262436284` do not contain any locale information.
  * Dates created from such values will be in the server's timezone (?).
  */
-import { utcToZonedTime } from "/opt/nodejs/date-fns";
+import { toZonedTime } from "/opt/nodejs/date-fns";
 
-export { utcToZonedTime };
+export { toZonedTime };
 
 const DEFAULT_TIMEZONE = "Europe/Helsinki";
 
@@ -16,7 +16,7 @@ const DEFAULT_TIMEZONE = "Europe/Helsinki";
  * @param timezone Target timezone
  */
 export const isLeet = (epoch: number, timezone = DEFAULT_TIMEZONE) => {
-  const createdAt: Date = utcToZonedTime(new Date(epoch), timezone);
+  const createdAt: Date = toZonedTime(new Date(epoch), timezone);
 
   return createdAt.getHours() === 13 && createdAt.getMinutes() === 37;
 };
@@ -27,7 +27,7 @@ export const isLeet = (epoch: number, timezone = DEFAULT_TIMEZONE) => {
  * @param timezone Target timezone
  */
 export const isLeeb = (epoch: number, timezone = DEFAULT_TIMEZONE) => {
-  const createdAt: Date = utcToZonedTime(new Date(epoch), timezone);
+  const createdAt: Date = toZonedTime(new Date(epoch), timezone);
 
   return createdAt.getHours() === 13 && createdAt.getMinutes() === 38;
 };

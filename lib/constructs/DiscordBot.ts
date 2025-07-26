@@ -6,10 +6,10 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
-import type { LambdaLayers } from "./LambdaLayers";
+import type { ILambdaLayers } from "./LambdaLayers";
 
 interface Props {
-  layers: LambdaLayers;
+  readonly layers: ILambdaLayers;
 }
 
 /**
@@ -17,12 +17,12 @@ interface Props {
  * Uses the Discord API to log into a server and read all messages posted.
  */
 export class DiscordBot extends Construct {
-  public readonly discordWatcher: NodejsFunction;
+  public readonly discordWatcher: lambda.IFunction;
 
   /**
    * SQS queue where the Discord bot will send all relevant messages it receives.
    */
-  public readonly discordBotOutQueue: sqs.Queue;
+  public readonly discordBotOutQueue: sqs.IQueue;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -49,7 +49,7 @@ export class DiscordBot extends Construct {
 
     // Discord bot Lambda function
     this.discordWatcher = new NodejsFunction(this, "DiscordWatcher", {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
       entry: path.join(__dirname, "../../src/leetbot/discordWatcher.ts"),
       handler: "handler",

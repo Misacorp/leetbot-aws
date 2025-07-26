@@ -19,10 +19,11 @@ const mockMessage: Pick<
 
 describe("leetHandler", () => {
   it("should throw an error when the leet emoji cannot be found", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
     jest.spyOn(emoji, "findEmoji").mockReturnValueOnce(undefined);
 
-    await expect(leetHandler(mockMessage, "mock-queue-url")).rejects.toThrow(
-      "Could not find emoji",
-    );
+    await expect(
+      leetHandler({ message: mockMessage, event: {} }),
+    ).rejects.toThrow("Could not find emoji");
   });
 });

@@ -24,7 +24,7 @@ export const leetHandler = async ({ message, event }: MessageHandlerProps) => {
   const content = message.content.trim().toLowerCase();
 
   if (content === "leet" || content === leetEmoji.toString()) {
-    // Verify timestamp. A test event can bypass this check.
+    // Verify the timestamp. A test event can bypass this check.
     const alwaysAllowLeet = isTestEvent(event) && event.alwaysAllowLeet;
     if (!isLeet(message.createdTimestamp) && !alwaysAllowLeet) {
       return;

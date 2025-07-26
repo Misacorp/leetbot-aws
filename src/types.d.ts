@@ -20,7 +20,7 @@ export interface MessageHandlerProps {
   /**
    * Discord message.
    */
-  message: Pick<
+  readonly message: Pick<
     Message,
     "createdTimestamp" | "react" | "guild" | "id" | "author" | "content"
   >,
@@ -29,5 +29,5 @@ export interface MessageHandlerProps {
    * In production, this is a ScheduledEvent originating from EventBridge.
    * When testing manually, this is a TestEvent.
    */
-  event: ScheduledEvent | TestEvent
+  readonly event: ScheduledEvent | TestEvent
 }

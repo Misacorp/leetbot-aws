@@ -20,7 +20,6 @@ export const sendMessageToDiscordSqs = async (
     return false;
   }
 
-  // Non-test events will be sent to SQS.
   // By default, test events will not be sent to SQS. However, test events can override this behavior.
   if (!isTestEvent(event) || event.sendMessageToSqs) {
     const success = await sendMessage({

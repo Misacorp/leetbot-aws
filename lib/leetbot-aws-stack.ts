@@ -1,5 +1,5 @@
-import { Stack, StackProps, Tags } from "aws-cdk-lib";
-import { Construct } from "constructs";
+import { Stack, type StackProps, Tags } from "aws-cdk-lib";
+import { type Construct } from "constructs";
 import { LambdaLayers } from "./constructs/LambdaLayers";
 import { DiscordBot } from "./constructs/DiscordBot";
 import { EventScheduler } from "./constructs/EventScheduler";
@@ -19,7 +19,7 @@ export class LeetbotAwsStack extends Stack {
 
     this.setTags();
 
-    this.lambdaLayers = new LambdaLayers(this, "DiscordLambdaLayerConstruct");
+    this.lambdaLayers = new LambdaLayers(this, "Layers");
 
     this.discordBot = new DiscordBot(this, "DiscordBot", {
       layers: this.lambdaLayers,
@@ -37,7 +37,7 @@ export class LeetbotAwsStack extends Stack {
    * Sets stack tags according to an agreed-upon convention
    */
   private setTags = () => {
-    Tags.of(this).add("Owner", "misa.jokisalo@knowit.fi");
+    Tags.of(this).add("Owner", "misa.jokisalo@gmail.com");
     Tags.of(this).add("Solution", "leetbot-aws");
   };
 }

@@ -1,12 +1,12 @@
 import { Construct } from "constructs";
 import { CfnSchedule } from "aws-cdk-lib/aws-scheduler";
 import * as iam from "aws-cdk-lib/aws-iam";
-import type { Function } from "aws-cdk-lib/aws-lambda";
+import type { IFunction } from "aws-cdk-lib/aws-lambda";
 
 interface Props {
-  target: Function;
-  scheduleExpression: string;
-  scheduleExpressionTimezone: string;
+  readonly target: IFunction;
+  readonly scheduleExpression: string;
+  readonly scheduleExpressionTimezone: string;
 }
 
 /**
