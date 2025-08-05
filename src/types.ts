@@ -10,24 +10,27 @@ export interface TestEvent {
   alwaysAllowLeet?: boolean;
   alwaysAllowLeeb?: boolean;
   alwaysAllowFailedLeet?: boolean;
-  sendMessageToSqs?: boolean;
+  // Should the message be sent for further processing and storage?
+  processMessage?: boolean;
 }
+
+/**
+ * Discord message, with relevant properties picked.
+ */
+export type DiscordMessage = Pick<
+  Message,
+  "createdTimestamp" | "react" | "guild" | "id" | "author" | "content"
+>;
 
 /**
  * Props for functions that handle Discord messages
  */
 export interface MessageHandlerProps {
-  /**
-   * Discord message.
-   */
-  readonly message: Pick<
-    Message,
-    "createdTimestamp" | "react" | "guild" | "id" | "author" | "content"
-  >,
+  readonly message: DiscordMessage;
   /**
    * Event that invoked the Lambda execution.
    * In production, this is a ScheduledEvent originating from EventBridge.
    * When testing manually, this is a TestEvent.
    */
-  readonly event: ScheduledEvent | TestEvent
+  readonly event: ScheduledEvent | TestEvent;
 }

@@ -13,4 +13,4 @@ aws_profile=$2
 function_name=$(jq -r '.LeetbotAwsStack | to_entries[] | select(.key | startswith("DiscordBotDiscordWatcherName")) | .value' cdk-outputs.json)
 
 # Update the secret value using the specified AWS profile
-aws lambda invoke --function-name "$function_name" --payload "$payload" --cli-binary-format raw-in-base64-out --profile "$aws_profile" /dev/stdout
+aws-vault exec $aws_profile -- aws lambda invoke --function-name "$function_name" --payload "$payload" --cli-binary-format raw-in-base64-out /dev/stdout

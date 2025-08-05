@@ -38,4 +38,4 @@ export const isTestEvent = (
   "alwaysAllowLeet" in event ||
   "alwaysAllowLeeb" in event ||
   "alwaysAllowFailedLeet" in event ||
-  "sendMessageToSqs" in event;
+  "processMessage" in event;

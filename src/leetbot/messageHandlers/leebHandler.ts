@@ -2,7 +2,7 @@ import { findEmoji } from "../util/emoji";
 import { isLeeb } from "../util/dateTime";
 import type { MessageHandlerProps } from "../../types";
 import { isTestEvent } from "../util/lambda";
-import { sendMessageToDiscordSqs } from "./sendMessageToDiscordSqs";
+import { publishToDiscordOutTopic } from "./publishToDiscordOutTopic";
 
 /**
  * Handles LEEB messages
@@ -25,13 +25,13 @@ export const leebHandler = async ({ message, event }: MessageHandlerProps) => {
   const content = message.content.trim().toLowerCase();
 
   if (content === "leeb" || content === leebEmoji.toString()) {
-    // Verify timestamp. A test event can bypass this check.
+    // Verify the timestamp. A test event can bypass this check.
     const alwaysAllowLeeb = isTestEvent(event) && event.alwaysAllowLeeb;
     if (!isLeeb(message.createdTimestamp) && !alwaysAllowLeeb) {
       return;
     }
 
-    const success = await sendMessageToDiscordSqs(message, event);
+    const success = await publishToDiscordOutTopic(message, event);
     if (!success) {
       return;
     }

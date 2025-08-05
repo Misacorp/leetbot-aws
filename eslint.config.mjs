@@ -121,4 +121,8 @@ export default defineConfig([
       "no-console": "off",
     },
   },
+  {
+    files: ["src/repository/**"],
+    rules: { "@typescript-eslint/no-namespace": "off" },
+  },
 ]);

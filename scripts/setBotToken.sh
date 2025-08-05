@@ -13,4 +13,4 @@ aws_profile=$2
 arn=$(jq -r '.LeetbotAwsStack | to_entries[] | select(.key | startswith("DiscordBotDiscordBotTokenArn")) | .value' cdk-outputs.json)
 
 # Update the secret value using the specified AWS profile
-aws secretsmanager update-secret --secret-id "$arn" --secret-string "$new_secret_value" --profile "$aws_profile"
+aws-vault exec $aws_profile -- aws secretsmanager update-secret --secret-id "$arn" --secret-string "$new_secret_value"

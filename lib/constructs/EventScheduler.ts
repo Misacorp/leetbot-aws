@@ -15,8 +15,6 @@ interface Props {
 export class EventScheduler extends Construct {
   private readonly role: iam.Role;
 
-  private readonly schedule: CfnSchedule;
-
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
@@ -42,7 +40,7 @@ export class EventScheduler extends Construct {
     this.role.attachInlinePolicy(invokeLambdaPolicy);
 
     // Define the schedule we want
-    this.schedule = new CfnSchedule(this, "EventScheduler", {
+    new CfnSchedule(this, "LeetSchedule", {
       flexibleTimeWindow: {
         mode: "OFF",
       },
