@@ -122,7 +122,7 @@ export default defineConfig([
     },
   },
   {
-    files: ["src/repository/**"],
+    files: ["src/**"],
     rules: { "@typescript-eslint/no-namespace": "off" },
   },
 ]);

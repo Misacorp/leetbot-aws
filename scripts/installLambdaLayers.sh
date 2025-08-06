@@ -10,6 +10,6 @@ for layer in src/layers/*/; do
     # Check if nodejs directory exists
     if [ -d "$layer/nodejs" ]; then
         echo "Installing dependencies for $layer..."
-        npm install --prefix "$layer/nodejs"
+        npm ci --prefix "$layer/nodejs"
     fi
 done

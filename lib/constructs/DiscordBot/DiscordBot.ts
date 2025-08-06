@@ -90,7 +90,8 @@ export class DiscordBot extends Construct {
     secret.grantRead(this.discordWatcher);
     this.discordBotOutTopic.grantPublish(this.discordWatcher);
 
-    // Export Lambda function's name to cdk-outputs.json
+    // Export Lambda function's name to cdk-outputs.json.
+    // Used with the scripts in this project.
     new cdk.CfnOutput(this, "DiscordWatcherName", {
       value: this.discordWatcher.functionName,
       description: "Discord watcher Lambda function name",

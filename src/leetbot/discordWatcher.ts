@@ -3,7 +3,16 @@ import { Client, Events, IntentsBitField } from "/opt/nodejs/discord";
 import keepAlive from "./util/lambda";
 import { getSecret } from "./util/secrets";
 import type { TestEvent } from "../types";
-import { publishToDiscordOutTopic } from "./messageHandlers/publishToDiscordOutTopic";
+import { publishDiscordMessage } from "./messageHandlers/publishDiscordMessage";
+
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      TOKEN_SECRET_ID: string;
+      TOPIC_ARN: string;
+    }
+  }
+}
 
 /**
  * Discord watcher.
@@ -15,7 +24,7 @@ export const handler = async (
   event: ScheduledEvent | TestEvent,
   context: Context,
 ) => {
-  const token = await getSecret(process.env.TOKEN_SECRET_ID!);
+  const token = await getSecret(process.env.TOKEN_SECRET_ID);
   const client = new Client({
     intents: new IntentsBitField()
       .add(IntentsBitField.Flags.Guilds)
@@ -70,6 +79,7 @@ const initEventHandlers = (
 
   client.on(Events.MessageCreate, (message) => {
     // Blindly pass all messages to SNS for further processing
-    void publishToDiscordOutTopic(message, event);
+    const topicArn = process.env.TOPIC_ARN;
+    void publishDiscordMessage({ message, topicArn, event });
   });
 };

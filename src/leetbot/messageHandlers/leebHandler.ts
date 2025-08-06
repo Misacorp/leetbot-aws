@@ -2,7 +2,7 @@ import { findEmoji } from "../util/emoji";
 import { isLeeb } from "../util/dateTime";
 import type { MessageHandlerProps } from "../../types";
 import { isTestEvent } from "../util/lambda";
-import { publishToDiscordOutTopic } from "./publishToDiscordOutTopic";
+import { publishDiscordMessage } from "./publishDiscordMessage";
 
 /**
  * Handles LEEB messages
@@ -31,7 +31,7 @@ export const leebHandler = async ({ message, event }: MessageHandlerProps) => {
       return;
     }
 
-    const success = await publishToDiscordOutTopic(message, event);
+    const success = await publishDiscordMessage(message, event);
     if (!success) {
       return;
     }

@@ -3,25 +3,26 @@ import type { MessageHandlerProps, TestEvent } from "../../types";
 import { isTestEvent } from "../util/lambda";
 import { publishMessage } from "../util/sns";
 
+interface Props {
+  // Discord message
+  readonly message: MessageHandlerProps["message"];
+  readonly topicArn: string;
+  readonly event?: ScheduledEvent | TestEvent;
+}
+
 /**
  * Sends a message to the Discord outgoing SNS topic
  * @param message Discord message
+ * @param topicArn
  * @param event   Lambda event
  */
-export const publishToDiscordOutTopic = async (
-  message: MessageHandlerProps["message"],
-  event: ScheduledEvent | TestEvent,
-) => {
-  const topicArn = process.env.TOPIC_ARN;
-  if (!topicArn) {
-    console.warn(
-      "Undefined TOPIC_ARN environment variable. Messages will not be sent to SNS.",
-    );
-    return false;
-  }
-
+export const publishDiscordMessage = async ({
+  message,
+  topicArn,
+  event,
+}: Props) => {
   // By default, test events will not be processed. However, test events can override this behavior.
-  if (!isTestEvent(event) || event.processMessage) {
+  if (!event || !isTestEvent(event) || event.processMessage) {
     const success = await publishMessage({
       TopicArn: topicArn,
       Message: JSON.stringify(message),
@@ -30,7 +31,6 @@ export const publishToDiscordOutTopic = async (
       MessageGroupId: message.author.id,
     });
 
-    // Everything worked
     if (success) {
       return true;
     }

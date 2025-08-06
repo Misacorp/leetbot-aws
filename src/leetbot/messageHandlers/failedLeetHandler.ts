@@ -2,7 +2,7 @@ import { isLeeb } from "../util/dateTime";
 import { findEmoji } from "../util/emoji";
 import type { MessageHandlerProps } from "../../types";
 import { isTestEvent } from "../util/lambda";
-import { publishToDiscordOutTopic } from "./publishToDiscordOutTopic";
+import { publishDiscordMessage } from "./publishDiscordMessage";
 
 /**
  * Handles LEET messages sent during the 13:38 minute
@@ -34,7 +34,7 @@ export const failedLeetHandler = async ({
       return;
     }
 
-    const success = await publishToDiscordOutTopic(message, event);
+    const success = await publishDiscordMessage(message, event);
     if (!success) {
       return;
     }
