@@ -80,6 +80,7 @@ export class DiscordBot extends Construct {
       environment: {
         TOKEN_SECRET_ID: secret.secretName,
         TOPIC_ARN: this.discordBotOutTopic.topicArn,
+        TABLE_NAME: props.table.tableName,
       },
       reservedConcurrentExecutions: 1,
       description:
