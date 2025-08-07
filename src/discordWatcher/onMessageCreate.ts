@@ -1,0 +1,78 @@
+import type { ScheduledEvent } from "aws-lambda";
+import { type GuildMember } from "/opt/nodejs/discord";
+import type { PartialDiscordMessage, TestEvent } from "../types";
+import { publishDiscordMessage } from "../messageEvaluator/publishDiscordMessage";
+
+/**
+ * Handles message creation events in Discord
+ * @param message Message created
+ * @param event   Event that started the Discord watcher
+ */
+export const onMessageCreate = async (
+  message: PartialDiscordMessage,
+  event: ScheduledEvent | TestEvent,
+) => {
+  if (message.partial) {
+    try {
+      await message.fetch();
+    } catch {
+      console.warn("Could not fetch message", message.id);
+    }
+  }
+
+  // Fetch author user object if partial or uncached
+  let authorUser = message.author;
+  if (!authorUser || authorUser.partial) {
+    try {
+      authorUser = await message.client.users.fetch(message.authorId);
+    } catch {
+      console.warn("Failed to fetch user", message.authorId);
+    }
+  }
+
+  // Fetch guild-specific member data
+  let guildMember: GuildMember | undefined;
+  if (message.guild) {
+    try {
+      guildMember = await message.guild.members.fetch(authorUser.id);
+    } catch {
+      console.warn("Failed to fetch guild member", authorUser.id);
+    }
+  }
+
+  // Minimal serializable JSON payload
+  const payload: Parameters<typeof publishDiscordMessage>[0] = {
+    message: {
+      id: message.id,
+      createdTimestamp: message.createdTimestamp,
+      channelId: message.channelId,
+      content: message.content,
+      author: {
+        id: authorUser.id,
+        username: authorUser.username,
+        discriminator: authorUser.discriminator,
+        avatar: authorUser.avatar,
+        avatarUrl: authorUser.avatarURL({
+          forceStatic: true,
+          extension: "png",
+        }),
+      },
+      member: guildMember && {
+        displayName: guildMember.displayName,
+        avatarUrl: guildMember.displayAvatarURL({ forceStatic: true }),
+      },
+      guild: message.guild,
+    },
+
+    topicArn: process.env.TOPIC_ARN,
+    event,
+  };
+
+  // Blindly pass all messages to SNS for further processing
+  const success = await publishDiscordMessage(payload);
+
+  if (!success) {
+    // React with a warning emoji if SNS publish failed
+    await message.react("⚠️");
+  }
+};

@@ -4,7 +4,7 @@
  * Unix timestamps like `1697262436284` do not contain any locale information.
  * Dates created from such values will be in the server's timezone (?).
  */
-import { toZonedTime } from "/opt/nodejs/date-fns";
+import { toZonedTime } from "/src/layers/date-fns/nodejs/date-fns";
 
 export { toZonedTime };
 

@@ -1,5 +1,5 @@
 import type { ScheduledEvent } from "aws-lambda";
-import type { Message } from "/opt/nodejs/discord";
+import type { GuildMember, Message } from "/opt/nodejs/discord";
 
 /**
  * Test event for Discord bot.
@@ -15,12 +15,43 @@ export interface TestEvent {
 }
 
 /**
+ * Incoming Discord message.
+ * Extended to match what is actually received. The Discord.js types don't reflect this.
+ */
+export type PartialDiscordMessage = Message & { authorId: string };
+
+/**
+ * Relevant properties of a Discord message.
+ */
+export type MessageSummary = Pick<
+  Message,
+  "createdTimestamp" | "guild" | "id" | "content" | "channelId"
+>;
+
+/**
+ * Relevant properties of the message author type.
+ */
+export type AuthorSummary = Pick<
+  Message["author"],
+  "id" | "username" | "discriminator" | "avatar"
+> & {
+  avatarUrl: string | null;
+};
+
+/**
+ * Relevant and interesting properties of the `GuildMember` type.
+ */
+export type GuildMemberSummary = Pick<GuildMember, "displayName"> & {
+  avatarUrl: string;
+};
+
+/**
  * Discord message, with relevant properties picked.
  */
-export type DiscordMessage = Pick<
-  Message,
-  "createdTimestamp" | "react" | "guild" | "id" | "author" | "content"
->;
+export type DiscordMessage = MessageSummary & {
+  author: AuthorSummary;
+  member: GuildMemberSummary | undefined;
+};
 
 /**
  * Props for functions that handle Discord messages

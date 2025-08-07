@@ -1,6 +1,6 @@
 import { isLeeb, isLeet } from "../util/dateTime";
 import { findEmoji } from "../util/emoji";
-import type { MessageHandlerProps } from "../../types";
+import type { MessageHandlerProps } from "../types";
 
 /**
  * Handles LEET and LEEB messages when they are not sent at the correct time

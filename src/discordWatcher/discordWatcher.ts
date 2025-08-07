@@ -1,9 +1,10 @@
 import type { Context, ScheduledEvent } from "aws-lambda";
-import { Client, Events, IntentsBitField } from "/opt/nodejs/discord";
-import keepAlive from "./util/lambda";
-import { getSecret } from "./util/secrets";
-import type { TestEvent } from "../types";
-import { publishDiscordMessage } from "./messageHandlers/publishDiscordMessage";
+import { Client, Events, IntentsBitField, Partials } from "/opt/nodejs/discord";
+import keepAlive from "../util/lambda";
+import { getSecret } from "../util/secrets";
+import type { PartialDiscordMessage, TestEvent } from "../types";
+import { onClientReady } from "./onClientReady";
+import { onMessageCreate } from "./onMessageCreate";
 
 declare global {
   namespace NodeJS {
@@ -29,7 +30,14 @@ export const handler = async (
     intents: new IntentsBitField()
       .add(IntentsBitField.Flags.Guilds)
       .add(IntentsBitField.Flags.GuildMessages)
-      .add(IntentsBitField.Flags.MessageContent),
+      .add(IntentsBitField.Flags.MessageContent)
+      .add(IntentsBitField.Flags.GuildMembers),
+    partials: [
+      Partials.Message,
+      Partials.User,
+      Partials.Channel,
+      Partials.GuildMember,
+    ],
     closeTimeout: 300,
   });
 
@@ -42,21 +50,14 @@ export const handler = async (
   console.info("Keeping the bot alive…");
   await keepAlive(event, context);
 
+  // Remove all listeners before quitting
+  console.info("Removing event listeners…");
+  client.removeAllListeners();
+
   console.info("Logging out of Discord…");
   await client.destroy();
 
   console.info("Exiting Lambda…");
-};
-
-/**
- * Client ready handler
- * @param client Discord client
- */
-const onClientReady = async (client: Client<true>) => {
-  console.info(`Logged in to Discord as ${client.user.tag}.`);
-
-  const guild = await client.guilds.fetch("215386000132669440");
-  console.info("Guild name:", guild.name);
 };
 
 /**
@@ -78,8 +79,8 @@ const initEventHandlers = (
   });
 
   client.on(Events.MessageCreate, (message) => {
-    // Blindly pass all messages to SNS for further processing
-    const topicArn = process.env.TOPIC_ARN;
-    void publishDiscordMessage({ message, topicArn, event });
+    // Type-casting here because Discord actually returns an object resembling a `PartialDiscordMessage`,
+    // but the Discord.js types don't account for this.
+    void onMessageCreate(message as unknown as PartialDiscordMessage, event);
   });
 };

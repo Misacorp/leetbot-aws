@@ -1,6 +1,6 @@
 import { findEmoji } from "../util/emoji";
 import { isLeeb } from "../util/dateTime";
-import type { MessageHandlerProps } from "../../types";
+import type { MessageHandlerProps } from "../types";
 import { isTestEvent } from "../util/lambda";
 import { publishDiscordMessage } from "./publishDiscordMessage";
 

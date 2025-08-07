@@ -1,5 +1,5 @@
 import type { Context, ScheduledEvent } from "aws-lambda";
-import type { MessageHandlerProps, TestEvent } from "../../types";
+import type { MessageHandlerProps, TestEvent } from "../types";
 
 // How long to leave for the function to log out of Discord and exit
 const EXIT_THRESHOLD = 4000;

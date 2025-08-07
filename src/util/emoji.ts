@@ -1,4 +1,4 @@
-import { Guild, type GuildEmoji } from "/opt/nodejs/discord";
+import { type Guild, type GuildEmoji } from "/opt/nodejs/discord";
 
 export const fallbackEmoji = "❔";
 

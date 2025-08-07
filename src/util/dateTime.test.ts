@@ -1,6 +1,6 @@
 import { isLeeb, isLeet, toZonedTime } from "./dateTime";
-import leetMessageJson from "../../../test/__mocks__/message_leet.json";
-import leebMessageJson from "../../../test/__mocks__/message_leeb.json";
+import leetMessageJson from "../../test/__mocks__/message_leet.json";
+import leebMessageJson from "../../test/__mocks__/message_leeb.json";
 import { type Message } from "/opt/nodejs/discord";
 
 const leetMessage: Message = leetMessageJson as unknown as Message;

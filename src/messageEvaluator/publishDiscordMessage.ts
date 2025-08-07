@@ -1,5 +1,5 @@
 import type { ScheduledEvent } from "aws-lambda";
-import type { MessageHandlerProps, TestEvent } from "../../types";
+import type { MessageHandlerProps, TestEvent } from "../types";
 import { isTestEvent } from "../util/lambda";
 import { publishMessage } from "../util/sns";
 
@@ -36,7 +36,5 @@ export const publishDiscordMessage = async ({
     }
   }
 
-  // React with a warning emoji if SNS publish failed
-  await message.react("⚠️");
   return false;
 };
