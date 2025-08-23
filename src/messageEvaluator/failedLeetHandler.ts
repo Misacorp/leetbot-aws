@@ -18,7 +18,7 @@ export const failedLeetHandler = async ({
   const leebEmoji = findEmoji(message.guild, "leeb");
 
   if (!leetEmoji || !leebEmoji) {
-    console.error(
+    logger.error(
       'Could not find a "leet" or "leeb" emoji. This function will terminate.',
     );
     throw new Error("Could not find emojis");
@@ -42,7 +42,7 @@ export const failedLeetHandler = async ({
     // React with the LEEB emoji on success
     await message.react(leebEmoji);
 
-    console.info(
+    logger.info(
       `Reacted to FAILED_LEET from user ${
         message.author.username
       } at ${new Date(message.createdTimestamp).toLocaleTimeString("fi-FI")}.`,

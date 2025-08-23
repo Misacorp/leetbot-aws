@@ -1,3 +1,4 @@
+import logger from "@logger";
 import type { Context, ScheduledEvent } from "aws-lambda";
 import { Client, Events, IntentsBitField, Partials } from "/opt/nodejs/discord";
 import keepAlive from "@/src/util/lambda";
@@ -44,20 +45,20 @@ export const handler = async (
   initEventHandlers(client, event);
 
   // Start the bot lifecycle
-  console.info("Logging in to Discord…");
+  logger.info("Logging in to Discord…");
   await client.login(token);
 
-  console.info("Keeping the bot alive…");
+  logger.info("Keeping the bot alive…");
   await keepAlive(event, context);
 
   // Remove all listeners before quitting
-  console.info("Removing event listeners…");
+  logger.info("Removing event listeners…");
   client.removeAllListeners();
 
-  console.info("Logging out of Discord…");
+  logger.info("Logging out of Discord…");
   await client.destroy();
 
-  console.info("Exiting Lambda…");
+  logger.info("Exiting Lambda…");
 };
 
 /**
@@ -74,8 +75,8 @@ const initEventHandlers = (
   });
 
   client.once(Events.Error, (error) => {
-    console.warn("Client exited with the following error:");
-    console.error(error);
+    logger.warn("Client exited with the following error:");
+    logger.error(error);
   });
 
   client.on(Events.MessageCreate, (message) => {

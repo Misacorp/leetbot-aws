@@ -1,3 +1,4 @@
+import logger from "@logger";
 import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
 import type { DiscordBotOutPayload } from "@/src/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
@@ -13,20 +14,20 @@ export const handler = async (event: SQSEvent) => {
     const payload = JSON.parse(snsRecord.Message) as DiscordBotOutPayload;
     const { message, event } = payload;
 
-    console.debug("Received this Discord message", message);
-    console.debug("Received this event", event);
+    logger.debug({ message }, "Received this Discord message");
+    logger.debug({ event }, "Received this event");
 
     if (!message.guild) {
-      console.warn("Message has no 'guild' property. Exiting…");
+      logger.warn("Message has no 'guild' property. Exiting…");
       return;
     }
 
-    console.debug("Getting guild information from DynamoDB…");
+    logger.debug("Getting guild information from DynamoDB…");
     const guild = await getGuildById(message.guild.id);
-    console.debug("Guild retrieved:", guild);
+    logger.debug({ guild }, "Guild retrieved:");
 
     if (!guild) {
-      console.warn(`No guild with id ${message.guild.id} found. Exiting…`);
+      logger.warn(`No guild with id ${message.guild.id} found. Exiting…`);
       return;
     }
 

@@ -1,3 +1,4 @@
+import logger from "@logger";
 import type { ScheduledEvent } from "aws-lambda";
 import { type GuildMember } from "/opt/nodejs/discord";
 import type { PartialDiscordMessage, TestEvent } from "@/src/types";
@@ -16,7 +17,7 @@ export const onMessageCreate = async (
     try {
       await message.fetch();
     } catch {
-      console.warn("Could not fetch message", message.id);
+      logger.warn(`Could not fetch message with id ${message.id}`);
     }
   }
 
@@ -26,7 +27,7 @@ export const onMessageCreate = async (
     try {
       authorUser = await message.client.users.fetch(message.authorId);
     } catch {
-      console.warn("Failed to fetch user", message.authorId);
+      logger.warn(`Failed to fetch user with authorId ${message.authorId}`);
     }
   }
 
@@ -36,7 +37,7 @@ export const onMessageCreate = async (
     try {
       guildMember = await message.guild.members.fetch(authorUser.id);
     } catch {
-      console.warn("Failed to fetch guild member", authorUser.id);
+      logger.warn(`Failed to fetch guild member with id ${authorUser.id}`);
     }
   }
 

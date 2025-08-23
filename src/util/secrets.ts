@@ -1,3 +1,4 @@
+import logger from "@logger";
 import { SecretsManager } from "@aws-sdk/client-secrets-manager";
 
 /**
@@ -5,7 +6,7 @@ import { SecretsManager } from "@aws-sdk/client-secrets-manager";
  * @param SecretId Secret id
  */
 const getSecret = async (SecretId: string): Promise<string> => {
-  console.info("Getting secret from Secrets Manager…");
+  logger.info("Getting secret from Secrets Manager…");
 
   const secretsManager = new SecretsManager();
   const tokenResponse = await secretsManager.getSecretValue({
@@ -16,7 +17,7 @@ const getSecret = async (SecretId: string): Promise<string> => {
   if (!token) {
     throw new Error("Unable to secret from Secrets Manager");
   }
-  console.info("Secret fetched successfully.");
+  logger.info("Secret fetched successfully.");
 
   return token;
 };

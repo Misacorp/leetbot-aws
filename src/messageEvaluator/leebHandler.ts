@@ -1,3 +1,4 @@
+import logger from "@logger";
 import { findEmoji } from "@/src/util/emoji";
 import { isLeeb } from "@/src/util/dateTime";
 import type { MessageHandlerProps } from "@/src/types";
@@ -15,7 +16,7 @@ export const leebHandler = async ({ message, event }: MessageHandlerProps) => {
   const leebEmoji = findEmoji(message.guild, "leeb");
 
   if (!leebEmoji) {
-    console.error(
+    logger.error(
       'Could not find a "leeb" emoji. This function will terminate.',
     );
     throw new Error("Could not find emoji");
@@ -39,7 +40,7 @@ export const leebHandler = async ({ message, event }: MessageHandlerProps) => {
     // React with the LEEB emoji on success
     await message.react(leebEmoji);
 
-    console.info(
+    logger.info(
       `Reacted to LEEB from user ${message.author.username} at ${new Date(
         message.createdTimestamp,
       ).toLocaleTimeString("fi-FI")}.`,

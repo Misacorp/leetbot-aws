@@ -1,3 +1,4 @@
+import logger from "@logger";
 import { type Client } from "/opt/nodejs/discord";
 import type { Emoji, Guild } from "@/src/repository/guild/types";
 import { upsertGuild } from "@/src/repository/guild/upsertGuild";
@@ -9,12 +10,12 @@ const GUILD_ID = "215386000132669440";
  * @param client Discord client
  */
 export const onClientReady = async (client: Client<true>) => {
-  console.info(`Logged in to Discord as ${client.user.tag}.`);
+  logger.info(`Logged in to Discord as ${client.user.tag}.`);
 
   const discordGuild = await client.guilds.fetch(GUILD_ID);
-  console.info("Guild name:", discordGuild.name);
+  logger.info(`Guild name: ${discordGuild.name}`);
 
-  console.debug("Gathering guild emojis…");
+  logger.info("Gathering guild emojis…");
   const emojiCollection = await discordGuild.emojis.fetch();
   const emojis: Emoji[] = Array.from(emojiCollection).map(([_, emoji]) => ({
     name: emoji.name,
@@ -30,6 +31,7 @@ export const onClientReady = async (client: Client<true>) => {
     emojis,
   };
 
-  console.info("Saving guild info to database…", guild);
+  logger.info("Saving guild information to database…");
+  logger.debug({ guild });
   await upsertGuild(guild);
 };

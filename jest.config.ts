@@ -11,6 +11,7 @@ module.exports = {
   transformIgnorePatterns: ["^.+\\.js$"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^@logger$": "<rootDir>/src/util/logger",
     "^/opt/nodejs/discord": "<rootDir>/src/layers/discord/nodejs/discord",
     "^/opt/nodejs/date-fns": "<rootDir>/src/layers/date-fns/nodejs/date-fns",
   },

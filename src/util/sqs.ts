@@ -1,3 +1,4 @@
+import logger from "@logger";
 import {
   SQSClient,
   SendMessageCommand,
@@ -15,19 +16,18 @@ let sqsClient: SQSClient;
  */
 export const getSqsClient = (props?: Props) => {
   if (sqsClient) {
-    console.info("Using existing SQS client");
+    logger.info("Using existing SQS client");
     return sqsClient;
   }
 
-  console.info("No SQS client. Creating a new one...");
+  logger.info("No SQS client. Creating a new one...");
 
   // Create SQS client
   let awsRegion = props?.region ?? process.env.AWS_REGION;
   const defaultRegion = "eu-north-1";
   if (!awsRegion) {
-    console.warn(
-      "AWS_REGION environment variable is undefined. Using default region",
-      defaultRegion,
+    logger.warn(
+      `AWS_REGION environment variable is undefined. Using default region ${defaultRegion}`,
     );
     awsRegion = defaultRegion;
   }
@@ -47,8 +47,8 @@ export const sendMessage = async (payload: SendMessageCommandInput) => {
     await getSqsClient().send(new SendMessageCommand(payload));
 
     return true;
-  } catch (err) {
-    console.error("Unable to send SQS message due to an error", err);
+  } catch (error) {
+    logger.error({ error }, "Unable to send SQS message due to an error");
     return false;
   }
 };
