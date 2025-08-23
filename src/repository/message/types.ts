@@ -1,12 +1,4 @@
-export const MessageTypes = {
-  LEET: "leet",
-  LEEB: "leeb",
-  FAILED_LEET: "failed_leet",
-  OTHER: "other",
-  TEST: "test",
-} as const;
-
-export type MessageType = (typeof MessageTypes)[keyof typeof MessageTypes];
+import { MessageType } from "../../types";
 
 export interface Message {
   messageType: MessageType;

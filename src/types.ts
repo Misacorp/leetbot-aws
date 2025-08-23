@@ -70,3 +70,13 @@ export interface MessageHandlerProps {
    */
   readonly event: ScheduledEvent | TestEvent;
 }
+
+export const MessageTypes = {
+  LEET: "leet",
+  LEEB: "leeb",
+  FAILED_LEET: "failed_leet",
+  OTHER: "other",
+  TEST: "test",
+} as const;
+
+export type MessageType = (typeof MessageTypes)[keyof typeof MessageTypes];

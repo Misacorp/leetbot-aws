@@ -1,11 +1,10 @@
 import { isLeet } from "../util/dateTime";
 import { findEmoji } from "../util/emoji";
-import type { DiscordMessage } from "../types";
+import { type DiscordMessage, MessageTypes } from "../types";
 import { Guild } from "../repository/guild/types";
 import { createMessage } from "../repository/message/createMessage";
-import { MessageTypes } from "../repository/message/types";
 import { upsertUser } from "../repository/user/upsertUser";
-import { getUserMessagesByDate } from "../repository/message/getUserMessagesByDate";
+import { hasAlreadyPostedOnDate } from "./util";
 
 interface LeetHandlerProps {
   message: DiscordMessage;
@@ -52,22 +51,19 @@ export const leetHandler = async ({
   }
 
   // Check if the user has already posted a message today
-  const existingMessages = await getUserMessagesByDate(
-    message.author.id,
-    new Date(message.createdTimestamp),
-  );
-
-  if (existingMessages.length > 0) {
+  if (
+    await hasAlreadyPostedOnDate(message.author.id, message.createdTimestamp)
+  ) {
     console.info(
-      `❌️The user has already posted ${existingMessages.length} message(s) today. Exiting leet handler…`,
+      `❌️The user has already posted a game message today. Exiting leet handler…`,
     );
     return;
   }
 
-  console.info("✅ That was a leet message! Saving it to the database…");
+  console.debug("Saving message to the database…");
 
   // Save message and user information
-  const promises = Promise.allSettled([
+  const [messageResult, userResult] = await Promise.allSettled([
     createMessage({
       messageType: MessageTypes.LEET,
       createdAt: new Date(message.createdTimestamp).toISOString(),
@@ -86,8 +82,6 @@ export const leetHandler = async ({
     ),
   ]);
 
-  const [messageResult, userResult] = await promises;
-
   if (messageResult.status === "rejected") {
     throw new Error(`Failed to create message: ${messageResult.reason}`);
   }
@@ -97,7 +91,7 @@ export const leetHandler = async ({
   }
 
   console.info(
-    `Saved LEET from user ${message.author.username} at ${new Date(
+    `✅Saved LEET from user ${message.author.username} at ${new Date(
       message.createdTimestamp,
     ).toLocaleTimeString("fi-FI")}.`,
   );
