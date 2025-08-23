@@ -89,6 +89,7 @@ export class DiscordBot extends Construct {
 
     // Grant Lambda the permissions it needs
     secret.grantRead(this.discordWatcher);
+    props.table.grantWriteData(this.discordWatcher);
     this.discordBotOutTopic.grantPublish(this.discordWatcher);
 
     // Export Lambda function's name to cdk-outputs.json.

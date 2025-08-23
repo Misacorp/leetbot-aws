@@ -1,47 +1,104 @@
 import { isLeet } from "../util/dateTime";
 import { findEmoji } from "../util/emoji";
-import type { MessageHandlerProps } from "../types";
-import { isTestEvent } from "../util/lambda";
-import { publishDiscordMessage } from "./publishDiscordMessage";
+import type { DiscordMessage } from "../types";
+import { Guild } from "../repository/guild/types";
+import { createMessage } from "../repository/message/createMessage";
+import { MessageTypes } from "../repository/message/types";
+import { upsertUser } from "../repository/user/upsertUser";
+import { getUserMessagesByDate } from "../repository/message/getUserMessagesByDate";
+
+interface LeetHandlerProps {
+  message: DiscordMessage;
+  guild: Guild;
+  alwaysAllowLeet?: boolean;
+}
 
 /**
  * Handles LEET messages
- * @param message  Message
- * @param event    Lambda event
  */
-export const leetHandler = async ({ message, event }: MessageHandlerProps) => {
+export const leetHandler = async ({
+  message,
+  guild,
+  alwaysAllowLeet = false,
+}: LeetHandlerProps) => {
   // Find LEET emoji
-  const leetEmoji = findEmoji(message.guild, "leet");
+  const leetEmoji = findEmoji(guild, "leet");
 
   if (!leetEmoji) {
-    console.error(
-      'Could not find a "leet" emoji. This function will terminate.',
-    );
-    throw new Error("Could not find emoji");
+    throw new Error("Could not find 'leet' emoji");
   }
 
   // Check message content
   const content = message.content.trim().toLowerCase();
+  console.debug("leetHandler extracted message content:", content);
 
-  if (content === "leet" || content === leetEmoji.toString()) {
-    // Verify the timestamp. A test event can bypass this check.
-    const alwaysAllowLeet = isTestEvent(event) && event.alwaysAllowLeet;
-    if (!isLeet(message.createdTimestamp) && !alwaysAllowLeet) {
-      return;
-    }
-
-    const success = await publishDiscordMessage(message, event);
-    if (!success) {
-      return;
-    }
-
-    // React with the LEET emoji on success
-    await message.react(leetEmoji);
-
-    console.info(
-      `Reacted to LEET from user ${message.author.username} at ${new Date(
-        message.createdTimestamp,
-      ).toLocaleTimeString("fi-FI")}.`,
+  if (!(content === "leet" || content.includes(leetEmoji.identifier))) {
+    console.debug(
+      "Message content does not warrant processing the LEET handler any further. Exiting leet handler…",
     );
+    return;
   }
+
+  // Verify the timestamp
+  if (!isLeet(message.createdTimestamp)) {
+    console.info("Received LEET with a non-LEET timestamp.");
+
+    if (alwaysAllowLeet) {
+      console.info("This is a test event where LEET is always allowed.");
+    } else {
+      console.info("❌ Not allowed. Exiting leet handler…");
+      return;
+    }
+  }
+
+  // Check if the user has already posted a message today
+  const existingMessages = await getUserMessagesByDate(
+    message.author.id,
+    new Date(message.createdTimestamp),
+  );
+
+  if (existingMessages.length > 0) {
+    console.info(
+      `❌️The user has already posted ${existingMessages.length} message(s) today. Exiting leet handler…`,
+    );
+    return;
+  }
+
+  console.info("✅ That was a leet message! Saving it to the database…");
+
+  // Save message and user information
+  const promises = Promise.allSettled([
+    createMessage({
+      messageType: MessageTypes.LEET,
+      createdAt: new Date(message.createdTimestamp).toISOString(),
+      guildId: guild.id,
+      id: message.id,
+      userId: message.author.id,
+    }),
+    upsertUser(
+      {
+        id: message.author.id,
+        username: message.author.username,
+        avatarUrl: message.member?.avatarUrl ?? message.author.avatarUrl,
+        displayName: message.member?.displayName ?? null,
+      },
+      guild.id,
+    ),
+  ]);
+
+  const [messageResult, userResult] = await promises;
+
+  if (messageResult.status === "rejected") {
+    throw new Error(`Failed to create message: ${messageResult.reason}`);
+  }
+
+  if (userResult.status === "rejected") {
+    console.warn("Failed to upsert user:", userResult.reason);
+  }
+
+  console.info(
+    `Saved LEET from user ${message.author.username} at ${new Date(
+      message.createdTimestamp,
+    ).toLocaleTimeString("fi-FI")}.`,
+  );
 };

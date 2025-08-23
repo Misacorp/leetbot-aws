@@ -1,4 +1,4 @@
-import { type Guild, type GuildEmoji } from "/opt/nodejs/discord";
+import type { Guild, Emoji } from "../repository/guild/types";
 
 export const fallbackEmoji = "❔";
 
@@ -8,8 +8,5 @@ export const fallbackEmoji = "❔";
  * @param guild Guild
  * @param name  Emoji name
  */
-export const findEmoji = (
-  guild: Guild | null,
-  name: string,
-): GuildEmoji | undefined =>
-  guild?.emojis.cache.find((emoji) => emoji.name === name);
+export const findEmoji = (guild: Guild, name: string): Emoji | undefined =>
+  guild.emojis.find((emoji) => emoji.name === name);

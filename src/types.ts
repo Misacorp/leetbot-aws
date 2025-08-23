@@ -3,15 +3,14 @@ import type { GuildMember, Message } from "/opt/nodejs/discord";
 
 /**
  * Test event for Discord bot.
- * When adding properties, include them in the `isTestEvent` function (search for it).
+ * When adding properties, include them in the `isTestEvent` function.
+ * @see isTestEvent
  */
 export interface TestEvent {
   timeoutOverrideMs?: number;
   alwaysAllowLeet?: boolean;
   alwaysAllowLeeb?: boolean;
   alwaysAllowFailedLeet?: boolean;
-  // Should the message be sent for further processing and storage?
-  processMessage?: boolean;
 }
 
 /**
@@ -53,8 +52,14 @@ export type DiscordMessage = MessageSummary & {
   member: GuildMemberSummary | undefined;
 };
 
+export interface DiscordBotOutPayload {
+  message: DiscordMessage;
+  event: null | TestEvent;
+}
+
 /**
  * Props for functions that handle Discord messages
+ * @deprecated
  */
 export interface MessageHandlerProps {
   readonly message: DiscordMessage;

@@ -1,11 +1,11 @@
 import type { ScheduledEvent } from "aws-lambda";
-import type { MessageHandlerProps, TestEvent } from "../types";
+import type { DiscordBotOutPayload, DiscordMessage, TestEvent } from "../types";
 import { isTestEvent } from "../util/lambda";
 import { publishMessage } from "../util/sns";
 
 interface Props {
   // Discord message
-  readonly message: MessageHandlerProps["message"];
+  readonly message: DiscordMessage;
   readonly topicArn: string;
   readonly event?: ScheduledEvent | TestEvent;
 }
@@ -13,28 +13,26 @@ interface Props {
 /**
  * Sends a message to the Discord outgoing SNS topic
  * @param message Discord message
- * @param topicArn
- * @param event   Lambda event
+ * @param topicArn SNS topic ARN
+ * @param event Event that triggered the Lambda function
  */
 export const publishDiscordMessage = async ({
   message,
   topicArn,
   event,
 }: Props) => {
-  // By default, test events will not be processed. However, test events can override this behavior.
-  if (!event || !isTestEvent(event) || event.processMessage) {
-    const success = await publishMessage({
-      TopicArn: topicArn,
-      Message: JSON.stringify(message),
-      MessageDeduplicationId: message.id,
-      // Ensure messages from the same author are processed to prevent abuse
-      MessageGroupId: message.author.id,
-    });
+  const payload: DiscordBotOutPayload = {
+    message,
+    event: isTestEvent(event) ? event : null,
+  };
 
-    if (success) {
-      return true;
-    }
-  }
+  const success = await publishMessage({
+    TopicArn: topicArn,
+    Message: JSON.stringify(payload),
+    MessageDeduplicationId: message.id,
+    // Ensure messages from the same author are processed to prevent abuse
+    MessageGroupId: message.author.id,
+  });
 
-  return false;
+  return Boolean(success);
 };

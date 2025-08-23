@@ -28,14 +28,20 @@ const keepAlive = async (
 export default keepAlive;
 
 /**
- * Determines if the event argument of a Lambda function was a test event.
+ * Determines if the event that started the Discord watcher Lambda is a test event.
  * @param event Event
  */
 export const isTestEvent = (
-  event: MessageHandlerProps["event"],
-): event is TestEvent =>
-  "timeoutOverrideMs" in event ||
-  "alwaysAllowLeet" in event ||
-  "alwaysAllowLeeb" in event ||
-  "alwaysAllowFailedLeet" in event ||
-  "processMessage" in event;
+  event: ScheduledEvent | TestEvent | undefined,
+): event is TestEvent => {
+  if (!event) {
+    return false;
+  }
+
+  return (
+    "timeoutOverrideMs" in event ||
+    "alwaysAllowLeet" in event ||
+    "alwaysAllowLeeb" in event ||
+    "alwaysAllowFailedLeet" in event
+  );
+};
