@@ -1,5 +1,5 @@
 import { PutCommand, type PutCommandOutput } from "@aws-sdk/lib-dynamodb";
-import { getDbClient } from "../util";
+import { getDbClient } from "@/src/repository/util";
 import type { Guild, GuildDbo } from "./types";
 
 const dbClient = getDbClient();

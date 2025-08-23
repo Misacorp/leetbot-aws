@@ -1,5 +1,5 @@
-import { getDbClient } from "../util";
 import { PutCommand, type PutCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { getDbClient } from "@/src/repository/util";
 import type { Message, MessageDbo } from "./types";
 
 declare global {

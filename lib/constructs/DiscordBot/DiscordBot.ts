@@ -5,12 +5,12 @@ import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources"; // Add this import
-import * as logs from "aws-cdk-lib/aws-logs"; // Add this import at the top
+import * as logs from "aws-cdk-lib/aws-logs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
+import { getRemovalPolicy } from "@/src/util/infra";
+import { type ITable } from "@/lib/constructs/Table";
 import type { ILambdaLayers } from "./LambdaLayers";
-import { getRemovalPolicy } from "../../../src/util/infra";
-import { type ITable } from "../Table";
 
 interface Props {
   readonly layers: ILambdaLayers;

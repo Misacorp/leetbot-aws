@@ -1,6 +1,6 @@
 import { type Client } from "/opt/nodejs/discord";
-import type { Emoji, Guild } from "../repository/guild/types";
-import { upsertGuild } from "../repository/guild/upsertGuild";
+import type { Emoji, Guild } from "@/src/repository/guild/types";
+import { upsertGuild } from "@/src/repository/guild/upsertGuild";
 
 const GUILD_ID = "215386000132669440";
 

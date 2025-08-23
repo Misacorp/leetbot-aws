@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
 import * as ddb from "aws-cdk-lib/aws-dynamodb";
-import { getRemovalPolicy } from "../../src/util/infra";
 import { type Grant, type IGrantable } from "aws-cdk-lib/aws-iam";
+import { getRemovalPolicy } from "@/src/util/infra";
 
 export interface ITable {
   grantReadData: (grantee: IGrantable) => Grant;

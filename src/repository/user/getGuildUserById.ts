@@ -1,5 +1,5 @@
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import { getDbClient } from "../util";
+import { getDbClient } from "@/src/repository/util";
 import { User } from "./types";
 
 declare global {

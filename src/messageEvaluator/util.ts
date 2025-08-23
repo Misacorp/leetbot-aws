@@ -1,5 +1,5 @@
-import { getUserMessagesByDate } from "../repository/message/getUserMessagesByDate";
-import { MessageType, MessageTypes } from "../types";
+import { getUserMessagesByDate } from "@/src/repository/message/getUserMessagesByDate";
+import { MessageType, MessageTypes } from "@/src/types";
 
 /**
  * Determines if a message type is related to the "Leet Game".

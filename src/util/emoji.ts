@@ -1,4 +1,4 @@
-import type { Guild, Emoji } from "../repository/guild/types";
+import type { Guild, Emoji } from "@/src/repository/guild/types";
 
 export const fallbackEmoji = "❔";
 

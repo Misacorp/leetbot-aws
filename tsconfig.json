@@ -22,6 +22,7 @@
     "typeRoots": ["./node_modules/@types"],
     "baseUrl": "./",
     "paths": {
+      "@/*": ["./*"],
       "/opt/nodejs/discord": ["src/layers/discord/nodejs/discord"],
       "/opt/nodejs/date-fns": ["src/layers/date-fns/nodejs/date-fns"]
     },

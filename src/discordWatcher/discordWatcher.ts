@@ -1,8 +1,8 @@
 import type { Context, ScheduledEvent } from "aws-lambda";
 import { Client, Events, IntentsBitField, Partials } from "/opt/nodejs/discord";
-import keepAlive from "../util/lambda";
-import { getSecret } from "../util/secrets";
-import type { PartialDiscordMessage, TestEvent } from "../types";
+import keepAlive from "@/src/util/lambda";
+import { getSecret } from "@/src/util/secrets";
+import type { PartialDiscordMessage, TestEvent } from "@/src/types";
 import { onClientReady } from "./onClientReady";
 import { onMessageCreate } from "./onMessageCreate";
 

@@ -1,7 +1,11 @@
 import type { ScheduledEvent } from "aws-lambda";
-import type { DiscordBotOutPayload, DiscordMessage, TestEvent } from "../types";
-import { isTestEvent } from "../util/lambda";
-import { publishMessage } from "../util/sns";
+import type {
+  DiscordBotOutPayload,
+  DiscordMessage,
+  TestEvent,
+} from "@/src/types";
+import { isTestEvent } from "@/src/util/lambda";
+import { publishMessage } from "@/src/util/sns";
 
 interface Props {
   // Discord message

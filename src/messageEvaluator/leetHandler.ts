@@ -1,9 +1,9 @@
-import { isLeet } from "../util/dateTime";
-import { findEmoji } from "../util/emoji";
-import { type DiscordMessage, MessageTypes } from "../types";
-import { Guild } from "../repository/guild/types";
-import { createMessage } from "../repository/message/createMessage";
-import { upsertUser } from "../repository/user/upsertUser";
+import { isLeet } from "@/src/util/dateTime";
+import { findEmoji } from "@/src/util/emoji";
+import { type DiscordMessage, MessageTypes } from "@/src/types";
+import { Guild } from "@/src/repository/guild/types";
+import { createMessage } from "@/src/repository/message/createMessage";
+import { upsertUser } from "@/src/repository/user/upsertUser";
 import { hasAlreadyPostedOnDate } from "./util";
 
 interface LeetHandlerProps {

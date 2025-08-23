@@ -1,9 +1,9 @@
+import { getUserMessagesByDate } from "@/src/repository/message/getUserMessagesByDate";
+import { MessageTypes } from "@/src/types";
 import { hasAlreadyPostedOnDate } from "./util";
-import { getUserMessagesByDate } from "../repository/message/getUserMessagesByDate";
-import { MessageTypes } from "../types";
 
 // Mock the getUserMessagesByDate function
-jest.mock("../repository/message/getUserMessagesByDate");
+jest.mock("@/src/repository/message/getUserMessagesByDate");
 const mockGetUserMessagesByDate = getUserMessagesByDate as jest.MockedFunction<
   typeof getUserMessagesByDate
 >;

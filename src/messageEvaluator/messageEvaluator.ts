@@ -1,6 +1,6 @@
 import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
-import type { DiscordBotOutPayload, DiscordMessage } from "../types";
-import { getGuildById } from "../repository/guild/getGuildById";
+import type { DiscordBotOutPayload } from "@/src/types";
+import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { leetHandler } from "./leetHandler";
 
 /**
