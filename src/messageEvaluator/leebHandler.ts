@@ -1,49 +1,71 @@
-import logger from "@logger";
-import { findEmoji } from "@/src/util/emoji";
+import baseLogger from "@logger";
 import { isLeeb } from "@/src/util/dateTime";
-import type { MessageHandlerProps } from "@/src/types";
-import { isTestEvent } from "@/src/util/lambda";
-import { publishDiscordMessage } from "./publishDiscordMessage";
+import { findEmoji } from "@/src/util/emoji";
+import { type DiscordMessage, MessageTypes } from "@/src/types";
+import { Guild } from "@/src/repository/guild/types";
+import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
+
+interface LeebHandlerProps {
+  message: DiscordMessage;
+  guild: Guild;
+  alwaysAllowLeeb?: boolean;
+  skipUniquenessCheck?: boolean;
+}
+
+const logger = baseLogger.child({ function: "leebHandler" });
 
 /**
  * Handles LEEB messages
- * @param message   Message
- * @param queueUrl  SQS queue URL to which messages will be sent
- * @param event     Lambda event
  */
-export const leebHandler = async ({ message, event }: MessageHandlerProps) => {
+export const leebHandler = async ({
+  message,
+  guild,
+  alwaysAllowLeeb = false,
+  skipUniquenessCheck = false,
+}: LeebHandlerProps) => {
   // Find LEEB emoji
-  const leebEmoji = findEmoji(message.guild, "leeb");
-
+  const leebEmoji = findEmoji(guild, "leeb");
   if (!leebEmoji) {
-    logger.error(
-      'Could not find a "leeb" emoji. This function will terminate.',
-    );
-    throw new Error("Could not find emoji");
+    throw new Error("Could not find 'leeb' emoji");
   }
 
   // Check message content
   const content = message.content.trim().toLowerCase();
+  logger.debug({ content }, "leebHandler extracted message content:");
 
-  if (content === "leeb" || content === leebEmoji.toString()) {
-    // Verify the timestamp. A test event can bypass this check.
-    const alwaysAllowLeeb = isTestEvent(event) && event.alwaysAllowLeeb;
-    if (!isLeeb(message.createdTimestamp) && !alwaysAllowLeeb) {
-      return;
-    }
-
-    const success = await publishDiscordMessage(message, event);
-    if (!success) {
-      return;
-    }
-
-    // React with the LEEB emoji on success
-    await message.react(leebEmoji);
-
-    logger.info(
-      `Reacted to LEEB from user ${message.author.username} at ${new Date(
-        message.createdTimestamp,
-      ).toLocaleTimeString("fi-FI")}.`,
+  if (!(content === "leeb" || content.includes(leebEmoji.identifier))) {
+    logger.debug(
+      "Message content does not warrant processing the LEEB handler any further. Exiting leeb handler…",
     );
+    return;
   }
+
+  // Verify the timestamp
+  if (!isLeeb(message.createdTimestamp)) {
+    logger.info("Received LEEB with a non-LEEB timestamp.");
+
+    if (alwaysAllowLeeb) {
+      logger.info("This is a test event where LEEB is always allowed.");
+    } else {
+      logger.info("❌ Not allowed. Exiting leeb handler…");
+      return;
+    }
+  }
+
+  // Check if the user has already posted a message today
+  if (skipUniquenessCheck) {
+    console.info("Skipping uniqueness check…");
+  } else if (
+    await hasAlreadyPostedOnDate(message.author.id, message.createdTimestamp)
+  ) {
+    logger.info(
+      `❌️The user has already posted a game message today. Exiting leeb handler…`,
+    );
+    return;
+  }
+
+  logger.debug("Saving message to the database…");
+
+  // Save message and user information
+  await saveMessageAndUser(message, guild, MessageTypes.LEEB);
 };

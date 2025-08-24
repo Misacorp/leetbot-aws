@@ -1,17 +1,18 @@
-import logger from "@logger";
+import baseLogger from "@logger";
 import { isLeet } from "@/src/util/dateTime";
 import { findEmoji } from "@/src/util/emoji";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
-import { createMessage } from "@/src/repository/message/createMessage";
-import { upsertUser } from "@/src/repository/user/upsertUser";
-import { hasAlreadyPostedOnDate } from "./util";
+import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 
 interface LeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
   alwaysAllowLeet?: boolean;
+  skipUniquenessCheck?: boolean;
 }
+
+const logger = baseLogger.child({ function: "leetHandler" });
 
 /**
  * Handles LEET messages
@@ -20,10 +21,10 @@ export const leetHandler = async ({
   message,
   guild,
   alwaysAllowLeet = false,
+  skipUniquenessCheck = false,
 }: LeetHandlerProps) => {
   // Find LEET emoji
   const leetEmoji = findEmoji(guild, "leet");
-
   if (!leetEmoji) {
     throw new Error("Could not find 'leet' emoji");
   }
@@ -52,7 +53,9 @@ export const leetHandler = async ({
   }
 
   // Check if the user has already posted a message today
-  if (
+  if (skipUniquenessCheck) {
+    console.info("Skipping uniqueness check…");
+  } else if (
     await hasAlreadyPostedOnDate(message.author.id, message.createdTimestamp)
   ) {
     logger.info(
@@ -63,37 +66,5 @@ export const leetHandler = async ({
 
   logger.debug("Saving message to the database…");
 
-  // Save message and user information
-  const [messageResult, userResult] = await Promise.allSettled([
-    createMessage({
-      messageType: MessageTypes.LEET,
-      createdAt: new Date(message.createdTimestamp).toISOString(),
-      guildId: guild.id,
-      id: message.id,
-      userId: message.author.id,
-    }),
-    upsertUser(
-      {
-        id: message.author.id,
-        username: message.author.username,
-        avatarUrl: message.member?.avatarUrl ?? message.author.avatarUrl,
-        displayName: message.member?.displayName ?? null,
-      },
-      guild.id,
-    ),
-  ]);
-
-  if (messageResult.status === "rejected") {
-    throw new Error(`Failed to create message: ${messageResult.reason}`);
-  }
-
-  if (userResult.status === "rejected") {
-    logger.warn("Failed to upsert user:", userResult.reason);
-  }
-
-  logger.info(
-    `✅Saved LEET from user ${message.author.username} at ${new Date(
-      message.createdTimestamp,
-    ).toLocaleTimeString("fi-FI")}.`,
-  );
+  await saveMessageAndUser(message, guild, MessageTypes.LEET);
 };

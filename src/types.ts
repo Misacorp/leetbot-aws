@@ -7,10 +7,16 @@ import type { GuildMember, Message } from "/opt/nodejs/discord";
  * @see isTestEvent
  */
 export interface TestEvent {
+  // Override how long the Discord bot will be online before terminating
   timeoutOverrideMs?: number;
+  // Ignore the timestamp constraint for LEET messages?
   alwaysAllowLeet?: boolean;
+  // Ignore the timestamp constraint for LEEB messages?
   alwaysAllowLeeb?: boolean;
+  // Ignore the timestamp constraint for FAILED_LEET messages?
   alwaysAllowFailedLeet?: boolean;
+  // Do not check if the user has already posted a message today?
+  skipUniquenessCheck?: boolean;
 }
 
 /**

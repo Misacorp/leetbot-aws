@@ -42,6 +42,7 @@ export const isTestEvent = (
     "timeoutOverrideMs" in event ||
     "alwaysAllowLeet" in event ||
     "alwaysAllowLeeb" in event ||
-    "alwaysAllowFailedLeet" in event
+    "alwaysAllowFailedLeet" in event ||
+    "skipUniquenessCheck" in event
   );
 };

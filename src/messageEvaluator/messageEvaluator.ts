@@ -3,6 +3,8 @@ import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
 import type { DiscordBotOutPayload } from "@/src/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { leetHandler } from "./leetHandler";
+import { leebHandler } from "./leebHandler";
+import { failedLeetHandler } from "@/src/messageEvaluator/failedLeetHandler";
 
 /**
  * Handles game-related messages like LEET, LEEB, etc.
@@ -34,7 +36,24 @@ export const handler = async (event: SQSEvent) => {
     // Pass the message to each handler that would be interested in processing it.
     // Handlers can be mutually exclusive, or they can have overlapping functionality.
     return Promise.all([
-      leetHandler({ message, guild, alwaysAllowLeet: event?.alwaysAllowLeet }),
+      leetHandler({
+        message,
+        guild,
+        alwaysAllowLeet: event?.alwaysAllowLeet,
+        skipUniquenessCheck: event?.skipUniquenessCheck,
+      }),
+      leebHandler({
+        message,
+        guild,
+        alwaysAllowLeeb: event?.alwaysAllowLeeb,
+        skipUniquenessCheck: event?.skipUniquenessCheck,
+      }),
+      failedLeetHandler({
+        message,
+        guild,
+        alwaysAllowFailedLeet: event?.alwaysAllowFailedLeet,
+        skipUniquenessCheck: event?.skipUniquenessCheck,
+      }),
     ]);
   });
 

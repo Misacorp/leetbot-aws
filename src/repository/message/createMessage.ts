@@ -13,7 +13,7 @@ declare global {
 const dbClient = getDbClient();
 
 /**
- * Creates a message in the database
+ * Creates a message in the database.
  */
 export const createMessage = async (
   message: Message,

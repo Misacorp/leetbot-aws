@@ -1,6 +1,7 @@
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { getDbClient } from "@/src/repository/util";
 import { Message } from "./types";
+import { getDatePrefix } from "@/src/util/dateTime";
 
 declare global {
   namespace NodeJS {
@@ -17,7 +18,7 @@ export const getUserMessagesByDate = async (
   date: Date,
 ): Promise<Message[]> => {
   // Format date as YYYY-MM-DD
-  const datePrefix = date.toISOString().split("T")[0];
+  const datePrefix = getDatePrefix(date);
 
   const command = new QueryCommand({
     TableName: process.env.TABLE_NAME,
