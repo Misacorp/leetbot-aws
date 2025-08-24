@@ -1,4 +1,4 @@
-import { isLeeb, isLeet, toZonedTime } from "./dateTime";
+import { isLeeb, isLeet, toZonedTime, getDatePrefix } from "./dateTime";
 import leetMessageJson from "@/test/__mocks__/message_leet.json";
 import leebMessageJson from "@/test/__mocks__/message_leeb.json";
 import { type Message } from "/opt/nodejs/discord";
@@ -177,6 +177,109 @@ describe("dateTime", () => {
       const epoch = date.getTime();
 
       expect(isLeeb(epoch)).toBeFalsy();
+    });
+  });
+
+  describe("getDatePrefix", () => {
+    describe("Unix timestamp input", () => {
+      it("should return correct date prefix for Unix timestamp in summer time", () => {
+        // July 15, 2023 at 10:30 UTC = 13:30 Helsinki summer time
+        const timestamp = new Date(Date.UTC(2023, 6, 15, 10, 30, 0)).getTime();
+
+        expect(getDatePrefix(timestamp)).toBe("2023-07-15");
+      });
+
+      it("should return correct date prefix for Unix timestamp in winter time", () => {
+        // January 15, 2023 at 11:30 UTC = 13:30 Helsinki winter time
+        const timestamp = new Date(Date.UTC(2023, 0, 15, 11, 30, 0)).getTime();
+
+        expect(getDatePrefix(timestamp)).toBe("2023-01-15");
+      });
+
+      it("should handle timezone conversion correctly at day boundary", () => {
+        // UTC midnight should be next day in Helsinki
+        const timestamp = new Date(Date.UTC(2023, 6, 15, 0, 0, 0)).getTime();
+
+        expect(getDatePrefix(timestamp)).toBe("2023-07-15");
+      });
+    });
+
+    describe("ISO string input", () => {
+      it("should return correct date prefix for ISO string", () => {
+        const isoString = "2023-10-14T12:33:56.789Z";
+
+        expect(getDatePrefix(isoString)).toBe("2023-10-14");
+      });
+
+      it("should handle ISO string without milliseconds", () => {
+        const isoString = "2023-12-25T23:59:59Z";
+
+        expect(getDatePrefix(isoString)).toBe("2023-12-26"); // Next day in Helsinki
+      });
+
+      it("should handle ISO string with timezone offset", () => {
+        const isoString = "2023-06-15T13:37:00+02:00";
+
+        expect(getDatePrefix(isoString)).toBe("2023-06-15");
+      });
+    });
+
+    describe("Date object input", () => {
+      it("should return correct date prefix for Date object", () => {
+        const date = new Date(Date.UTC(2023, 8, 20, 15, 45, 30));
+
+        expect(getDatePrefix(date)).toBe("2023-09-20");
+      });
+
+      it("should handle Date object at midnight UTC", () => {
+        const date = new Date(Date.UTC(2023, 11, 31, 0, 0, 0));
+
+        expect(getDatePrefix(date)).toBe("2023-12-31");
+      });
+    });
+
+    describe("Timezone handling", () => {
+      it("should use default timezone (Europe/Helsinki) when not specified", () => {
+        const timestamp = new Date(Date.UTC(2023, 6, 15, 21, 0, 0)).getTime();
+
+        expect(getDatePrefix(timestamp)).toBe("2023-07-16"); // Next day in Helsinki
+      });
+
+      it("should use specified timezone", () => {
+        const timestamp = new Date(Date.UTC(2023, 6, 15, 21, 0, 0)).getTime();
+
+        expect(getDatePrefix(timestamp, "UTC")).toBe("2023-07-15");
+        expect(getDatePrefix(timestamp, "America/New_York")).toBe("2023-07-15");
+      });
+    });
+
+    describe("Edge cases", () => {
+      it("should handle leap year date", () => {
+        const timestamp = new Date(Date.UTC(2024, 1, 29, 12, 0, 0)).getTime();
+
+        expect(getDatePrefix(timestamp)).toBe("2024-02-29");
+      });
+
+      it("should handle year boundary crossing", () => {
+        // New Year's Eve UTC becomes New Year's Day in Helsinki
+        const timestamp = new Date(Date.UTC(2022, 11, 31, 22, 30, 0)).getTime();
+
+        expect(getDatePrefix(timestamp)).toBe("2023-01-01");
+      });
+
+      it("should handle various date formats consistently", () => {
+        const baseDate = "2023-05-15T10:30:00.000Z";
+        const timestamp = new Date(baseDate).getTime();
+        const dateObject = new Date(baseDate);
+
+        const result1 = getDatePrefix(timestamp);
+        const result2 = getDatePrefix(baseDate);
+        const result3 = getDatePrefix(dateObject);
+
+        expect(result1).toBe(result2);
+        expect(result2).toBe(result3);
+        expect(result1).toBe("2023-05-15");
+      });
     });
   });
 });
