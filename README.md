@@ -2,24 +2,41 @@
 
 Leetbot in the cloud. See the [project dashboard](https://github.com/users/Misacorp/projects/1/views/1).
 
+Leetbot is a Discord bot that monitors messages in Discord servers during specific time windows (13:36-13:39) to detect and track "leet" messages. It provides statistics and leaderboards for users based on their messaging patterns.
+
+## Features
+
+- 🕐 Time-based message monitoring (13:36-13:39 daily)
+- 📊 Message type tracking (leet, leeb, failed_leet)
+- 🏆 User statistics and leaderboards
+- ☁️ Fully serverless AWS architecture
+- 🌍 Timezone-aware scheduling with daylight savings support
+
+## Prerequisites
+
+Before setting up the project, ensure you have:
+
+- [Node.js](https://nodejs.org/) (version 18 or higher)
+- [AWS CLI](https://aws.amazon.com/cli/) configured with appropriate permissions
+- [aws-vault](https://github.com/99designs/aws-vault) (recommended for credential management)
+- A Discord bot token (see [Discord Developer Portal](https://discord.com/developers/applications))
+
 ---
 
 <!-- TOC -->
 
 - [Leetbot AWS](#leetbot-aws)
+  - [Features](#features)
+  - [Prerequisites](#prerequisites)
 - [Development](#development)
+  - [Scripts](#scripts)
 - [Architecture](#architecture)
   - [Lambda Layers](#lambda-layers)
+  - [DynamoDB Design](#dynamodb-design)
 - [Deployment](#deployment)
   - [Deployment Troubleshooting](#deployment-troubleshooting)
-    - [No bucket named `xyz`. Is account `123` bootstrapped?](#no-bucket-named-xyz-is-account-123-bootstrapped)
-      - [Option 1: CLI](#option-1-cli)
-      - [Option 2: AWS Management Console](#option-2-aws-management-console)
-  - [Resources](#resources)
-- [Scripts](#scripts)
-  - [Set Discord Bot Token](#set-discord-bot-token)
-  - [Start Discord Bot](#start-discord-bot)
-  <!-- TOC -->
+
+<!-- TOC -->
 
 # Development
 
