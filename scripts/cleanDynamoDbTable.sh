@@ -1,12 +1,30 @@
 #!/usr/bin/env bash
 # Wipe all items from a DynamoDB table using aws-vault + AWS CLI v2.
-# Usage: ./dynamo-wipe.sh <table-name> <aws-vault-profile>
 set -euo pipefail
 
-TABLE="${1:-}"; PROFILE="${2:-}"
-[[ -n "$TABLE" && -n "$PROFILE" ]] || { echo "Usage: $0 <table-name> <aws-vault-profile>"; exit 1; }
+# Check that AWS profile is provided, table name is optional
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  echo "Usage: $0 <aws_profile> [table_name]"
+  echo "  If table_name is omitted, it will be auto-discovered from cdk-outputs.json"
+  exit 1
+fi
 
-av() { aws-vault exec "$PROFILE" -- aws "$@"; }
+aws_profile=$1
+table_name_arg=${2:-}
+
+# Handle table name parameter - use CDK output if not provided
+if [ -z "$table_name_arg" ]; then
+  TABLE=$(jq -r '.LeetbotAwsStack | to_entries[] | select(.key | startswith("LeetbotTableTableName67C42FB6")) | .value' cdk-outputs.json)
+  if [ "$TABLE" = "null" ] || [ -z "$TABLE" ]; then
+    echo "Error: Could not find DynamoDB table name in cdk-outputs.json"
+    exit 1
+  fi
+  echo "Using table from CDK outputs: $TABLE"
+else
+  TABLE=$table_name_arg
+fi
+
+av() { aws-vault exec "$aws_profile" -- aws "$@"; }
 
 # --- Discover key schema (PK + optional SK) ---
 DESC_JSON="$(av dynamodb describe-table --table-name "$TABLE" --no-cli-pager --output json)"

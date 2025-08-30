@@ -1,3 +1,4 @@
+import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as ddb from "aws-cdk-lib/aws-dynamodb";
 import { type Grant, type IGrantable } from "aws-cdk-lib/aws-iam";
@@ -40,6 +41,11 @@ export class Table extends Construct implements ITable {
         name: "sk2",
         type: ddb.AttributeType.STRING,
       },
+    });
+
+    new cdk.CfnOutput(this, "TableName", {
+      value: this.table.tableName,
+      description: "DynamoDB table name",
     });
   }
 
