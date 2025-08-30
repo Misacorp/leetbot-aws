@@ -23,6 +23,10 @@ export const leetHandler = async ({
   alwaysAllowLeet = false,
   skipUniquenessCheck = false,
 }: LeetHandlerProps) => {
+  logger.info(
+    `Processing LEET from ${message.author.id} created at ${message.createdTimestamp}`,
+  );
+
   // Find LEET emoji
   const leetEmoji = findEmoji(guild, "leet");
   if (!leetEmoji) {

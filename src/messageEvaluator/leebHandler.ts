@@ -23,6 +23,10 @@ export const leebHandler = async ({
   alwaysAllowLeeb = false,
   skipUniquenessCheck = false,
 }: LeebHandlerProps) => {
+  logger.info(
+    `Processing LEEB from ${message.author.id} created at ${message.createdTimestamp}`,
+  );
+
   // Find LEEB emoji
   const leebEmoji = findEmoji(guild, "leeb");
   if (!leebEmoji) {

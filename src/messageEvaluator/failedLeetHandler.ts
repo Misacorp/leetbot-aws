@@ -24,6 +24,10 @@ export const failedLeetHandler = async ({
   alwaysAllowFailedLeet = false,
   skipUniquenessCheck = false,
 }: FailedLeetHandlerProps) => {
+  logger.info(
+    `Processing FAILED_LEET from ${message.author.id} created at ${message.createdTimestamp}`,
+  );
+
   // Find LEET emoji
   const leetEmoji = findEmoji(guild, "leet");
   if (!leetEmoji) {
