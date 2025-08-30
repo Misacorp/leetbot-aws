@@ -4,11 +4,13 @@ import { findEmoji } from "@/src/util/emoji";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
+import { publishReaction } from "@/src/messageEvaluator/publishReaction";
 
 interface FailedLeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
   tableName: string;
+  topicArn: string;
   alwaysAllowFailedLeet?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -23,6 +25,7 @@ export const failedLeetHandler = async ({
   message,
   guild,
   tableName,
+  topicArn,
   alwaysAllowFailedLeet = false,
   skipUniquenessCheck = false,
 }: FailedLeetHandlerProps) => {
@@ -30,10 +33,11 @@ export const failedLeetHandler = async ({
     `Processing FAILED_LEET from ${message.author.id} created at ${message.createdTimestamp}`,
   );
 
-  // Find LEET emoji
+  // Find emojis
   const leetEmoji = findEmoji(guild, "leet");
-  if (!leetEmoji) {
-    throw new Error("Could not find 'leet' emoji");
+  const leebEmoji = findEmoji(guild, "leeb");
+  if (!leetEmoji || !leebEmoji) {
+    throw new Error("Could not find 'leet' or 'leeb' emoji");
   }
 
   // Check message content
@@ -69,9 +73,15 @@ export const failedLeetHandler = async ({
       tableName,
     })
   ) {
-    logger.info(
-      `❌️The user has already posted a game message today. Exiting failed leet handler…`,
-    );
+    logger.info(`❌️The user has already posted a game message today.`);
+
+    await publishReaction({
+      messageId: message.id,
+      emoji: "😡",
+      channelId: message.channelId,
+      topicArn,
+    });
+
     return;
   }
 
@@ -82,5 +92,12 @@ export const failedLeetHandler = async ({
     message,
     guild,
     messageType: MessageTypes.FAILED_LEET,
+  });
+
+  await publishReaction({
+    messageId: message.id,
+    emoji: leebEmoji.identifier,
+    channelId: message.channelId,
+    topicArn,
   });
 };

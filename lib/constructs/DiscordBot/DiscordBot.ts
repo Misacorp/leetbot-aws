@@ -32,7 +32,17 @@ export class DiscordBot extends Construct {
   /**
    * SQS queue that writes Discord messages to the database.
    */
-  public readonly leetMessageEvaluationQueue: sqs.IQueue;
+  public readonly messageEvaluationQueue: sqs.IQueue;
+
+  /**
+   * SNS topic where the message evaluator will send information about processed messages.
+   */
+  public readonly messageEvaluationOutTopic: sns.ITopic;
+
+  /**
+   * SQS queue that the Discord bot listens to for reaction commands etc.
+   */
+  public readonly discordInQueue: sqs.IQueue;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -54,6 +64,25 @@ export class DiscordBot extends Construct {
       fifo: true,
       contentBasedDeduplication: true,
     });
+
+    // Message evaluator output topic
+    this.messageEvaluationOutTopic = new sns.Topic(
+      this,
+      "MessageEvaluationOutTopic",
+      {
+        fifo: false,
+      },
+    );
+
+    this.discordInQueue = new sqs.Queue(this, "DiscordInQueue", {
+      removalPolicy: getRemovalPolicy(),
+      fifo: false,
+      retentionPeriod: cdk.Duration.days(1),
+    });
+
+    this.messageEvaluationOutTopic.addSubscription(
+      new subs.SqsSubscription(this.discordInQueue),
+    );
 
     // Discord bot Lambda function
     this.discordWatcher = new NodejsFunction(this, "DiscordWatcher", {
@@ -81,7 +110,7 @@ export class DiscordBot extends Construct {
         TOKEN_SECRET_ID: secret.secretName,
         TABLE_NAME: props.table.tableName,
         DISCORD_OUT_TOPIC_ARN: this.discordBotOutTopic.topicArn,
-        DISCORD_IN_QUEUE_URL: "asdasdas", // TODO
+        DISCORD_IN_QUEUE_URL: this.discordInQueue.queueUrl,
       },
       reservedConcurrentExecutions: 1,
       description:
@@ -92,6 +121,7 @@ export class DiscordBot extends Construct {
     secret.grantRead(this.discordWatcher);
     props.table.grantWriteData(this.discordWatcher);
     this.discordBotOutTopic.grantPublish(this.discordWatcher);
+    this.discordInQueue.grantConsumeMessages(this.discordWatcher);
 
     // Export Lambda function's name to cdk-outputs.json.
     // Used with the scripts in this project.
@@ -101,9 +131,9 @@ export class DiscordBot extends Construct {
     });
 
     // Queue that reads from the Discord outgoing SNS topic
-    this.leetMessageEvaluationQueue = new sqs.Queue(
+    this.messageEvaluationQueue = new sqs.Queue(
       this,
-      "LeetMessageEvaluationQueue",
+      "MessageEvaluationQueue",
       {
         removalPolicy: getRemovalPolicy(),
         contentBasedDeduplication: true,
@@ -113,7 +143,7 @@ export class DiscordBot extends Construct {
     );
 
     this.discordBotOutTopic.addSubscription(
-      new subs.SqsSubscription(this.leetMessageEvaluationQueue),
+      new subs.SqsSubscription(this.messageEvaluationQueue),
     );
 
     // Lambda that writes messages to the database
@@ -134,17 +164,19 @@ export class DiscordBot extends Construct {
       },
       environment: {
         TABLE_NAME: props.table.tableName,
-        MESSAGE_EVALUATOR_OUT_TOPIC_ARN: "asasdadas", // TODO
+        MESSAGE_EVALUATOR_OUT_TOPIC_ARN:
+          this.messageEvaluationOutTopic.topicArn,
       },
       description:
         "Determines which Discord messages are interesting for the 'leet game', and processes them further.",
     });
 
     props.table.grantReadWriteData(messageEvaluator);
+    this.messageEvaluationOutTopic.grantPublish(messageEvaluator);
 
     // Add SQS event source to trigger Lambda when messages arrive
     messageEvaluator.addEventSource(
-      new lambdaEventSources.SqsEventSource(this.leetMessageEvaluationQueue, {
+      new lambdaEventSources.SqsEventSource(this.messageEvaluationQueue, {
         batchSize: 10,
       }),
     );

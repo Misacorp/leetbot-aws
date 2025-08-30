@@ -4,11 +4,13 @@ import { findEmoji } from "@/src/util/emoji";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
+import { publishReaction } from "@/src/messageEvaluator/publishReaction";
 
 interface LeebHandlerProps {
   message: DiscordMessage;
   guild: Guild;
   tableName: string;
+  topicArn: string;
   alwaysAllowLeeb?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -22,6 +24,7 @@ export const leebHandler = async ({
   message,
   guild,
   tableName,
+  topicArn,
   alwaysAllowLeeb = false,
   skipUniquenessCheck = false,
 }: LeebHandlerProps) => {
@@ -53,7 +56,15 @@ export const leebHandler = async ({
     if (alwaysAllowLeeb) {
       logger.info("This is a test event where LEEB is always allowed.");
     } else {
-      logger.info("❌ Not allowed. Exiting leeb handler…");
+      logger.info("❌ Not allowed.");
+
+      await publishReaction({
+        messageId: message.id,
+        emoji: "🤡",
+        channelId: message.channelId,
+        topicArn,
+      });
+
       return;
     }
   }
@@ -68,9 +79,15 @@ export const leebHandler = async ({
       tableName,
     })
   ) {
-    logger.info(
-      `❌️The user has already posted a game message today. Exiting leeb handler…`,
-    );
+    logger.info(`❌️The user has already posted a game message today.`);
+
+    await publishReaction({
+      messageId: message.id,
+      emoji: "😡",
+      channelId: message.channelId,
+      topicArn,
+    });
+
     return;
   }
 
@@ -82,5 +99,12 @@ export const leebHandler = async ({
     guild,
     messageType: MessageTypes.LEEB,
     tableName,
+  });
+
+  await publishReaction({
+    messageId: message.id,
+    emoji: leebEmoji.identifier,
+    channelId: message.channelId,
+    topicArn,
   });
 };

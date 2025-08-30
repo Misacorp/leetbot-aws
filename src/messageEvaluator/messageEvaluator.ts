@@ -16,6 +16,7 @@ declare global {
 }
 
 const tableName = process.env.TABLE_NAME;
+const topicArn = process.env.MESSAGE_EVALUATOR_OUT_TOPIC_ARN;
 
 /**
  * Handles game-related messages like LEET, LEEB, etc.
@@ -54,6 +55,7 @@ export const handler = async (event: SQSEvent) => {
         message,
         guild,
         tableName,
+        topicArn,
         alwaysAllowLeet: event?.alwaysAllowLeet,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),
@@ -61,6 +63,7 @@ export const handler = async (event: SQSEvent) => {
         message,
         guild,
         tableName,
+        topicArn,
         alwaysAllowLeeb: event?.alwaysAllowLeeb,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),
@@ -68,6 +71,7 @@ export const handler = async (event: SQSEvent) => {
         message,
         guild,
         tableName,
+        topicArn,
         alwaysAllowFailedLeet: event?.alwaysAllowFailedLeet,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),

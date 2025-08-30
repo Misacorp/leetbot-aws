@@ -4,11 +4,13 @@ import { findEmoji } from "@/src/util/emoji";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
+import { publishReaction } from "@/src/messageEvaluator/publishReaction";
 
 interface LeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
   tableName: string;
+  topicArn: string;
   alwaysAllowLeet?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -22,6 +24,7 @@ export const leetHandler = async ({
   message,
   guild,
   tableName,
+  topicArn,
   alwaysAllowLeet = false,
   skipUniquenessCheck = false,
 }: LeetHandlerProps) => {
@@ -53,7 +56,15 @@ export const leetHandler = async ({
     if (alwaysAllowLeet) {
       logger.info("This is a test event where LEET is always allowed.");
     } else {
-      logger.info("❌ Not allowed. Exiting leet handler…");
+      logger.info("❌ Not allowed.");
+
+      await publishReaction({
+        messageId: message.id,
+        emoji: "🤡",
+        channelId: message.channelId,
+        topicArn,
+      });
+
       return;
     }
   }
@@ -68,9 +79,15 @@ export const leetHandler = async ({
       tableName,
     })
   ) {
-    logger.info(
-      `❌️The user has already posted a game message today. Exiting leet handler…`,
-    );
+    logger.info(`❌️The user has already posted a game message today.`);
+
+    await publishReaction({
+      messageId: message.id,
+      emoji: "😡",
+      channelId: message.channelId,
+      topicArn,
+    });
+
     return;
   }
 
@@ -81,5 +98,12 @@ export const leetHandler = async ({
     guild,
     messageType: MessageTypes.LEET,
     tableName,
+  });
+
+  await publishReaction({
+    messageId: message.id,
+    emoji: leetEmoji.identifier,
+    channelId: message.channelId,
+    topicArn,
   });
 };

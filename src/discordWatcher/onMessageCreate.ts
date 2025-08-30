@@ -2,7 +2,7 @@ import logger from "@logger";
 import type { ScheduledEvent } from "aws-lambda";
 import { type GuildMember } from "/opt/nodejs/discord";
 import type { PartialDiscordMessage, TestEvent } from "@/src/types";
-import { publishDiscordMessage } from "@/src/messageEvaluator/publishDiscordMessage";
+import { publishDiscordMessage } from "@/src/discordWatcher/publishDiscordMessage";
 
 /**
  * Handles message creation events in Discord

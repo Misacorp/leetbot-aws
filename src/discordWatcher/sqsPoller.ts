@@ -4,24 +4,28 @@ import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
 } from "@aws-sdk/client-sqs";
+import type { SNSMessage } from "aws-lambda";
 import type { Client } from "/opt/nodejs/discord";
 import type { DiscordReactionCommand } from "@/src/types";
 
 export class SQSPoller {
   private sqsClient: SQSClient;
   private isPolling = false;
+  private readonly queueUrl: string;
+  private readonly discordClient: Client;
 
-  constructor() {
+  constructor(queueUrl: string, client: Client) {
+    this.queueUrl = queueUrl;
+    this.discordClient = client;
     this.sqsClient = new SQSClient({});
   }
 
   /**
    * Start polling SQS queue for reaction instructions
-   * @param discordClient Discord client
    */
-  public startPolling(discordClient: Client): void {
+  public startPolling(): void {
     this.isPolling = true;
-    void this.pollSQSForReactions(discordClient);
+    void this.pollSQSForReactions(this.queueUrl, this.discordClient);
   }
 
   /**
@@ -33,13 +37,17 @@ export class SQSPoller {
 
   /**
    * Poll SQS queue for reaction instructions
+   * @param queueUrl SQS queue url to poll from
    * @param discordClient Discord client
    */
-  private async pollSQSForReactions(discordClient: Client): Promise<void> {
+  private async pollSQSForReactions(
+    queueUrl: string,
+    discordClient: Client,
+  ): Promise<void> {
     while (this.isPolling) {
       try {
         const command = new ReceiveMessageCommand({
-          QueueUrl: process.env.SQS_QUEUE_URL,
+          QueueUrl: queueUrl,
           MaxNumberOfMessages: 10,
           WaitTimeSeconds: 1,
           VisibilityTimeout: 30,
@@ -71,7 +79,7 @@ export class SQSPoller {
   /**
    * Process a single reaction command from SQS
    * @param discordClient Discord client
-   * @param messageBody SQS message body
+   * @param messageBody SQS message body (SNS message wrapper)
    * @param receiptHandle SQS message receipt handle
    */
   private async processReactCommand(
@@ -80,7 +88,21 @@ export class SQSPoller {
     receiptHandle: string,
   ): Promise<void> {
     try {
-      const instruction: DiscordReactionCommand = JSON.parse(messageBody);
+      // Parse the SNS message wrapper
+      const snsMessage: SNSMessage = JSON.parse(messageBody);
+
+      if (!snsMessage.Message) {
+        logger.warn(
+          { snsMessage },
+          "Invalid SNS message - missing Message field",
+        );
+        return;
+      }
+
+      // Parse the actual DiscordReactionCommand from the SNS Message field
+      const instruction: DiscordReactionCommand = JSON.parse(
+        snsMessage.Message,
+      );
 
       if (!instruction.messageId || !instruction.emoji) {
         logger.warn(

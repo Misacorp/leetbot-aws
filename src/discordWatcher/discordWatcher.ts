@@ -45,7 +45,7 @@ export const handler = async (
     ],
     closeTimeout: 300,
   });
-  const sqsPoller = new SQSPoller();
+  const sqsPoller = new SQSPoller(process.env.DISCORD_IN_QUEUE_URL, client);
 
   initEventHandlers({
     client,
