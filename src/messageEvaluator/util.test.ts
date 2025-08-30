@@ -10,6 +10,7 @@ const mockGetUserMessagesByDate = getUserMessagesByDate as jest.MockedFunction<
 
 describe("messageEvaluator > util", () => {
   describe("hasAlreadyPostedOnDate", () => {
+    const tableName = "test-table";
     const userId = "user123";
     const timestamp = new Date("2024-01-15T13:37:00.000Z").getTime();
 
@@ -29,13 +30,18 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(true);
-        expect(mockGetUserMessagesByDate).toHaveBeenCalledWith(
+        expect(mockGetUserMessagesByDate).toHaveBeenCalledWith({
+          tableName,
           userId,
-          new Date(timestamp),
-        );
+          date: new Date(timestamp),
+        });
       });
 
       it("should return true when user has posted a LEEB message", async () => {
@@ -49,7 +55,11 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(true);
       });
@@ -65,7 +75,11 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(true);
       });
@@ -88,7 +102,11 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(true);
       });
@@ -98,7 +116,11 @@ describe("messageEvaluator > util", () => {
       it("should return false when no messages exist", async () => {
         mockGetUserMessagesByDate.mockResolvedValue([]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(false);
       });
@@ -114,7 +136,11 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(false);
       });
@@ -130,7 +156,11 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(false);
       });
@@ -153,7 +183,11 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(false);
       });
@@ -185,7 +219,11 @@ describe("messageEvaluator > util", () => {
           },
         ]);
 
-        const result = await hasAlreadyPostedOnDate(userId, timestamp);
+        const result = await hasAlreadyPostedOnDate({
+          tableName,
+          userId,
+          createdTimestamp: timestamp,
+        });
 
         expect(result).toBe(true);
       });
@@ -198,12 +236,17 @@ describe("messageEvaluator > util", () => {
         ).getTime();
         mockGetUserMessagesByDate.mockResolvedValue([]);
 
-        await hasAlreadyPostedOnDate(userId, specificTimestamp);
-
-        expect(mockGetUserMessagesByDate).toHaveBeenCalledWith(
+        await hasAlreadyPostedOnDate({
+          tableName,
           userId,
-          new Date(specificTimestamp),
-        );
+          createdTimestamp: specificTimestamp,
+        });
+
+        expect(mockGetUserMessagesByDate).toHaveBeenCalledWith({
+          tableName,
+          userId,
+          date: new Date(specificTimestamp),
+        });
       });
     });
   });

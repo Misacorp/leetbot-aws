@@ -22,49 +22,62 @@ const isGameMessage = (
 /**
  * Determines if a given user has already posted a game message on the given date.
  * Does not count non-game-related messages that may exist.
- * @param userId User id
- * @param createdTimestamp Message creation timestamp
  */
-export const hasAlreadyPostedOnDate = async (
-  userId: string,
-  createdTimestamp: number,
-): Promise<boolean> => {
-  const existingMessages = await getUserMessagesByDate(
+export const hasAlreadyPostedOnDate = async ({
+  tableName,
+  userId,
+  // Message creation timestamp
+  createdTimestamp,
+}: {
+  tableName: string;
+  userId: string;
+  createdTimestamp: number;
+}): Promise<boolean> => {
+  const existingMessages = await getUserMessagesByDate({
+    tableName,
     userId,
-    new Date(createdTimestamp),
-  );
+    date: new Date(createdTimestamp),
+  });
 
   return existingMessages.some((message) => isGameMessage(message.messageType));
 };
 
 /**
  * Saves a given message and its author's data to the database.
- * @param message Discord message
- * @param guild Discord guild
- * @param messageType Message type e.g., LEET, LEEB, OTHER
  */
-export const saveMessageAndUser = async (
-  message: DiscordMessage,
-  guild: Guild,
-  messageType: MessageType,
-) => {
+export const saveMessageAndUser = async ({
+  message,
+  guild,
+  // Message type e.g., LEET, LEEB, OTHER
+  messageType,
+  tableName,
+}: {
+  message: DiscordMessage;
+  guild: Guild;
+  messageType: MessageType;
+  tableName: string;
+}) => {
   const [messageResult, userResult] = await Promise.allSettled([
     createMessage({
-      messageType,
-      createdAt: new Date(message.createdTimestamp).toISOString(),
-      guildId: guild.id,
-      id: message.id,
-      userId: message.author.id,
+      tableName,
+      message: {
+        messageType,
+        createdAt: new Date(message.createdTimestamp).toISOString(),
+        guildId: guild.id,
+        id: message.id,
+        userId: message.author.id,
+      },
     }),
-    upsertUser(
-      {
+    upsertUser({
+      tableName,
+      user: {
         id: message.author.id,
         username: message.author.username,
         avatarUrl: message.member?.avatarUrl ?? message.author.avatarUrl,
         displayName: message.member?.displayName ?? null,
       },
-      guild.id,
-    ),
+      guildId: guild.id,
+    }),
   ]);
 
   if (messageResult.status === "rejected") {

@@ -7,10 +7,15 @@ const dbClient = getDbClient();
 /**
  * Creates or updates a user in the database
  */
-export const upsertUser = (
-  user: User,
-  guildId: string,
-): Promise<PutCommandOutput> => {
+export const upsertUser = ({
+  tableName,
+  user,
+  guildId,
+}: {
+  tableName: string;
+  user: User;
+  guildId: string;
+}): Promise<PutCommandOutput> => {
   const userDbo: UserDbo = {
     ...user,
     pk1: `user#${user.id}`,
@@ -18,7 +23,7 @@ export const upsertUser = (
   };
 
   const command = new PutCommand({
-    TableName: process.env.TABLE_NAME,
+    TableName: tableName,
     Item: userDbo,
   });
 

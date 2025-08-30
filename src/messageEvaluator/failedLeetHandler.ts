@@ -8,6 +8,7 @@ import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 interface FailedLeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
+  tableName: string;
   alwaysAllowFailedLeet?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -21,6 +22,7 @@ const logger = baseLogger.child({ function: "failedLeetHandler" });
 export const failedLeetHandler = async ({
   message,
   guild,
+  tableName,
   alwaysAllowFailedLeet = false,
   skipUniquenessCheck = false,
 }: FailedLeetHandlerProps) => {
@@ -61,7 +63,11 @@ export const failedLeetHandler = async ({
   if (skipUniquenessCheck) {
     console.info("Skipping uniqueness check…");
   } else if (
-    await hasAlreadyPostedOnDate(message.author.id, message.createdTimestamp)
+    await hasAlreadyPostedOnDate({
+      userId: message.author.id,
+      createdTimestamp: message.createdTimestamp,
+      tableName,
+    })
   ) {
     logger.info(
       `❌️The user has already posted a game message today. Exiting failed leet handler…`,
@@ -71,5 +77,10 @@ export const failedLeetHandler = async ({
 
   logger.debug("Saving FAILED_LEET message to the database…");
 
-  await saveMessageAndUser(message, guild, MessageTypes.FAILED_LEET);
+  await saveMessageAndUser({
+    tableName,
+    message,
+    guild,
+    messageType: MessageTypes.FAILED_LEET,
+  });
 };

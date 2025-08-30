@@ -6,6 +6,17 @@ import { leetHandler } from "./leetHandler";
 import { leebHandler } from "./leebHandler";
 import { failedLeetHandler } from "@/src/messageEvaluator/failedLeetHandler";
 
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      TABLE_NAME: string;
+      MESSAGE_EVALUATOR_OUT_TOPIC_ARN: string;
+    }
+  }
+}
+
+const tableName = process.env.TABLE_NAME;
+
 /**
  * Handles game-related messages like LEET, LEEB, etc.
  * Messages originate from the Discord bot but are passed through AWS services as JSON.
@@ -25,7 +36,10 @@ export const handler = async (event: SQSEvent) => {
     }
 
     logger.debug("Getting guild information from DynamoDB…");
-    const guild = await getGuildById(message.guild.id);
+    const guild = await getGuildById({
+      id: message.guild.id,
+      tableName: process.env.TABLE_NAME,
+    });
     logger.debug({ guild }, "Guild retrieved:");
 
     if (!guild) {
@@ -39,18 +53,21 @@ export const handler = async (event: SQSEvent) => {
       leetHandler({
         message,
         guild,
+        tableName,
         alwaysAllowLeet: event?.alwaysAllowLeet,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),
       leebHandler({
         message,
         guild,
+        tableName,
         alwaysAllowLeeb: event?.alwaysAllowLeeb,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),
       failedLeetHandler({
         message,
         guild,
+        tableName,
         alwaysAllowFailedLeet: event?.alwaysAllowFailedLeet,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),

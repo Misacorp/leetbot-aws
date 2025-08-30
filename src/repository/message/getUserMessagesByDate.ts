@@ -3,25 +3,22 @@ import { getDbClient } from "@/src/repository/util";
 import { Message } from "./types";
 import { getDatePrefix } from "@/src/util/dateTime";
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      TABLE_NAME: string;
-    }
-  }
-}
-
 const dbClient = getDbClient();
 
-export const getUserMessagesByDate = async (
-  userId: string,
-  date: Date,
-): Promise<Message[]> => {
+export const getUserMessagesByDate = async ({
+  tableName,
+  userId,
+  date,
+}: {
+  tableName: string;
+  userId: string;
+  date: Date;
+}): Promise<Message[]> => {
   // Format date as YYYY-MM-DD
   const datePrefix = getDatePrefix(date);
 
   const command = new QueryCommand({
-    TableName: process.env.TABLE_NAME,
+    TableName: tableName,
     KeyConditionExpression: "pk1 = :pk1 AND begins_with(sk1, :sk1Prefix)",
     ExpressionAttributeValues: {
       ":pk1": `user#${userId}`,

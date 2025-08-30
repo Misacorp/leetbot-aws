@@ -7,7 +7,13 @@ const dbClient = getDbClient();
 /**
  * Creates or updates a guild in the database
  */
-export const upsertGuild = (guild: Guild): Promise<PutCommandOutput> => {
+export const upsertGuild = ({
+  tableName,
+  guild,
+}: {
+  tableName: string;
+  guild: Guild;
+}): Promise<PutCommandOutput> => {
   const guildDbo: GuildDbo = {
     ...guild,
     pk1: `guild#${guild.id}`,
@@ -15,7 +21,7 @@ export const upsertGuild = (guild: Guild): Promise<PutCommandOutput> => {
   };
 
   const command = new PutCommand({
-    TableName: process.env.TABLE_NAME,
+    TableName: tableName,
     Item: guildDbo,
   });
 

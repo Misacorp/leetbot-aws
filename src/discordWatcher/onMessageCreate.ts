@@ -6,13 +6,19 @@ import { publishDiscordMessage } from "@/src/messageEvaluator/publishDiscordMess
 
 /**
  * Handles message creation events in Discord
- * @param message Message created
- * @param event   Event that started the Discord watcher
  */
-export const onMessageCreate = async (
-  message: PartialDiscordMessage,
-  event: ScheduledEvent | TestEvent,
-) => {
+export const onMessageCreate = async ({
+  message,
+  discordOutTopicArn,
+  event,
+}: {
+  // Newly created message
+  message: PartialDiscordMessage;
+  // Fan-out topic arn
+  discordOutTopicArn: string;
+  // Event that started the Discord watcher
+  event: ScheduledEvent | TestEvent;
+}) => {
   if (message.partial) {
     try {
       await message.fetch();
@@ -65,7 +71,7 @@ export const onMessageCreate = async (
       guild: message.guild,
     },
 
-    topicArn: process.env.TOPIC_ARN,
+    topicArn: discordOutTopicArn,
     event,
   };
 

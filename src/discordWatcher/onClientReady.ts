@@ -2,14 +2,24 @@ import logger from "@logger";
 import { type Client } from "/opt/nodejs/discord";
 import type { Emoji, Guild } from "@/src/repository/guild/types";
 import { upsertGuild } from "@/src/repository/guild/upsertGuild";
+import type { SQSPoller } from "./sqsPoller";
 
 const GUILD_ID = "215386000132669440";
 
 /**
  * Client ready handler
- * @param client Discord client
  */
-export const onClientReady = async (client: Client<true>) => {
+export const onClientReady = async ({
+  client,
+  tableName,
+  sqsPoller,
+}: {
+  // Discord client
+  client: Client<true>;
+  tableName: string;
+  // SQS poller for handling incoming events
+  sqsPoller?: SQSPoller;
+}) => {
   logger.info(`Logged in to Discord as ${client.user.tag}.`);
 
   const discordGuild = await client.guilds.fetch(GUILD_ID);
@@ -33,5 +43,10 @@ export const onClientReady = async (client: Client<true>) => {
 
   logger.info("Saving guild information to database…");
   logger.debug({ guild });
-  await upsertGuild(guild);
+  await upsertGuild({ tableName, guild });
+
+  if (sqsPoller) {
+    logger.info("Starting SQS polling…");
+    sqsPoller.startPolling(client);
+  }
 };

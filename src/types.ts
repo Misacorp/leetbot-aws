@@ -64,17 +64,12 @@ export interface DiscordBotOutPayload {
 }
 
 /**
- * Props for functions that handle Discord messages
- * @deprecated
+ * Commands the Discord bot to react to a message with a given id.
  */
-export interface MessageHandlerProps {
-  readonly message: DiscordMessage;
-  /**
-   * Event that invoked the Lambda execution.
-   * In production, this is a ScheduledEvent originating from EventBridge.
-   * When testing manually, this is a TestEvent.
-   */
-  readonly event: ScheduledEvent | TestEvent;
+export interface DiscordReactionCommand {
+  messageId: string;
+  emoji: string;
+  channelId: string;
 }
 
 export const MessageTypes = {

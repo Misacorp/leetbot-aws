@@ -2,22 +2,18 @@ import { PutCommand, type PutCommandOutput } from "@aws-sdk/lib-dynamodb";
 import { getDbClient } from "@/src/repository/util";
 import type { Message, MessageDbo } from "./types";
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      TABLE_NAME: string;
-    }
-  }
-}
-
 const dbClient = getDbClient();
 
 /**
  * Creates a message in the database.
  */
-export const createMessage = async (
-  message: Message,
-): Promise<PutCommandOutput> => {
+export const createMessage = async ({
+  tableName,
+  message,
+}: {
+  tableName: string;
+  message: Message;
+}): Promise<PutCommandOutput> => {
   const messageDbo: MessageDbo = {
     ...message,
     pk1: `user#${message.userId}`,
@@ -27,7 +23,7 @@ export const createMessage = async (
   };
 
   const command = new PutCommand({
-    TableName: process.env.TABLE_NAME,
+    TableName: tableName,
     Item: messageDbo,
   });
 

@@ -8,6 +8,7 @@ import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 interface LeebHandlerProps {
   message: DiscordMessage;
   guild: Guild;
+  tableName: string;
   alwaysAllowLeeb?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -20,6 +21,7 @@ const logger = baseLogger.child({ function: "leebHandler" });
 export const leebHandler = async ({
   message,
   guild,
+  tableName,
   alwaysAllowLeeb = false,
   skipUniquenessCheck = false,
 }: LeebHandlerProps) => {
@@ -60,7 +62,11 @@ export const leebHandler = async ({
   if (skipUniquenessCheck) {
     console.info("Skipping uniqueness check…");
   } else if (
-    await hasAlreadyPostedOnDate(message.author.id, message.createdTimestamp)
+    await hasAlreadyPostedOnDate({
+      userId: message.author.id,
+      createdTimestamp: message.createdTimestamp,
+      tableName,
+    })
   ) {
     logger.info(
       `❌️The user has already posted a game message today. Exiting leeb handler…`,
@@ -71,5 +77,10 @@ export const leebHandler = async ({
   logger.debug("Saving message to the database…");
 
   // Save message and user information
-  await saveMessageAndUser(message, guild, MessageTypes.LEEB);
+  await saveMessageAndUser({
+    message,
+    guild,
+    messageType: MessageTypes.LEEB,
+    tableName,
+  });
 };

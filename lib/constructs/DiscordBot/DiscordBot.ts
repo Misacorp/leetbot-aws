@@ -79,8 +79,9 @@ export class DiscordBot extends Construct {
       layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
       environment: {
         TOKEN_SECRET_ID: secret.secretName,
-        TOPIC_ARN: this.discordBotOutTopic.topicArn,
         TABLE_NAME: props.table.tableName,
+        DISCORD_OUT_TOPIC_ARN: this.discordBotOutTopic.topicArn,
+        DISCORD_IN_QUEUE_URL: "asdasdas", // TODO
       },
       reservedConcurrentExecutions: 1,
       description:
@@ -133,6 +134,7 @@ export class DiscordBot extends Construct {
       },
       environment: {
         TABLE_NAME: props.table.tableName,
+        MESSAGE_EVALUATOR_OUT_TOPIC_ARN: "asasdadas", // TODO
       },
       description:
         "Determines which Discord messages are interesting for the 'leet game', and processes them further.",

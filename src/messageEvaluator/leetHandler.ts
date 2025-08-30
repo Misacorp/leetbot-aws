@@ -8,6 +8,7 @@ import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 interface LeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
+  tableName: string;
   alwaysAllowLeet?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -20,6 +21,7 @@ const logger = baseLogger.child({ function: "leetHandler" });
 export const leetHandler = async ({
   message,
   guild,
+  tableName,
   alwaysAllowLeet = false,
   skipUniquenessCheck = false,
 }: LeetHandlerProps) => {
@@ -60,7 +62,11 @@ export const leetHandler = async ({
   if (skipUniquenessCheck) {
     console.info("Skipping uniqueness check…");
   } else if (
-    await hasAlreadyPostedOnDate(message.author.id, message.createdTimestamp)
+    await hasAlreadyPostedOnDate({
+      userId: message.author.id,
+      createdTimestamp: message.createdTimestamp,
+      tableName,
+    })
   ) {
     logger.info(
       `❌️The user has already posted a game message today. Exiting leet handler…`,
@@ -70,5 +76,10 @@ export const leetHandler = async ({
 
   logger.debug("Saving message to the database…");
 
-  await saveMessageAndUser(message, guild, MessageTypes.LEET);
+  await saveMessageAndUser({
+    message,
+    guild,
+    messageType: MessageTypes.LEET,
+    tableName,
+  });
 };
