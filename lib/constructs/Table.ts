@@ -1,6 +1,8 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as ddb from "aws-cdk-lib/aws-dynamodb";
+import * as backup from "aws-cdk-lib/aws-backup";
+import * as events from "aws-cdk-lib/aws-events";
 import { type Grant, type IGrantable } from "aws-cdk-lib/aws-iam";
 import { getRemovalPolicy } from "@/src/util/infra";
 
@@ -43,6 +45,8 @@ export class Table extends Construct implements ITable {
       },
     });
 
+    this.setupDailyBackup();
+
     new cdk.CfnOutput(this, "TableName", {
       value: this.table.tableName,
       description: "DynamoDB table name",
@@ -67,5 +71,37 @@ export class Table extends Construct implements ITable {
 
   public get tableName(): string {
     return this.table.tableName;
+  }
+
+  private setupDailyBackup(): void {
+    // Where to back up
+    const backupVault = new backup.BackupVault(this, "TableBackupVault", {
+      removalPolicy: getRemovalPolicy(),
+    });
+
+    // How to back up
+    const backupPlan = new backup.BackupPlan(this, "TableBackupPlan", {
+      backupPlanRules: [
+        new backup.BackupPlanRule({
+          scheduleExpression: events.Schedule.cron({
+            minute: "37",
+            hour: "03",
+            day: "*",
+            month: "*",
+            year: "*",
+          }),
+          scheduleExpressionTimezone: cdk.TimeZone.EUROPE_HELSINKI,
+          deleteAfter: cdk.Duration.days(7),
+          startWindow: cdk.Duration.hours(2),
+          completionWindow: cdk.Duration.hours(10),
+          backupVault,
+        }),
+      ],
+    });
+
+    // What to back up
+    backupPlan.addSelection("TableSelection", {
+      resources: [backup.BackupResource.fromDynamoDbTable(this.table)],
+    });
   }
 }
