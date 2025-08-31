@@ -1,3 +1,9 @@
 import * as cdk from "aws-cdk-lib";
 
-export const getRemovalPolicy = () => cdk.RemovalPolicy.DESTROY; // TODO: Change when moving away from the AWS sandbox account
+export const getRemovalPolicy = (environment: string = "dev") => {
+  if (environment === "prd") {
+    return cdk.RemovalPolicy.RETAIN;
+  }
+
+  return cdk.RemovalPolicy.DESTROY;
+};

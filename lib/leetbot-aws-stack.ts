@@ -17,15 +17,21 @@ export class LeetbotAwsStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const deploymentEnvironment =
+      this.node.tryGetContext("deploymentEnvironment") ?? "dev";
+
     this.setTags();
 
     this.lambdaLayers = new LambdaLayers(this, "Layers");
 
-    this.table = new Table(this, "LeetbotTable");
+    this.table = new Table(this, "LeetbotTable", {
+      environment: deploymentEnvironment,
+    });
 
     this.discordBot = new DiscordBot(this, "DiscordBot", {
       layers: this.lambdaLayers,
       table: this.table,
+      environment: deploymentEnvironment,
     });
 
     this.scheduler = new EventScheduler(this, "EventScheduler", {

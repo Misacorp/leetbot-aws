@@ -14,10 +14,14 @@ export interface ITable {
   tableName: string;
 }
 
+interface Props {
+  readonly environment: string;
+}
+
 export class Table extends Construct implements ITable {
   private readonly table: ddb.Table;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
     this.table = new ddb.Table(this, "LeetTable", {
@@ -30,7 +34,7 @@ export class Table extends Construct implements ITable {
         type: ddb.AttributeType.STRING,
       },
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: getRemovalPolicy(),
+      removalPolicy: getRemovalPolicy(props.environment),
     });
 
     this.table.addGlobalSecondaryIndex({
@@ -45,7 +49,7 @@ export class Table extends Construct implements ITable {
       },
     });
 
-    this.setupDailyBackup();
+    this.setupDailyBackup(props.environment);
 
     new cdk.CfnOutput(this, "TableName", {
       value: this.table.tableName,
@@ -73,11 +77,9 @@ export class Table extends Construct implements ITable {
     return this.table.tableName;
   }
 
-  private setupDailyBackup(): void {
+  private setupDailyBackup(environment: string): void {
     // Where to back up
-    const backupVault = new backup.BackupVault(this, "TableBackupVault", {
-      removalPolicy: getRemovalPolicy(),
-    });
+    const backupVault = new backup.BackupVault(this, "TableBackupVault", {});
 
     // How to back up
     const backupPlan = new backup.BackupPlan(this, "TableBackupPlan", {
@@ -103,5 +105,8 @@ export class Table extends Construct implements ITable {
     backupPlan.addSelection("TableSelection", {
       resources: [backup.BackupResource.fromDynamoDbTable(this.table)],
     });
+
+    // Apply removal policy to the backup plan
+    backupPlan.applyRemovalPolicy(getRemovalPolicy(environment));
   }
 }

@@ -15,6 +15,7 @@ import type { ILambdaLayers } from "./LambdaLayers";
 interface Props {
   readonly layers: ILambdaLayers;
   readonly table: ITable;
+  readonly environment: string;
 }
 
 /**
@@ -50,7 +51,7 @@ export class DiscordBot extends Construct {
     // Create a place in AWS Secrets Manager to store our bot token
     const secret = new secretsManager.Secret(this, "DiscordBotToken", {
       description: "Discord bot token secret",
-      removalPolicy: getRemovalPolicy(),
+      removalPolicy: getRemovalPolicy(props.environment),
     });
 
     // Output the secret ARN after deployment
@@ -75,7 +76,7 @@ export class DiscordBot extends Construct {
     );
 
     this.discordInQueue = new sqs.Queue(this, "DiscordInQueue", {
-      removalPolicy: getRemovalPolicy(),
+      removalPolicy: getRemovalPolicy(props.environment),
       fifo: false,
       retentionPeriod: cdk.Duration.days(1),
     });
@@ -135,7 +136,7 @@ export class DiscordBot extends Construct {
       this,
       "MessageEvaluationQueue",
       {
-        removalPolicy: getRemovalPolicy(),
+        removalPolicy: getRemovalPolicy(props.environment),
         contentBasedDeduplication: true,
         fifo: true,
         retentionPeriod: cdk.Duration.days(7),
