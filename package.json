@@ -15,6 +15,8 @@
     "aws:unbootstrap": "aws cloudformation delete-stack --stack-name CDKToolkit",
     "aws:synth": "npx cdk synth",
     "aws:deploy": "npx cdk deploy --outputs-file cdk-outputs.json",
+    "aws:deploy:dev": "aws-vault exec leetbot-dev -- npx cdk deploy --context deploymentEnvironment=dev --outputs-file cdk-outputs-dev.json",
+    "aws:deploy:prd": "aws-vault exec leetbot-prd -- npx cdk deploy --context deploymentEnvironment=prd --outputs-file cdk-outputs-prd.json",
     "aws:destroy": "npx cdk destroy"
   },
   "devDependencies": {

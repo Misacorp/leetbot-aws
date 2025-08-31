@@ -7,7 +7,7 @@ dist
 !dist/layer/nodejs/node_modules
 
 # CDK outputs file
-cdk-outputs.json
+cdk-outputs*.json
 
 # CDK asset staging directory
 .cdk.staging

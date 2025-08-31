@@ -143,7 +143,7 @@ export class SQSPoller {
       // Delete the message from SQS after processing
       await this.sqsClient.send(
         new DeleteMessageCommand({
-          QueueUrl: process.env.SQS_QUEUE_URL,
+          QueueUrl: this.queueUrl,
           ReceiptHandle: receiptHandle,
         }),
       );

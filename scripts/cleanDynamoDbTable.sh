@@ -2,24 +2,35 @@
 # Wipe all items from a DynamoDB table using aws-vault + AWS CLI v2.
 set -euo pipefail
 
-# Check that AWS profile is provided, table name is optional
-if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  echo "Usage: $0 <aws_profile> [table_name]"
-  echo "  If table_name is omitted, it will be auto-discovered from cdk-outputs.json"
+# Check that AWS profile and environment are provided, table name is optional
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+  echo "Usage: $0 <aws_profile> <environment> [table_name]"
+  echo "Example: $0 leetbot-dev dev"
+  echo "  If table_name is omitted, it will be auto-discovered from cdk-outputs-<environment>.json"
   exit 1
 fi
 
 aws_profile=$1
-table_name_arg=${2:-}
+environment=$2
+table_name_arg=${3:-}
+
+# Select the correct outputs file and stack name based on environment
+outputs_file="cdk-outputs-${environment}.json"
+stack_name="${environment}-LeetbotCloud"
 
 # Handle table name parameter - use CDK output if not provided
 if [ -z "$table_name_arg" ]; then
-  TABLE=$(jq -r '.LeetbotAwsStack | to_entries[] | select(.key | startswith("LeetbotTableTableName67C42FB6")) | .value' cdk-outputs.json)
-  if [ "$TABLE" = "null" ] || [ -z "$TABLE" ]; then
-    echo "Error: Could not find DynamoDB table name in cdk-outputs.json"
+  if [ ! -f "$outputs_file" ]; then
+    echo "Error: $outputs_file not found. Make sure you've deployed the $environment environment."
     exit 1
   fi
-  echo "Using table from CDK outputs: $TABLE"
+  
+  TABLE=$(jq -r ".[\"$stack_name\"] | to_entries[] | select(.key | startswith(\"LeetbotTableTableName\")) | .value" "$outputs_file")
+  if [ "$TABLE" = "null" ] || [ -z "$TABLE" ]; then
+    echo "Error: Could not find DynamoDB table name in $outputs_file for stack $stack_name"
+    exit 1
+  fi
+  echo "Using table from CDK outputs ($outputs_file): $TABLE"
 else
   TABLE=$table_name_arg
 fi
