@@ -1,6 +1,7 @@
 import { PutCommand, type PutCommandOutput } from "@aws-sdk/lib-dynamodb";
 import { getDbClient } from "@/src/repository/util";
 import type { Message, MessageDbo } from "./types";
+import { isGameMessage } from "@/src/messageEvaluator/util";
 
 const dbClient = getDbClient();
 
@@ -16,11 +17,27 @@ export const createMessage = async ({
 }): Promise<PutCommandOutput> => {
   const messageDbo: MessageDbo = {
     ...message,
-    pk1: `user#${message.userId}`,
-    sk1: `createdAt#${message.createdAt}`,
-    pk2: `guild#${message.guildId}`,
-    sk2: `messageType#${message.messageType}`,
+    pk1: `guild#${message.guildId}#messageType#${message.messageType}`,
+    sk1: `createdAt#${message.createdAt}#messageId#${message.id}`,
+    pk2: `guild#${message.guildId}#user#${message.userId}`,
+    sk2: `createdAt#${message.createdAt}#messageId#${message.id}`,
   };
+
+  // Add speed GSI values only for game messages
+  if (isGameMessage(message.messageType)) {
+    messageDbo["pk3"] =
+      `guild#${message.guildId}#messageType#${message.messageType}`;
+
+    const createdAt = new Date(message.createdAt);
+    const speed = (
+      createdAt.getUTCSeconds() * 1000 +
+      createdAt.getUTCMilliseconds()
+    )
+      .toString()
+      .padStart(5, "0");
+    messageDbo["sk3"] =
+      `speed#${speed}#createdAt#${message.createdAt}#messageId#${message.id}`;
+  }
 
   const command = new PutCommand({
     TableName: tableName,

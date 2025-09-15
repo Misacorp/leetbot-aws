@@ -9,7 +9,7 @@ import { upsertUser } from "@/src/repository/user/upsertUser";
  * Determines if a message type is related to the "Leet Game".
  * @param messageType Message type
  */
-const isGameMessage = (
+export const isGameMessage = (
   messageType: MessageType,
 ): messageType is "leet" | "leeb" | "failed_leet" => {
   return (
@@ -25,16 +25,19 @@ const isGameMessage = (
  */
 export const hasAlreadyPostedOnDate = async ({
   tableName,
+  guildId,
   userId,
   // Message creation timestamp
   createdTimestamp,
 }: {
   tableName: string;
+  guildId: string;
   userId: string;
   createdTimestamp: number;
 }): Promise<boolean> => {
   const existingMessages = await getUserMessagesByDate({
     tableName,
+    guildId,
     userId,
     date: new Date(createdTimestamp),
   });

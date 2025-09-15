@@ -32,6 +32,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -39,6 +40,7 @@ describe("messageEvaluator > util", () => {
         expect(result).toBe(true);
         expect(mockGetUserMessagesByDate).toHaveBeenCalledWith({
           tableName,
+          guildId: "guild1",
           userId,
           date: new Date(timestamp),
         });
@@ -57,6 +59,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -77,6 +80,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -104,6 +108,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -118,6 +123,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -138,6 +144,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -158,6 +165,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -185,6 +193,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -221,6 +230,7 @@ describe("messageEvaluator > util", () => {
 
         const result = await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: timestamp,
         });
@@ -238,12 +248,14 @@ describe("messageEvaluator > util", () => {
 
         await hasAlreadyPostedOnDate({
           tableName,
+          guildId: "guild1",
           userId,
           createdTimestamp: specificTimestamp,
         });
 
         expect(mockGetUserMessagesByDate).toHaveBeenCalledWith({
           tableName,
+          guildId: "guild1",
           userId,
           date: new Date(specificTimestamp),
         });

@@ -48,6 +48,17 @@ export class Table extends Construct implements ITable {
         type: ddb.AttributeType.STRING,
       },
     });
+    this.table.addGlobalSecondaryIndex({
+      indexName: "gsi3",
+      partitionKey: {
+        name: "pk3",
+        type: ddb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: "sk3",
+        type: ddb.AttributeType.STRING,
+      },
+    });
 
     this.setupDailyBackup(props.environment);
 

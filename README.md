@@ -153,19 +153,7 @@ When adding more layers, update `tsconfig.json` with a matching path to that lay
 
 ## DynamoDB Design
 
-> ⚠️ This section is used more for planning than documentation. It may not be up to date.
-
-The following is a list of database access patterns used by the application.
-
-| Access Pattern                                                                                         | Example Response                           | Index              |
-| ------------------------------------------------------------------------------------------------------ | ------------------------------------------ | ------------------ |
-| Check if a user has already posted a message of a given type today e.g., no duplicate `leet` messages. | `true`                                     | user-timestamp     |
-| Count the sums of all message types for a given guild.                                                 | `{ leet: 300, leeb: 77, failed_leet: 28 }` | guild-\*           |
-| Count the sums of all message types for a given user.                                                  | `{ leet: 10, leeb: 5, failed_leet: 1 }`    | user-timestamp     |
-| Get the user with the most messages of a given type in a given guild e.g., most `leet` messages.       | `{ user: {}, count: 31 }`                  | guild-message-type |
-| Count the number of `leet` messages for each user in a given guild.                                    | `[{ user: {}, count: 31 }]`                | guild-message-type |
-| Get the users with the fastest messages of a given type e.g., top 10 fastest `leet`.                   | ???                                        | ???                |
-| Get the users with the slowest messages of a given type e.g., top 10 slowest `leeb`.                   | ???                                        | ???                |
+See the `types.ts` files in `src/repository` for detailed descriptions about database indices and access patterns.
 
 # Deployment
 

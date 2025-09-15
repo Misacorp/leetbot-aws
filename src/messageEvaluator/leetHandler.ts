@@ -71,9 +71,10 @@ export const leetHandler = async ({
 
   // Check if the user has already posted a message today
   if (skipUniquenessCheck) {
-    console.info("Skipping uniqueness check…");
+    logger.info("Skipping uniqueness check…");
   } else if (
     await hasAlreadyPostedOnDate({
+      guildId: guild.id,
       userId: message.author.id,
       createdTimestamp: message.createdTimestamp,
       tableName,
