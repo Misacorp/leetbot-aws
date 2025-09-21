@@ -10,7 +10,7 @@ import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import { getRemovalPolicy } from "@/src/util/infra";
 import { type ITable } from "@/lib/constructs/Table";
-import type { ILambdaLayers } from "./LambdaLayers";
+import type { ILambdaLayers } from "../LambdaLayers";
 
 interface Props {
   readonly layers: ILambdaLayers;
@@ -159,9 +159,15 @@ export class DiscordBot extends Construct {
         retention: logs.RetentionDays.THREE_DAYS,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       }),
+      layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
       bundling: {
         minify: false,
-        externalModules: ["@aws-sdk/*"],
+        externalModules: [
+          "@aws-sdk/*",
+          "discord.js",
+          "date-fns",
+          "date-fns-tz",
+        ],
       },
       environment: {
         TABLE_NAME: props.table.tableName,

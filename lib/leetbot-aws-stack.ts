@@ -1,9 +1,10 @@
 import { Stack, type StackProps, Tags } from "aws-cdk-lib";
 import { type Construct } from "constructs";
-import { LambdaLayers } from "./constructs/DiscordBot/LambdaLayers";
-import { DiscordBot } from "./constructs/DiscordBot/DiscordBot";
+import { LambdaLayers } from "./constructs/Discord/LambdaLayers";
+import { DiscordBot } from "@/lib/constructs/Discord/DiscordBot/DiscordBot";
 import { EventScheduler } from "./constructs/EventScheduler";
 import { Table } from "./constructs/Table";
+import { DiscordCommandHandler } from "@/lib/constructs/Discord/DiscordCommandHandler/DiscordCommandHandler";
 
 /**
  * Main CloudFormation stack
@@ -39,6 +40,10 @@ export class LeetbotAwsStack extends Stack {
       // Run every day at 13:36 Helsinki time
       scheduleExpression: "cron(35 13 * * ? *)",
       scheduleExpressionTimezone: "Europe/Helsinki",
+    });
+
+    new DiscordCommandHandler(this, "DiscordCommands", {
+      layers: this.lambdaLayers,
     });
   }
 
