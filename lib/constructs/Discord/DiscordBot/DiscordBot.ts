@@ -4,7 +4,7 @@ import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources"; // Add this import
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";

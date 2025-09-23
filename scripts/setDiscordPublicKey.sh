@@ -30,7 +30,7 @@ if [ ! -f "$outputs_file" ]; then
 fi
 
 # Read the parameter name from the environment-specific outputs file
-parameter_name=$(jq -r ".[\"$stack_name\"] | to_entries[] | select(.key | startswith(\"DiscordCommandsDiscordPublicKeyParam\")) | .value" "$outputs_file")
+parameter_name=$(jq -r ".[\"$stack_name\"] | to_entries[] | select(.key | startswith(\"DiscordParametersDiscordPublicKeyParameter\")) | .value" "$outputs_file")
 
 if [ "$parameter_name" = "null" ] || [ -z "$parameter_name" ]; then
   echo "Error: Could not find Discord public key parameter name in $outputs_file for stack $stack_name"

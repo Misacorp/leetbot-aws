@@ -6,7 +6,6 @@ import {
   ComponentType,
 } from "/opt/nodejs/discord";
 
-// Use Discord.js types for better type safety
 export interface DiscordInteractionData {
   id: string;
   token: string;

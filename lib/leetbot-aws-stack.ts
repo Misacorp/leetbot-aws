@@ -5,6 +5,7 @@ import { DiscordBot } from "@/lib/constructs/Discord/DiscordBot/DiscordBot";
 import { EventScheduler } from "./constructs/EventScheduler";
 import { Table } from "./constructs/Table";
 import { DiscordCommandHandler } from "@/lib/constructs/Discord/DiscordCommandHandler/DiscordCommandHandler";
+import { DiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 
 /**
  * Main CloudFormation stack
@@ -14,6 +15,7 @@ export class LeetbotAwsStack extends Stack {
   private readonly table: Table;
   private readonly discordBot: DiscordBot;
   private readonly scheduler: EventScheduler;
+  private readonly discordParameters: DiscordParameters;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -42,8 +44,12 @@ export class LeetbotAwsStack extends Stack {
       scheduleExpressionTimezone: "Europe/Helsinki",
     });
 
+    this.discordParameters = new DiscordParameters(this, "DiscordParameters");
+
     new DiscordCommandHandler(this, "DiscordCommands", {
       layers: this.lambdaLayers,
+      environment: deploymentEnvironment,
+      parameters: this.discordParameters,
     });
   }
 
