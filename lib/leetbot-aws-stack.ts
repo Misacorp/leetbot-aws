@@ -50,6 +50,7 @@ export class LeetbotAwsStack extends Stack {
       layers: this.lambdaLayers,
       environment: deploymentEnvironment,
       parameters: this.discordParameters,
+      table: this.table,
     });
   }
 

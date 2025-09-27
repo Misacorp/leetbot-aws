@@ -17,11 +17,13 @@ import {
   IInteractionsApi,
   InteractionsApi,
 } from "@/lib/constructs/Discord/DiscordCommandHandler/InteractionsApi";
+import { ITable } from "@/lib/constructs/Table";
 
 interface Props {
   readonly layers: ILambdaLayers;
   readonly environment: string;
   readonly parameters: IDiscordParameters;
+  readonly table: ITable;
 }
 
 /**
@@ -115,9 +117,12 @@ export class DiscordCommandHandler extends Construct {
         minify: false,
         externalModules: ["@aws-sdk/*"],
       },
-      environment: {},
+      environment: {
+        TABLE_NAME: props.table.tableName,
+      },
       description: "Handles all slash commands.",
     });
+    props.table.grantReadWriteData(this.slashCommandWorker);
 
     // Ingress (Lambda-handled publish) - SNS - SQS - Worker
     this.commandProcessingTopic.addSubscription(
