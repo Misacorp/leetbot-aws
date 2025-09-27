@@ -6,6 +6,7 @@ export interface User {
 }
 
 export interface UserDbo extends User {
-  pk1: `user#${User["id"]}`;
-  sk1: `guild#${string}`;
+  // Allows querying all users in a given guild
+  pk1: `guild#${string}`;
+  sk1: `user#${User["id"]}`;
 }

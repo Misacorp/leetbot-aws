@@ -18,8 +18,8 @@ export const upsertUser = ({
 }): Promise<PutCommandOutput> => {
   const userDbo: UserDbo = {
     ...user,
-    pk1: `user#${user.id}`,
-    sk1: `guild#${guildId}`,
+    pk1: `guild#${guildId}`,
+    sk1: `user#${user.id}`,
   };
 
   const command = new PutCommand({
