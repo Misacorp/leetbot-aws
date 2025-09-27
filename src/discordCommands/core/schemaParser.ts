@@ -2,6 +2,8 @@ import {
   type APIApplicationCommandInteractionDataOption,
   type APIApplicationCommandInteractionDataBasicOption,
   type RESTPostAPIApplicationCommandsJSONBody,
+  type APIApplicationCommandBasicOption,
+  type APIApplicationCommandSubcommandOption,
   ApplicationCommandOptionType,
 } from "discord-api-types/v10";
 
@@ -33,14 +35,16 @@ type ExtractOptionValueType<T extends number> =
                     ? string
                     : string | number | boolean;
 
-// Extract choices if they exist, otherwise use the base type
+// Extract choices if they exist, otherwise use the base type (supports readonly and mutable arrays)
 type ExtractChoiceValues<T> = T extends {
   choices: readonly { value: infer V }[];
 }
   ? V
-  : T extends { type: infer TType extends number }
-    ? ExtractOptionValueType<TType>
-    : never;
+  : T extends { choices: { value: infer V }[] }
+    ? V
+    : T extends { type: infer TType extends number }
+      ? ExtractOptionValueType<TType>
+      : never;
 
 // Parse a single option definition into its runtime type
 type ParseOption<T> = T extends {
@@ -188,4 +192,64 @@ function parseDirectOptionsFromSchema<
   }
 
   return parsed;
+}
+
+// === OPTION BUILDER HELPERS TO REDUCE SCHEMA BOILERPLATE ===
+
+// Helper to extract the value union from a readonly choices array
+export type ChoiceValues<C> = C extends readonly { value: infer V }[]
+  ? V
+  : never;
+
+// Create a String option with optional choices while preserving literal unions from a readonly choices array
+export function stringOption<
+  N extends string,
+  C extends readonly { name: string; value: V }[] | undefined = undefined,
+  V extends string = string,
+>(name: N, description: string, opts?: { required?: boolean; choices?: C }) {
+  // Materialize a mutable choices array compatible with Discord API types,
+  // while keeping the literal union of values captured as V from the provided choices tuple
+  const choices = (
+    opts?.choices
+      ? opts.choices.map((c) => ({ name: c.name, value: c.value }))
+      : undefined
+  ) as C extends undefined
+    ? undefined
+    : { name: string; value: ChoiceValues<NonNullable<C>> }[];
+
+  return {
+    type: ApplicationCommandOptionType.String as const,
+    name,
+    description,
+    required: !!opts?.required,
+    ...(choices ? { choices } : {}),
+  } satisfies APIApplicationCommandBasicOption;
+}
+
+// Create a User option (Discord resolves to a user ID string)
+export function userOption<N extends string>(
+  name: N,
+  description: string,
+  opts?: { required?: boolean },
+) {
+  return {
+    type: ApplicationCommandOptionType.User as const,
+    name,
+    description,
+    required: !!opts?.required,
+  } satisfies APIApplicationCommandBasicOption;
+}
+
+// Create a Subcommand option wrapper
+export function subcommand<N extends string, O extends readonly any[]>(
+  name: N,
+  description: string,
+  options: O,
+) {
+  return {
+    type: ApplicationCommandOptionType.Subcommand as const,
+    name,
+    description,
+    options,
+  } satisfies APIApplicationCommandSubcommandOption;
 }

@@ -10,10 +10,10 @@ import logger from "@logger";
 
 export async function handleUserInfoCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-  data: UserInfoCommand, // Auto-generated from schema!
+  data: UserInfoCommand,
 ): Promise<{ statusCode: number; body: string }> {
-  const userId = data.username;
-  const window = data.window;
+  const userId = data.options.username;
+  const window = data.options.window;
 
   logger.info(
     {

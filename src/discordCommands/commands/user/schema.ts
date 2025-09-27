@@ -142,12 +142,16 @@ export type CommandInputTagged<
   }
     ? T
     : [],
-> =
-  HasSubcommand<Os> extends true
-    ? {
-        [K in SubNames<Os>]: { subcommand: K; options: SubOptions<Os, K> };
-      }[SubNames<Os>]
+> = {
+  subcommand?: SubNames<Os>;
+  options: HasSubcommand<Os> extends true
+    ? SubNames<Os> extends infer K extends string
+      ? K extends SubNames<Os>
+        ? SubOptions<Os, K>
+        : never
+      : never
     : PartialExcept<OptionsToRecord<Os>, RequiredNames<Os>>;
+};
 
 /**
  * 🧰 Helper functions to map from Discord Webhook payloads to these types
@@ -179,43 +183,50 @@ type Tagged =
     };
 
 /** Convert Discord webhook payload to a tagged shape that’s easy to `switch` on. */
-export function normalizeChatInput(
+export function normalizeChatInput<
+  S extends RESTPostAPIApplicationCommandsJSONBody & {
+    options?: readonly { name: string; type: ApplicationCommandOptionType }[];
+  },
+>(
   i: APIChatInputApplicationCommandInteraction,
-) {
+  _schema: S,
+): { command: string } & CommandInputTagged<S> {
   const top = i.data.options?.[0];
+
   if (!top) {
     return {
       command: i.data.name,
-      kind: "no-sub",
-      options: {},
-    };
+      options: {} as CommandInputTagged<S>["options"],
+    } as { command: string } & CommandInputTagged<S>;
   }
 
   if (top.type === ApplicationCommandOptionType.Subcommand) {
     return {
       command: i.data.name,
-      kind: "sub",
-      subcommand: top.name,
-      options: optionsArrayToRecord(top.options),
-    };
+      subcommand: top.name as CommandInputTagged<S>["subcommand"],
+      options: optionsArrayToRecord(
+        top.options,
+      ) as CommandInputTagged<S>["options"],
+    } as { command: string } & CommandInputTagged<S>;
   }
 
   if (top.type === ApplicationCommandOptionType.SubcommandGroup) {
     const sub = top.options?.[0];
     return {
       command: i.data.name,
-      kind: "group",
-      group: top.name,
-      subcommand: sub?.name ?? "",
-      options: optionsArrayToRecord(sub?.options),
-    };
+      subcommand: sub?.name as CommandInputTagged<S>["subcommand"],
+      options: optionsArrayToRecord(
+        sub?.options,
+      ) as CommandInputTagged<S>["options"],
+    } as { command: string } & CommandInputTagged<S>;
   }
 
   return {
     command: i.data.name,
-    kind: "no-sub",
-    options: optionsArrayToRecord(i.data.options as any),
-  };
+    options: optionsArrayToRecord(
+      i.data.options as any,
+    ) as CommandInputTagged<S>["options"],
+  } as { command: string } & CommandInputTagged<S>;
 }
 
 /* ---------------------------------------------- */
@@ -274,8 +285,10 @@ function testUserInfo(data: UserInfoInput) {
 }
 
 const userTagged: CommandInputTagged<typeof UserInfoCommandSchema> = {
-  username: "asd",
-  window: "all_time",
+  options: {
+    username: "asd",
+    window: "all_time",
+  },
 };
 
 /**

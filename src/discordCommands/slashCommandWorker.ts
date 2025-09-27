@@ -5,9 +5,15 @@ import { isAPIChatInputCommandInteraction } from "@/src/discordCommands/typeGuar
 import { type APIInteraction } from "discord-api-types/v10";
 import { handleRankingCommand } from "./commands/ranking/handler";
 import { handleUserInfoCommand } from "./commands/user/handler";
-import { normalizeChatInput } from "@/src/discordCommands/commands/user/schema";
-import { type UserInfoCommand } from "./commands/user/schema";
-import { type RankingCommand } from "./commands/user/schema";
+import {
+  normalizeChatInput,
+  RankingCommandSchema,
+  UserInfoCommandSchema,
+} from "@/src/discordCommands/commands/user/schema";
+import {
+  type UserInfoCommand,
+  type RankingCommand,
+} from "./commands/user/schema";
 
 /**
  * Schema-driven Discord slash command worker.
@@ -35,32 +41,20 @@ export const handler = async (event: SQSEvent) => {
 
     try {
       // Schema-driven parsing - fully automatic and type-safe!
-      const commandData = normalizeChatInput(interaction);
+      const commandName = interaction.data.name;
 
-      if (!commandData) {
-        throw new Error("Failed to parse command");
-      }
-
-      logger.info(
-        { command: commandData.command },
-        "Parsed command via schema",
-      );
-
-      switch (commandData.command) {
-        case "ranking":
-          return await handleRankingCommand(
-            interaction,
-            commandData as RankingCommand,
-          );
+      switch (commandName) {
         case "user": {
-          return await handleUserInfoCommand(
-            interaction,
-            commandData.options as UserInfoCommand,
-          );
+          const data = normalizeChatInput(interaction, UserInfoCommandSchema);
+          return await handleUserInfoCommand(interaction, data);
+        }
+        case "ranking": {
+          const data = normalizeChatInput(interaction, RankingCommandSchema);
+          return await handleRankingCommand(interaction, data);
         }
       }
 
-      throw new Error(`Unknown command: ${commandData.command}`);
+      throw new Error(`Unknown command: ${commandName}`);
     } catch (error) {
       logger.error(
         {

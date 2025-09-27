@@ -24,6 +24,12 @@ export async function handleRankingCommand(
     "Processing ranking command",
   );
 
+  if (!data.subcommand) {
+    await updateOriginalResponse(interaction, {
+      content: `No subcommand specified. Give me a leet, leeb or failed_leet`,
+    });
+  }
+
   const messageTypeMap = {
     leet: MessageTypes.LEET,
     leeb: MessageTypes.LEEB,
@@ -68,7 +74,7 @@ export async function handleRankingCommand(
       );
 
     const windowText = getWindowDisplayText(window);
-    responseContent = `**${data.subcommand.toUpperCase()} Rankings** ${windowText}\n\n${rankings.join("\n")}`;
+    responseContent = `**${data.subcommand?.toUpperCase()} Rankings** ${windowText}\n\n${rankings.join("\n")}`;
   }
 
   const result = await updateOriginalResponse(interaction, {
