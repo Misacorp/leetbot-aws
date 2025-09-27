@@ -1,5 +1,5 @@
 import { type APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
-import { type UserInfoCommandData } from "./schema";
+import { UserInfoCommand } from "./schema";
 import { updateOriginalResponse } from "../../discordWebhook";
 import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
@@ -10,10 +10,10 @@ import logger from "@logger";
 
 export async function handleUserInfoCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-  data: UserInfoCommandData, // Auto-generated from schema!
+  data: UserInfoCommand, // Auto-generated from schema!
 ): Promise<{ statusCode: number; body: string }> {
-  const userId = data.options.username; // Discord User option provides the user ID
-  const window = data.options.window;
+  const userId = data.username;
+  const window = data.window;
 
   logger.info(
     {

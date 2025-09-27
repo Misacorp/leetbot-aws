@@ -1,5 +1,9 @@
 // src/command-typegen.ts
 import {
+  APIApplicationCommandInteractionDataBasicOption,
+  APIApplicationCommandInteractionDataSubcommandGroupOption,
+  APIApplicationCommandInteractionDataSubcommandOption,
+  APIChatInputApplicationCommandInteraction,
   ApplicationCommandOptionType,
   ApplicationCommandType,
   type RESTPostAPIApplicationCommandsJSONBody,
@@ -53,6 +57,20 @@ type SubcommandUnion<
       ? { [K in S["name"]]: SubcommandValue<Extract<S, { name: K }>> }
       : never
     : never;
+
+// Names of subcommands from an options tuple
+type SubNames<
+  Os extends readonly { name: string; type: ApplicationCommandOptionType }[],
+> = Extract<
+  Os[number],
+  { type: ApplicationCommandOptionType.Subcommand }
+>["name"];
+
+// Value for a specific subcommand
+type SubOptions<
+  Os extends readonly any[],
+  K extends SubNames<Os>,
+> = SubcommandValue<Extract<Os[number], { name: K }>>;
 
 /** If an option provides choices, narrow to the union of their values. */
 type ChoiceValue<
@@ -109,6 +127,97 @@ export type CommandInput<
     ? SubcommandUnion<Os>
     : PartialExcept<OptionsToRecord<Os>, RequiredNames<Os>>;
 
+export type CommandInputTagged<
+  S extends RESTPostAPIApplicationCommandsJSONBody & {
+    options?: readonly { name: string; type: ApplicationCommandOptionType }[];
+  },
+  Os extends readonly {
+    name: string;
+    type: ApplicationCommandOptionType;
+  }[] = S extends {
+    options: infer T extends readonly {
+      name: string;
+      type: ApplicationCommandOptionType;
+    }[];
+  }
+    ? T
+    : [],
+> =
+  HasSubcommand<Os> extends true
+    ? {
+        [K in SubNames<Os>]: { subcommand: K; options: SubOptions<Os, K> };
+      }[SubNames<Os>]
+    : PartialExcept<OptionsToRecord<Os>, RequiredNames<Os>>;
+
+/**
+ * 🧰 Helper functions to map from Discord Webhook payloads to these types
+ */
+type OptionsRecord = Record<string, string | number | boolean>;
+
+function optionsArrayToRecord(
+  opts: readonly APIApplicationCommandInteractionDataBasicOption[] | undefined,
+): OptionsRecord {
+  const out: OptionsRecord = {};
+  for (const o of opts ?? []) {
+    // For entity-type options (user/channel/role/mentionable/attachment),
+    // Discord sends IDs as strings in o.value; resolved objects are in interaction.data.resolved.
+    // If you want resolved objects, join from interaction.data.resolved here.
+    // For now, we keep IDs.
+    out[o.name] = o.value;
+  }
+  return out;
+}
+
+type Tagged =
+  | { kind: "no-sub"; options: OptionsRecord }
+  | { kind: "sub"; subcommand: string; options: OptionsRecord }
+  | {
+      kind: "group";
+      group: string;
+      subcommand: string;
+      options: OptionsRecord;
+    };
+
+/** Convert Discord webhook payload to a tagged shape that’s easy to `switch` on. */
+export function normalizeChatInput(
+  i: APIChatInputApplicationCommandInteraction,
+) {
+  const top = i.data.options?.[0];
+  if (!top) {
+    return {
+      command: i.data.name,
+      kind: "no-sub",
+      options: {},
+    };
+  }
+
+  if (top.type === ApplicationCommandOptionType.Subcommand) {
+    return {
+      command: i.data.name,
+      kind: "sub",
+      subcommand: top.name,
+      options: optionsArrayToRecord(top.options),
+    };
+  }
+
+  if (top.type === ApplicationCommandOptionType.SubcommandGroup) {
+    const sub = top.options?.[0];
+    return {
+      command: i.data.name,
+      kind: "group",
+      group: top.name,
+      subcommand: sub?.name ?? "",
+      options: optionsArrayToRecord(sub?.options),
+    };
+  }
+
+  return {
+    command: i.data.name,
+    kind: "no-sub",
+    options: optionsArrayToRecord(i.data.options as any),
+  };
+}
+
 /* ---------------------------------------------- */
 /* Example usage with your schema                  */
 /* ---------------------------------------------- */
@@ -140,6 +249,8 @@ export const UserInfoCommandSchema = {
 } as const satisfies RESTPostAPIApplicationCommandsJSONBody;
 
 type UserInfoInput = CommandInput<typeof UserInfoCommandSchema>;
+// TODO: Rename these
+export type UserInfoCommand = CommandInputTagged<typeof UserInfoCommandSchema>;
 
 // ✅ IntelliSense:
 //    - username: required, type string (user ID)
@@ -161,6 +272,11 @@ function testUserInfo(data: UserInfoInput) {
   const window = data.window;
   const username = data.username;
 }
+
+const userTagged: CommandInputTagged<typeof UserInfoCommandSchema> = {
+  username: "asd",
+  window: "all_time",
+};
 
 /**
  * RANKING COMMAND
@@ -244,22 +360,26 @@ export const RankingCommandSchema = {
   ],
 } as const satisfies RESTPostAPIApplicationCommandsJSONBody;
 
-type RankingInput = CommandInput<typeof RankingCommandSchema>;
+// ⚠️ Note the "Tagged" version is used.
+export type RankingCommand = CommandInputTagged<typeof RankingCommandSchema>;
 
-const testRanking01: RankingInput = {
-  leeb: {
+const testRanking01: RankingCommand = {
+  subcommand: "leet",
+  options: {
     window: "this_week",
   },
 };
 
-function testRanking(data: RankingInput) {
-  if ("leet" in data) {
-    const window = data.leet.window;
-  }
-  if ("leeb" in data) {
-    const window = data.leeb.window;
-  }
-  if ("failed_leet" in data) {
-    const window = data.failed_leet.window;
+function handleRankingTagged(d: RankingCommand) {
+  switch (d.subcommand) {
+    case "leet":
+      d.options.window;
+      break;
+    case "leeb":
+      d.options.window;
+      break;
+    case "failed_leet":
+      d.options.window;
+      break;
   }
 }

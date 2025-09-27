@@ -1,5 +1,5 @@
 import { type APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
-import { type RankingCommandData } from "./schema";
+// import { type RankingCommandData } from "./schema";
 import { updateOriginalResponse } from "../../discordWebhook";
 import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
@@ -8,12 +8,13 @@ import { MessageTypes } from "@/src/types";
 import type { Message } from "@/src/repository/message/types";
 import type { User } from "@/src/repository/user/types";
 import logger from "@logger";
+import { RankingCommand } from "@/src/discordCommands/commands/user/schema";
 
 export async function handleRankingCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-  data: RankingCommandData, // This is now auto-generated from schema!
+  data: RankingCommand, // This is now auto-generated from schema!
 ): Promise<{ statusCode: number; body: string }> {
-  const window = data.options?.window;
+  const window = data.options.window;
 
   logger.info(
     {

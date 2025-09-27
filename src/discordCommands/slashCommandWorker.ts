@@ -3,13 +3,11 @@ import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
 import { sendErrorResponse } from "./discordWebhook";
 import { isAPIChatInputCommandInteraction } from "@/src/discordCommands/typeGuards";
 import { type APIInteraction } from "discord-api-types/v10";
-import {
-  parseCommand,
-  isRankingCommand,
-  isUserInfoCommand,
-} from "./core/router";
 import { handleRankingCommand } from "./commands/ranking/handler";
 import { handleUserInfoCommand } from "./commands/user/handler";
+import { normalizeChatInput } from "@/src/discordCommands/commands/user/schema";
+import { type UserInfoCommand } from "./commands/user/schema";
+import { type RankingCommand } from "./commands/user/schema";
 
 /**
  * Schema-driven Discord slash command worker.
@@ -37,7 +35,7 @@ export const handler = async (event: SQSEvent) => {
 
     try {
       // Schema-driven parsing - fully automatic and type-safe!
-      const commandData = parseCommand(interaction);
+      const commandData = normalizeChatInput(interaction);
 
       if (!commandData) {
         throw new Error("Failed to parse command");
@@ -48,11 +46,18 @@ export const handler = async (event: SQSEvent) => {
         "Parsed command via schema",
       );
 
-      // Type-safe routing with auto-generated data types
-      if (isRankingCommand(commandData)) {
-        return await handleRankingCommand(interaction, commandData.data);
-      } else if (isUserInfoCommand(commandData)) {
-        return await handleUserInfoCommand(interaction, commandData.data);
+      switch (commandData.command) {
+        case "ranking":
+          return await handleRankingCommand(
+            interaction,
+            commandData as RankingCommand,
+          );
+        case "user": {
+          return await handleUserInfoCommand(
+            interaction,
+            commandData.options as UserInfoCommand,
+          );
+        }
       }
 
       throw new Error(`Unknown command: ${commandData.command}`);
