@@ -13,7 +13,7 @@ export interface ParsedCommandOptions {
  * Generic parser for Discord slash command options that handles subcommands, subcommand groups, and basic options
  */
 export function parseCommandOptions(
-  topLevelOptions: APIApplicationCommandInteractionDataOption[],
+  topLevelOptions: APIApplicationCommandInteractionDataOption[] = [],
 ): ParsedCommandOptions {
   if (topLevelOptions.length === 0) {
     return { options: new Map() };

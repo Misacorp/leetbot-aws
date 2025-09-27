@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { REST, Routes } from "/opt/nodejs/discord";
-import { ALL_COMMAND_SCHEMAS } from "@/src/discordCommands/registration/commands";
+import { ALL_COMMAND_SCHEMAS } from "@/src/discordCommands/core/registry";
 
 // dev, prd, etc.
 const env = process.env.NODE_ENV || "dev";

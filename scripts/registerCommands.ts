@@ -1,5 +1,6 @@
 import { config } from "dotenv";
-import { REST, Routes, SlashCommandBuilder } from "/opt/nodejs/discord";
+import { REST, Routes } from "/opt/nodejs/discord";
+import { ALL_COMMAND_SCHEMAS } from "../src/discordCommands/core/registry";
 
 // dev, prd, etc.
 const env = process.env.NODE_ENV || "dev";
@@ -16,60 +17,21 @@ if (!TOKEN || !CLIENT_ID) {
   );
 }
 
-// Define your commands here
-const commands = [
-  new SlashCommandBuilder()
-    .setName("ranking")
-    .setDescription("Get LeetCode ranking information")
-    .addStringOption((option) =>
-      option
-        .setName("username")
-        .setDescription("LeetCode username")
-        .setRequired(false),
-    ),
-
-  new SlashCommandBuilder()
-    .setName("speed")
-    .setDescription("Get speed statistics")
-    .addStringOption((option) =>
-      option
-        .setName("mode")
-        .setDescription("Fastest or slowest")
-        .setRequired(false)
-        .addChoices(
-          { name: "fastest", value: "fastest" },
-          { name: "slowest", value: "slowest" },
-        ),
-    )
-    .addStringOption((option) =>
-      option
-        .setName("type")
-        .setDescription("Message type")
-        .setRequired(false)
-        .addChoices(
-          { name: "leet", value: "leet" },
-          { name: "leeb", value: "leeb" },
-          { name: "failed leet", value: "failed_leet" },
-        ),
-    )
-    .addStringOption((option) =>
-      option
-        .setName("window")
-        .setDescription("Time window")
-        .setRequired(false)
-        .addChoices(
-          { name: "Daily", value: "daily" },
-          { name: "Weekly", value: "weekly" },
-          { name: "Monthly", value: "monthly" },
-        ),
-    ),
-].map((command) => command.toJSON());
+// Use type-safe command schemas for registration
+const commands = ALL_COMMAND_SCHEMAS.map((schema) => {
+  // Convert readonly schema to a plain mutable object for REST call
+  return JSON.parse(JSON.stringify(schema));
+});
 
 const rest = new REST().setToken(TOKEN);
 
 async function registerCommands() {
   try {
     console.log("Started refreshing application (/) commands.");
+    console.log(
+      `Registering ${commands.length} commands:`,
+      commands.map((cmd) => cmd.name).join(", "),
+    );
 
     if (GUILD_ID) {
       // Register guild-specific commands (faster for development)

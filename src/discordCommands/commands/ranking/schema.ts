@@ -4,13 +4,9 @@ import {
   ApplicationCommandType,
   ApplicationCommandOptionType,
 } from "discord-api-types/v10";
+import { type CommandWindow } from "@/src/discordCommands/core/types";
 
 export type RankingSubcommand = "leet" | "leeb" | "failed_leet";
-export type CommandWindow =
-  | "this_month"
-  | "this_week"
-  | "this_year"
-  | "all_time";
 
 const timeWindowOption: APIApplicationCommandOption = {
   type: ApplicationCommandOptionType.String,
@@ -55,41 +51,3 @@ export interface RankingCommandData {
   subcommand: RankingSubcommand;
   window?: CommandWindow;
 }
-
-export const UserInfoCommandSchema = {
-  name: "user",
-  description: "Get user information",
-  type: ApplicationCommandType.ChatInput,
-  options: [
-    {
-      type: ApplicationCommandOptionType.User,
-      name: "username",
-      description: "Username",
-      required: true,
-    },
-    timeWindowOption,
-  ],
-} as const satisfies RESTPostAPIApplicationCommandsJSONBody;
-
-export interface UserInfoCommandData {
-  userId: string; // Discord user ID from the User option
-  window?: CommandWindow;
-}
-
-// === COMMAND REGISTRY ===
-// This creates a union type of all possible command data
-export type CommandData =
-  | { command: "ranking"; data: RankingCommandData }
-  | { command: "user"; data: UserInfoCommandData };
-
-// Extract the command names as a union type
-export type CommandName = CommandData["command"];
-
-// Registry of all command schemas
-export const COMMAND_SCHEMAS = {
-  ranking: RankingCommandSchema,
-  user: UserInfoCommandSchema,
-} as const;
-
-// Type to get all schemas as an array (useful for registration)
-export const ALL_COMMAND_SCHEMAS = Object.values(COMMAND_SCHEMAS);
