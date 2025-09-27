@@ -11,6 +11,10 @@ import {
 import { handleRankingCommand } from "./commands/ranking/handler";
 import { handleUserInfoCommand } from "./commands/user/handler";
 
+/**
+ * Schema-driven Discord slash command worker.
+ * Commands are automatically parsed from their schemas - no manual parsing needed!
+ */
 export const handler = async (event: SQSEvent) => {
   const promises = event.Records.map(async (record: SQSRecord) => {
     logger.debug({ record }, "Raw SQS record");
@@ -32,23 +36,26 @@ export const handler = async (event: SQSEvent) => {
     }
 
     try {
-      // Parse the command using type-safe routing
+      // Schema-driven parsing - fully automatic and type-safe!
       const commandData = parseCommand(interaction);
 
       if (!commandData) {
         throw new Error("Failed to parse command");
       }
 
-      logger.info({ command: commandData.command }, "Parsed command");
+      logger.info(
+        { command: commandData.command },
+        "Parsed command via schema",
+      );
 
-      // Type-safe routing
+      // Type-safe routing with auto-generated data types
       if (isRankingCommand(commandData)) {
         return await handleRankingCommand(interaction, commandData.data);
       } else if (isUserInfoCommand(commandData)) {
         return await handleUserInfoCommand(interaction, commandData.data);
       }
 
-      throw new Error(`Unknown command.`);
+      throw new Error(`Unknown command: ${commandData.command}`);
     } catch (error) {
       logger.error(
         {

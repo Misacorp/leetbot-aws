@@ -1,24 +1,33 @@
 import {
   type RESTPostAPIApplicationCommandsJSONBody,
-  type APIApplicationCommandOption,
+  type APIApplicationCommandOptionChoice,
   ApplicationCommandType,
   ApplicationCommandOptionType,
 } from "discord-api-types/v10";
-import { type CommandWindow } from "@/src/discordCommands/core/types";
+import { type ParsedFromSchema } from "../../core/schemaParser";
 
-export type RankingSubcommand = "leet" | "leeb" | "failed_leet";
+const TIME_WINDOW_VALUES = [
+  "this_month",
+  "this_week",
+  "this_year",
+  "all_time",
+] as const;
+export type TimeWindowValue = (typeof TIME_WINDOW_VALUES)[number];
 
-const timeWindowOption: APIApplicationCommandOption = {
-  type: ApplicationCommandOptionType.String,
-  name: "window",
-  description: "Time window for the ranking",
-  required: false,
-  choices: [
+const timeWindowChoices: APIApplicationCommandOptionChoice<TimeWindowValue>[] =
+  [
     { name: "This Month", value: "this_month" },
     { name: "This Week", value: "this_week" },
     { name: "This Year", value: "this_year" },
     { name: "All Time", value: "all_time" },
-  ],
+  ];
+
+const timeWindowOption = {
+  type: ApplicationCommandOptionType.String as const,
+  name: "window",
+  description: "Time window for the ranking",
+  required: false,
+  choices: timeWindowChoices,
 };
 
 export const RankingCommandSchema = {
@@ -47,7 +56,5 @@ export const RankingCommandSchema = {
   ],
 } as const satisfies RESTPostAPIApplicationCommandsJSONBody;
 
-export interface RankingCommandData {
-  subcommand: RankingSubcommand;
-  window?: CommandWindow;
-}
+// Auto-generated from schema! No need to maintain this manually
+export type RankingCommandData = ParsedFromSchema<typeof RankingCommandSchema>;

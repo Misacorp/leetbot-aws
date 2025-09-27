@@ -11,12 +11,14 @@ import logger from "@logger";
 
 export async function handleRankingCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-  data: RankingCommandData,
+  data: RankingCommandData, // This is now auto-generated from schema!
 ): Promise<{ statusCode: number; body: string }> {
+  const window = data.options?.window;
+
   logger.info(
     {
-      subcommand: data.subcommand,
-      window: data.window,
+      subcommand: data.subcommand, // Fully typed: "leet" | "leeb" | "failed_leet"
+      window: window, // Using type assertion temporarily
     },
     "Processing ranking command",
   );
@@ -28,7 +30,7 @@ export async function handleRankingCommand(
   } as const;
 
   const messageType = messageTypeMap[data.subcommand];
-  const { startDate, endDate } = getDateRange(data.window);
+  const { startDate, endDate } = getDateRange(window);
 
   let responseContent = "No data available";
 
@@ -64,7 +66,7 @@ export async function handleRankingCommand(
           `${index + 1}. ${userMap.get(userId)?.displayName ?? "Unknown User"}: ${messages.length}`,
       );
 
-    const windowText = getWindowDisplayText(data.window);
+    const windowText = getWindowDisplayText(window);
     responseContent = `**${data.subcommand.toUpperCase()} Rankings** ${windowText}\n\n${rankings.join("\n")}`;
   }
 

@@ -1,61 +1,38 @@
 import { type APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
-import { parseCommandOptions } from "./parser";
-import { type CommandName } from "./types";
+import { parseFromSchema } from "./schemaParser";
 import {
-  type RankingCommandData,
-} from "../commands/ranking/schema";
-import {
-  type UserInfoCommandData,
-} from "../commands/user/schema";
+  COMMAND_SCHEMAS,
+  type CommandData,
+  type CommandName,
+} from "./registry";
 
-// Discriminated union of command data returned by the router
-export type CommandData =
-  | { command: "ranking"; data: RankingCommandData }
-  | { command: "user"; data: UserInfoCommandData };
-
+// Schema-driven command parser - works for any command automatically!
 export function parseCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): CommandData | null {
   const commandName = interaction.data.name as CommandName;
-  const topLevelOptions = interaction.data.options ?? [];
-  const parsed = parseCommandOptions(topLevelOptions);
+  const options = interaction.data.options ?? [];
 
-  switch (commandName) {
-    case "ranking": {
-      const rankingData = parseRankingFromParsed(parsed);
-      return rankingData ? { command: "ranking", data: rankingData } : null;
-    }
-    case "user": {
-      const userData = parseUserFromParsed(parsed);
-      return userData ? { command: "user", data: userData } : null;
-    }
-    default: {
-      const _exhaustive: never = commandName;
-      return null;
-    }
+  // Look up the schema for this command
+  const schema = COMMAND_SCHEMAS[commandName];
+  if (!schema) {
+    return null;
   }
-}
 
-function parseRankingFromParsed(parsed: ReturnType<typeof parseCommandOptions>): RankingCommandData | null {
-  if (!parsed.subcommand) return null;
+  // Parse using the schema - fully type-safe and automatic
+  const parsedData = parseFromSchema(schema, options);
+  if (!parsedData) {
+    return null;
+  }
 
+  // Return discriminated union
   return {
-    subcommand: parsed.subcommand as RankingCommandData["subcommand"],
-    window: parsed.options.get("window") as RankingCommandData["window"],
-  };
+    command: commandName,
+    data: parsedData,
+  } as CommandData;
 }
 
-function parseUserFromParsed(parsed: ReturnType<typeof parseCommandOptions>): UserInfoCommandData | null {
-  const userId = parsed.options.get("username") as string | undefined;
-  if (!userId) return null;
-
-  return {
-    userId,
-    window: parsed.options.get("window") as UserInfoCommandData["window"],
-  };
-}
-
-// Type guards to help route in handlers
+// Auto-generated type guards based on registry
 export function isRankingCommand(
   commandData: CommandData,
 ): commandData is Extract<CommandData, { command: "ranking" }> {
@@ -66,4 +43,12 @@ export function isUserInfoCommand(
   commandData: CommandData,
 ): commandData is Extract<CommandData, { command: "user" }> {
   return commandData.command === "user";
+}
+
+// Generic type guard factory for extensibility
+export function isCommand<K extends CommandName>(
+  commandData: CommandData,
+  commandName: K,
+): commandData is Extract<CommandData, { command: K }> {
+  return commandData.command === commandName;
 }

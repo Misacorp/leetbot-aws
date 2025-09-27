@@ -10,18 +10,21 @@ import logger from "@logger";
 
 export async function handleUserInfoCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-  data: UserInfoCommandData,
+  data: UserInfoCommandData, // Auto-generated from schema!
 ): Promise<{ statusCode: number; body: string }> {
+  const userId = data.options.username; // Discord User option provides the user ID
+  const window = data.options.window;
+
   logger.info(
     {
-      userId: data.userId,
-      window: data.window,
+      username: userId,
+      window: window,
     },
     "Processing user info command",
   );
 
-  const { startDate, endDate } = getDateRange(data.window);
-  const windowText = getWindowDisplayText(data.window);
+  const { startDate, endDate } = getDateRange(window);
+  const windowText = getWindowDisplayText(window);
 
   let responseContent = "No user data available";
 
@@ -31,13 +34,17 @@ export async function handleUserInfoCommand(
       guildId: interaction.guild_id,
     });
 
-    const user = guildMembers.find((u) => u.id === data.userId);
+    const user = guildMembers.find((u) => u.id === userId); // Note: username is actually userId from Discord User option
 
     if (!user) {
       responseContent = "❌ User not found in this server.";
     } else {
       // Fetch statistics for this user across message types
-      const messageTypes = [MessageTypes.LEET, MessageTypes.LEEB, MessageTypes.FAILED_LEET];
+      const messageTypes = [
+        MessageTypes.LEET,
+        MessageTypes.LEEB,
+        MessageTypes.FAILED_LEET,
+      ];
 
       const userStats = await Promise.all(
         messageTypes.map(async (messageType) => {
@@ -49,12 +56,16 @@ export async function handleUserInfoCommand(
             endDate,
           });
 
-          const userMessages = messages.filter((m: Message) => m.userId === data.userId);
+          const userMessages = messages.filter(
+            (m: Message) => m.userId === userId,
+          );
           return { type: messageType, count: userMessages.length };
         }),
       );
 
-      const statsText = userStats.map(({ type, count }) => `${type}: ${count}`).join("\n");
+      const statsText = userStats
+        .map(({ type, count }) => `${type}: ${count}`)
+        .join("\n");
       responseContent = `**User Info for ${user.displayName ?? user.username}** ${windowText}\n\n${statsText}`;
     }
   }
