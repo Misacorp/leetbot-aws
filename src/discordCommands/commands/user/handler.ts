@@ -21,7 +21,7 @@ export async function handleUserInfoCommand(
   );
 
   const userId = data.options.username;
-  const window = data.options.window;
+  const window = data.options.when;
 
   logger.info(
     {

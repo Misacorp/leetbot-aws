@@ -24,7 +24,7 @@ export async function handleRankingCommand(
     RankingCommandSchema,
   );
 
-  const window = data.options.window;
+  const window = data.options.when;
 
   logger.info(
     {
