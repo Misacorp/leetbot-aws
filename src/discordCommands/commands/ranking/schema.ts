@@ -4,6 +4,7 @@ import {
   ApplicationCommandOptionType,
 } from "discord-api-types/v10";
 import { CommandInputTagged } from "@/src/discordCommands/core/schemaParser";
+import { windowOption } from "@/src/discordCommands/core/common";
 
 export const RankingCommandSchema = {
   name: "ranking",
@@ -14,61 +15,21 @@ export const RankingCommandSchema = {
       type: ApplicationCommandOptionType.Subcommand,
       name: "leet",
       description: "Show leet message rankings",
-      options: [
-        {
-          type: ApplicationCommandOptionType.String as const,
-          name: "window",
-          description: "Time window constraint for the query",
-          required: false,
-          choices: [
-            { name: "This Month", value: "this_month" },
-            { name: "This Week", value: "this_week" },
-            { name: "This Year", value: "this_year" },
-            { name: "All Time", value: "all_time" },
-          ],
-        },
-      ],
+      options: [windowOption],
     },
     {
       type: ApplicationCommandOptionType.Subcommand,
       name: "leeb",
       description: "Show leeb message rankings",
-      options: [
-        {
-          type: ApplicationCommandOptionType.String as const,
-          name: "window",
-          description: "Time window constraint for the query",
-          required: false,
-          choices: [
-            { name: "This Month", value: "this_month" },
-            { name: "This Week", value: "this_week" },
-            { name: "This Year", value: "this_year" },
-            { name: "All Time", value: "all_time" },
-          ],
-        },
-      ],
+      options: [windowOption],
     },
     {
       type: ApplicationCommandOptionType.Subcommand,
       name: "failed_leet",
       description: "Show failed leet message rankings",
-      options: [
-        {
-          type: ApplicationCommandOptionType.String as const,
-          name: "window",
-          description: "Time window constraint for the query",
-          required: false,
-          choices: [
-            { name: "This Month", value: "this_month" },
-            { name: "This Week", value: "this_week" },
-            { name: "This Year", value: "this_year" },
-            { name: "All Time", value: "all_time" },
-          ],
-        },
-      ],
+      options: [windowOption],
     },
   ],
 } as const satisfies RESTPostAPIApplicationCommandsJSONBody;
 
-// ⚠️ Note the "Tagged" version is used.
 export type RankingCommand = CommandInputTagged<typeof RankingCommandSchema>;

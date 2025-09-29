@@ -69,7 +69,7 @@ type SubOptions<
 > = SubcommandValue<Extract<Os[number], { name: K }>>;
 
 /** If an option provides choices, narrow to the union of their values. */
-type ChoiceValue<
+export type ChoiceValue<
   O extends { choices?: readonly { value: unknown }[] } | unknown,
 > = O extends { choices: readonly (infer C)[] }
   ? C extends { value: unknown }
