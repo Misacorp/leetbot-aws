@@ -1,3 +1,4 @@
+import logger from "@logger";
 import {
   SSMClient,
   GetParameterCommand,
@@ -21,10 +22,12 @@ export async function getParameter(
   parameterName: string,
   withDecryption: boolean = false,
 ): Promise<string> {
+  logger.debug(`⏳ Getting parameter named ${parameterName}`);
+
   const cacheKey = `${parameterName}:${withDecryption}`;
   const cached = parameterCache.get(cacheKey);
 
-  // Return cached value if still valid
+  // Return a cached value if still valid
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.value;
   }
@@ -45,9 +48,14 @@ export async function getParameter(
       timestamp: Date.now(),
     });
 
+    logger.debug(`✅ Successfully retrieved parameter named ${parameterName}`);
+
     return value;
   } catch (error) {
-    console.error(`Failed to get SSM parameter ${parameterName}:`, error);
+    logger.error(
+      { error },
+      `❌ Failed to get SSM parameter named ${parameterName}:`,
+    );
     throw error;
   }
 }
@@ -71,9 +79,9 @@ export async function putParameter(
     parameterCache.delete(`${parameterName}:false`);
     parameterCache.delete(`${parameterName}:true`);
 
-    console.log(`Successfully updated SSM parameter ${parameterName}`);
+    logger.info(`Successfully updated SSM parameter ${parameterName}`);
   } catch (error) {
-    console.error(`Failed to put SSM parameter ${parameterName}:`, error);
+    logger.error({ error }, `Failed to put SSM parameter ${parameterName}`);
     throw error;
   }
 }
