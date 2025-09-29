@@ -28,7 +28,22 @@ async function registerCommands() {
     console.log("Started refreshing application (/) commands.");
 
     // Convert your command schemas to the format Discord expects
-    const commands = ALL_COMMAND_SCHEMAS.map((schema) => {
+    const commands = ALL_COMMAND_SCHEMAS.map((originalSchema) => {
+      const schema: typeof originalSchema & {
+        dm_permission?: boolean;
+        default_member_permissions?: string | undefined;
+      } = { ...originalSchema };
+
+      // If working in the dev environment, disable commands for everyone by default.
+      // Add permissions to users, roles or channels in Discord directly.
+      if (env !== "prd") {
+        schema.dm_permission = false; // no DMs
+        schema.default_member_permissions = "0"; // disabled for @everyone
+        console.log(
+          `Disabling the ${schema.name} command for everyone by default`,
+        );
+      }
+
       // The 'as const satisfies RESTPostAPIApplicationCommandsJSONBody' makes it readonly,
       // but Discord.js expects a mutable object, so we create a plain copy
       return JSON.parse(JSON.stringify(schema));
