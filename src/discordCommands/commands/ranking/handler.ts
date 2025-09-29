@@ -18,7 +18,7 @@ import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOrig
  */
 export async function handleRankingCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-): Promise<{ statusCode: number; body: string }> {
+): Promise<void> {
   const data: RankingCommand = normalizeChatInput(
     interaction,
     RankingCommandSchema,
@@ -41,10 +41,7 @@ export async function handleRankingCommand(
         content: `No subcommand specified. Give me a leet, leeb or failed_leet`,
       },
     });
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ ok: true, discordResponse: "yeet" }),
-    };
+    return;
   }
 
   const messageTypeMap = {
@@ -104,9 +101,4 @@ export async function handleRankingCommand(
   if (!result.success) {
     throw new Error(result.error || "Failed to send Discord response");
   }
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ ok: true, discordResponse: result.status }),
-  };
 }

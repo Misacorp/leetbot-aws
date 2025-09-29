@@ -78,5 +78,6 @@ export const handler = async (event: SQSEvent) => {
     ]);
   });
 
-  await Promise.all(promises);
+  // Treat each message in the batch independently
+  await Promise.allSettled(promises);
 };

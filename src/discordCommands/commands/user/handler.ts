@@ -14,7 +14,7 @@ import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOrig
  */
 export async function handleUserInfoCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-): Promise<{ statusCode: number; body: string }> {
+): Promise<void> {
   const data: UserInfoCommand = normalizeChatInput(
     interaction,
     UserInfoCommandSchema,
@@ -88,9 +88,4 @@ export async function handleUserInfoCommand(
   if (!result.success) {
     throw new Error(result.error || "Failed to send Discord response");
   }
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ ok: true, discordResponse: result.status }),
-  };
 }
