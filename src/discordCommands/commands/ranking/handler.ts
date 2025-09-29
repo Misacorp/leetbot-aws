@@ -1,5 +1,4 @@
 import { type APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
-// import { type RankingCommandData } from "./schema";
 import { updateOriginalResponse } from "../../discordWebhook";
 import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
@@ -8,12 +7,23 @@ import { MessageTypes } from "@/src/types";
 import type { Message } from "@/src/repository/message/types";
 import type { User } from "@/src/repository/user/types";
 import logger from "@logger";
-import { RankingCommand } from "@/src/discordCommands/commands/user/schema";
+import {
+  type RankingCommand,
+  RankingCommandSchema,
+} from "@/src/discordCommands/commands/ranking/schema";
+import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
 
+/**
+ * Handles the Discord interaction (slash command) for ranking.
+ */
 export async function handleRankingCommand(
   interaction: APIChatInputApplicationCommandInteraction,
-  data: RankingCommand, // This is now auto-generated from schema!
 ): Promise<{ statusCode: number; body: string }> {
+  const data: RankingCommand = normalizeChatInput(
+    interaction,
+    RankingCommandSchema,
+  );
+
   const window = data.options.window;
 
   logger.info(
@@ -28,6 +38,10 @@ export async function handleRankingCommand(
     await updateOriginalResponse(interaction, {
       content: `No subcommand specified. Give me a leet, leeb or failed_leet`,
     });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ ok: true, discordResponse: "yeet" }),
+    };
   }
 
   const messageTypeMap = {

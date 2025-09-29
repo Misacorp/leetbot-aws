@@ -1,255 +1,216 @@
 import {
-  type APIApplicationCommandInteractionDataOption,
   type APIApplicationCommandInteractionDataBasicOption,
-  type RESTPostAPIApplicationCommandsJSONBody,
-  type APIApplicationCommandBasicOption,
-  type APIApplicationCommandSubcommandOption,
+  type APIChatInputApplicationCommandInteraction,
   ApplicationCommandOptionType,
+  type RESTPostAPIApplicationCommandsJSONBody,
 } from "discord-api-types/v10";
 
-// === TYPE UTILITIES FOR SCHEMA-DRIVEN PARSING ===
-
-// Extract command name from schema
-type ExtractCommandName<T extends RESTPostAPIApplicationCommandsJSONBody> =
-  T["name"];
-
-// Extract option value types based on Discord API option types
-type ExtractOptionValueType<T extends number> =
+/**
+ * Map a Discord option 'type' -> primitive "value" shape you expect to read.
+ * For Discord interactions, option values are IDs (strings) for entities.
+ */
+type PrimitiveForType<T extends ApplicationCommandOptionType> =
   T extends ApplicationCommandOptionType.String
     ? string
     : T extends ApplicationCommandOptionType.Integer
       ? number
-      : T extends ApplicationCommandOptionType.Boolean
-        ? boolean
-        : T extends ApplicationCommandOptionType.User
-          ? string
-          : T extends ApplicationCommandOptionType.Channel
-            ? string
-            : T extends ApplicationCommandOptionType.Role
-              ? string
-              : T extends ApplicationCommandOptionType.Mentionable
-                ? string
-                : T extends ApplicationCommandOptionType.Number
-                  ? number
-                  : T extends ApplicationCommandOptionType.Attachment
-                    ? string
-                    : string | number | boolean;
+      : T extends ApplicationCommandOptionType.Number
+        ? number
+        : T extends ApplicationCommandOptionType.Boolean
+          ? boolean
+          : T extends
+                | ApplicationCommandOptionType.User
+                | ApplicationCommandOptionType.Channel
+                | ApplicationCommandOptionType.Role
+                | ApplicationCommandOptionType.Mentionable
+                | ApplicationCommandOptionType.Attachment
+            ? string // IDs of those entities
+            : never;
 
-// Extract choices if they exist, otherwise use the base type (supports readonly and mutable arrays)
-type ExtractChoiceValues<T> = T extends {
-  choices: readonly { value: infer V }[];
-}
-  ? V
-  : T extends { choices: { value: infer V }[] }
-    ? V
-    : T extends { type: infer TType extends number }
-      ? ExtractOptionValueType<TType>
-      : never;
+type HasSubcommand<
+  Os extends readonly { type: ApplicationCommandOptionType }[],
+> =
+  Extract<
+    Os[number],
+    { type: ApplicationCommandOptionType.Subcommand }
+  > extends never
+    ? false
+    : true;
 
-// Parse a single option definition into its runtime type
-type ParseOption<T> = T extends {
-  name: infer Name extends string;
-  required?: infer Required;
-}
-  ? Required extends true
-    ? { [K in Name]: ExtractChoiceValues<T> }
-    : { [K in Name]?: ExtractChoiceValues<T> }
-  : never;
-
-// Parse all options in an array
-type ParseOptions<T extends readonly unknown[]> = T extends readonly []
-  ? {}
-  : T extends readonly [infer First, ...infer Rest]
-    ? ParseOption<First> & ParseOptions<Rest>
+type SubcommandValue<O extends { options?: readonly any[] }> =
+  O["options"] extends readonly any[]
+    ? PartialExcept<OptionsToRecord<O["options"]>, RequiredNames<O["options"]>>
     : {};
 
-// Simpler approach: Extract subcommand names and create base type
-type ExtractSubcommandNames<T extends readonly unknown[]> =
-  T extends readonly (infer U)[]
-    ? U extends {
-        name: infer Name;
-        type: ApplicationCommandOptionType.Subcommand;
-      }
-      ? Name
+type SubcommandUnion<
+  Os extends readonly { name: string; options?: readonly any[] }[],
+> =
+  Extract<
+    Os[number],
+    { type: ApplicationCommandOptionType.Subcommand }
+  > extends infer S
+    ? S extends { name: string; options?: readonly any[] }
+      ? { [K in S["name"]]: SubcommandValue<Extract<S, { name: K }>> }
       : never
     : never;
 
-// Create base subcommand type with common options from any subcommand
-type ExtractSubcommandOptions<T extends readonly unknown[]> =
-  T extends readonly (infer U)[]
-    ? U extends {
-        type: ApplicationCommandOptionType.Subcommand;
-        options: infer Options extends readonly unknown[];
-      }
-      ? ParseOptions<Options>
-      : {}
-    : {};
+// Names of subcommands from an options tuple
+type SubNames<
+  Os extends readonly { name: string; type: ApplicationCommandOptionType }[],
+> = Extract<
+  Os[number],
+  { type: ApplicationCommandOptionType.Subcommand }
+>["name"];
 
-// Simple discriminated union for subcommands
-type ParseSubcommands<T extends readonly unknown[]> = {
-  subcommand: ExtractSubcommandNames<T>;
-} & ExtractSubcommandOptions<T>;
+// Value for a specific subcommand
+type SubOptions<
+  Os extends readonly any[],
+  K extends SubNames<Os>,
+> = SubcommandValue<Extract<Os[number], { name: K }>>;
 
-// Main schema parser - handles both regular options and subcommands
-export type ParsedFromSchema<T extends RESTPostAPIApplicationCommandsJSONBody> =
-  T["options"] extends readonly unknown[]
-    ? T["options"][number] extends {
-        type: ApplicationCommandOptionType.Subcommand;
-      }
-      ? { subcommand: ExtractSubcommandNames<T["options"]> } & {
-          options: ExtractSubcommandOptions<T["options"]>;
-        } // Has subcommands
-      : { options: ParseOptions<T["options"]> } // Regular options only
-    : { options: {} };
-
-// === RUNTIME PARSING FUNCTIONS ===
-
-export interface ParsedCommandResult<
-  T extends RESTPostAPIApplicationCommandsJSONBody,
-> {
-  command: ExtractCommandName<T>;
-  data: ParsedFromSchema<T>;
-}
-
-// Generic schema-driven parser
-export function parseFromSchema<
-  T extends RESTPostAPIApplicationCommandsJSONBody,
->(
-  schema: T,
-  options: APIApplicationCommandInteractionDataOption[] = [],
-): ParsedFromSchema<T> | null {
-  if (!schema.options) {
-    return {} as ParsedFromSchema<T>;
-  }
-
-  // Check if this command has subcommands
-  const hasSubcommands = schema.options.some(
-    (opt) =>
-      "type" in opt && opt.type === ApplicationCommandOptionType.Subcommand,
-  );
-
-  if (hasSubcommands) {
-    return parseSubcommandFromSchema(schema, options) as ParsedFromSchema<T>;
-  } else {
-    return parseDirectOptionsFromSchema(schema, options) as ParsedFromSchema<T>;
-  }
-}
-
-function parseSubcommandFromSchema<
-  T extends RESTPostAPIApplicationCommandsJSONBody,
->(schema: T, options: APIApplicationCommandInteractionDataOption[]): any {
-  const subcommandOption = options.find(
-    (opt) => opt.type === ApplicationCommandOptionType.Subcommand,
-  );
-
-  if (!subcommandOption) {
-    return null;
-  }
-
-  const subcommand = subcommandOption.name;
-  const subcommandOptions = subcommandOption.options ?? [];
-
-  // Find the matching subcommand in schema to get its option definitions
-  const subcommandSchema = schema.options?.find(
-    (opt) =>
-      "name" in opt &&
-      opt.name === subcommand &&
-      "type" in opt &&
-      opt.type === ApplicationCommandOptionType.Subcommand,
-  );
-
-  const parsed: any = { subcommand, options: {} };
-
-  // Parse the subcommand's options
-  if (
-    subcommandSchema &&
-    "options" in subcommandSchema &&
-    subcommandSchema.options
-  ) {
-    const valueOptions = subcommandOptions.filter(
-      (o): o is APIApplicationCommandInteractionDataBasicOption => "value" in o,
-    );
-
-    for (const valueOption of valueOptions) {
-      parsed.options[valueOption.name] = valueOption.value;
-    }
-  }
-
-  return parsed;
-}
-
-function parseDirectOptionsFromSchema<
-  T extends RESTPostAPIApplicationCommandsJSONBody,
->(schema: T, options: APIApplicationCommandInteractionDataOption[]): any {
-  const parsed: any = { options: {} };
-
-  const valueOptions = options.filter(
-    (o): o is APIApplicationCommandInteractionDataBasicOption => "value" in o,
-  );
-
-  for (const valueOption of valueOptions) {
-    parsed.options[valueOption.name] = valueOption.value;
-  }
-
-  return parsed;
-}
-
-// === OPTION BUILDER HELPERS TO REDUCE SCHEMA BOILERPLATE ===
-
-// Helper to extract the value union from a readonly choices array
-export type ChoiceValues<C> = C extends readonly { value: infer V }[]
-  ? V
+/** If an option provides choices, narrow to the union of their values. */
+type ChoiceValue<
+  O extends { choices?: readonly { value: unknown }[] } | unknown,
+> = O extends { choices: readonly (infer C)[] }
+  ? C extends { value: unknown }
+    ? C["value"]
+    : never
   : never;
 
-// Create a String option with optional choices while preserving literal unions from a readonly choices array
-export function stringOption<
-  N extends string,
-  C extends readonly { name: string; value: V }[] | undefined = undefined,
-  V extends string = string,
->(name: N, description: string, opts?: { required?: boolean; choices?: C }) {
-  // Materialize a mutable choices array compatible with Discord API types,
-  // while keeping the literal union of values captured as V from the provided choices tuple
-  const choices = (
-    opts?.choices
-      ? opts.choices.map((c) => ({ name: c.name, value: c.value }))
-      : undefined
-  ) as C extends undefined
-    ? undefined
-    : { name: string; value: ChoiceValues<NonNullable<C>> }[];
+/** Value type for a single option object, honoring `choices` if present. */
+type ValueForOption<O extends { type: ApplicationCommandOptionType }> = [
+  ChoiceValue<O>,
+] extends [never]
+  ? PrimitiveForType<O["type"]>
+  : ChoiceValue<O>;
 
-  return {
-    type: ApplicationCommandOptionType.String as const,
-    name,
-    description,
-    required: !!opts?.required,
-    ...(choices ? { choices } : {}),
-  } satisfies APIApplicationCommandBasicOption;
+/** Convert an options tuple to a `{ [name]: value }` record. */
+type OptionsToRecord<
+  Os extends readonly { name: string; type: ApplicationCommandOptionType }[],
+> = {
+  [O in Os[number] as O["name"]]: ValueForOption<O>;
+};
+
+/** Names of required options in a tuple. */
+type RequiredNames<Os extends readonly { name: string; required?: boolean }[]> =
+  Extract<Os[number], { required: true }>["name"];
+
+/** Make only K required; everything else optional. */
+type PartialExcept<T, K extends PropertyKey> = Omit<
+  Partial<T>,
+  Extract<keyof T, K>
+> & { [P in Extract<keyof T, K>]-?: T[P] };
+
+/** Final input type for a command schema. */
+export type CommandInput<
+  S extends RESTPostAPIApplicationCommandsJSONBody & {
+    options?: readonly { name: string; type: ApplicationCommandOptionType }[];
+  },
+  Os extends readonly {
+    name: string;
+    type: ApplicationCommandOptionType;
+  }[] = S extends {
+    options: infer T extends readonly {
+      name: string;
+      type: ApplicationCommandOptionType;
+    }[];
+  }
+    ? T
+    : [],
+> = Os extends []
+  ? {}
+  : HasSubcommand<Os> extends true
+    ? SubcommandUnion<Os>
+    : PartialExcept<OptionsToRecord<Os>, RequiredNames<Os>>;
+
+export type CommandInputTagged<
+  S extends RESTPostAPIApplicationCommandsJSONBody & {
+    options?: readonly { name: string; type: ApplicationCommandOptionType }[];
+  },
+  Os extends readonly {
+    name: string;
+    type: ApplicationCommandOptionType;
+  }[] = S extends {
+    options: infer T extends readonly {
+      name: string;
+      type: ApplicationCommandOptionType;
+    }[];
+  }
+    ? T
+    : [],
+> = {
+  subcommand?: SubNames<Os>;
+  options: HasSubcommand<Os> extends true
+    ? SubNames<Os> extends infer K extends string
+      ? K extends SubNames<Os>
+        ? SubOptions<Os, K>
+        : never
+      : never
+    : PartialExcept<OptionsToRecord<Os>, RequiredNames<Os>>;
+};
+
+/**
+ * 🧰 Helper functions to map from Discord Webhook payloads to these types
+ */
+type OptionsRecord = Record<string, string | number | boolean>;
+
+function optionsArrayToRecord(
+  opts: readonly APIApplicationCommandInteractionDataBasicOption[] | undefined,
+): OptionsRecord {
+  const out: OptionsRecord = {};
+  for (const o of opts ?? []) {
+    // For entity-type options (user/channel/role/mentionable/attachment),
+    // Discord sends IDs as strings in o.value; resolved objects are in interaction.data.resolved.
+    // If you want resolved objects, join from interaction.data.resolved here.
+    // For now, we keep IDs.
+    out[o.name] = o.value;
+  }
+  return out;
 }
 
-// Create a User option (Discord resolves to a user ID string)
-export function userOption<N extends string>(
-  name: N,
-  description: string,
-  opts?: { required?: boolean },
-) {
-  return {
-    type: ApplicationCommandOptionType.User as const,
-    name,
-    description,
-    required: !!opts?.required,
-  } satisfies APIApplicationCommandBasicOption;
-}
+/** Convert Discord webhook payload to a tagged shape that’s easy to `switch` on. */
+export function normalizeChatInput<
+  S extends RESTPostAPIApplicationCommandsJSONBody & {
+    options?: readonly { name: string; type: ApplicationCommandOptionType }[];
+  },
+>(
+  i: APIChatInputApplicationCommandInteraction,
+  _schema: S,
+): { command: string } & CommandInputTagged<S> {
+  const top = i.data.options?.[0];
 
-// Create a Subcommand option wrapper
-export function subcommand<N extends string, O extends readonly any[]>(
-  name: N,
-  description: string,
-  options: O,
-) {
+  if (!top) {
+    return {
+      command: i.data.name,
+      options: {} as CommandInputTagged<S>["options"],
+    } as { command: string } & CommandInputTagged<S>;
+  }
+
+  if (top.type === ApplicationCommandOptionType.Subcommand) {
+    return {
+      command: i.data.name,
+      subcommand: top.name as CommandInputTagged<S>["subcommand"],
+      options: optionsArrayToRecord(
+        top.options,
+      ) as CommandInputTagged<S>["options"],
+    } as { command: string } & CommandInputTagged<S>;
+  }
+
+  if (top.type === ApplicationCommandOptionType.SubcommandGroup) {
+    const sub = top.options?.[0];
+    return {
+      command: i.data.name,
+      subcommand: sub?.name as CommandInputTagged<S>["subcommand"],
+      options: optionsArrayToRecord(
+        sub?.options,
+      ) as CommandInputTagged<S>["options"],
+    } as { command: string } & CommandInputTagged<S>;
+  }
+
   return {
-    type: ApplicationCommandOptionType.Subcommand as const,
-    name,
-    description,
-    options,
-  } satisfies APIApplicationCommandSubcommandOption;
+    command: i.data.name,
+    options: optionsArrayToRecord(
+      i.data.options as any,
+    ) as CommandInputTagged<S>["options"],
+  } as { command: string } & CommandInputTagged<S>;
 }

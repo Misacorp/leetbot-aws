@@ -2,7 +2,7 @@ import { config } from "dotenv";
 import { REST, Routes } from "/opt/nodejs/discord";
 import { ALL_COMMAND_SCHEMAS } from "@/src/discordCommands/core/registry";
 
-// dev, prd, etc.
+// Determine the correct environment for loading environment variables
 const env = process.env.NODE_ENV || "dev";
 const envFile = `.env.${env}`;
 config({ path: envFile });
@@ -19,6 +19,10 @@ if (!TOKEN || !CLIENT_ID) {
 
 const rest = new REST().setToken(TOKEN);
 
+/**
+ * Register all commands in the registry
+ * @see registry.ts
+ */
 async function registerCommands() {
   try {
     console.log("Started refreshing application (/) commands.");
@@ -56,4 +60,6 @@ async function registerCommands() {
   }
 }
 
-registerCommands();
+(async () => {
+  await registerCommands();
+})();

@@ -5,19 +5,10 @@ import { isAPIChatInputCommandInteraction } from "@/src/discordCommands/typeGuar
 import { type APIInteraction } from "discord-api-types/v10";
 import { handleRankingCommand } from "./commands/ranking/handler";
 import { handleUserInfoCommand } from "./commands/user/handler";
-import {
-  normalizeChatInput,
-  RankingCommandSchema,
-  UserInfoCommandSchema,
-} from "@/src/discordCommands/commands/user/schema";
-import {
-  type UserInfoCommand,
-  type RankingCommand,
-} from "./commands/user/schema";
 
 /**
- * Schema-driven Discord slash command worker.
- * Commands are automatically parsed from their schemas - no manual parsing needed!
+ * Discord interaction (slash command) worker.
+ * Routes interactions to their own handlers.
  */
 export const handler = async (event: SQSEvent) => {
   const promises = event.Records.map(async (record: SQSRecord) => {
@@ -29,7 +20,7 @@ export const handler = async (event: SQSEvent) => {
       {
         interactionId: interaction.id,
         guild: interaction.guild_id,
-        channel: interaction.channel_id,
+        channel: interaction.channel?.id,
         data: interaction.data,
       },
       "Received command",
@@ -40,17 +31,14 @@ export const handler = async (event: SQSEvent) => {
     }
 
     try {
-      // Schema-driven parsing - fully automatic and type-safe!
       const commandName = interaction.data.name;
 
       switch (commandName) {
         case "user": {
-          const data = normalizeChatInput(interaction, UserInfoCommandSchema);
-          return await handleUserInfoCommand(interaction, data);
+          return await handleUserInfoCommand(interaction);
         }
         case "ranking": {
-          const data = normalizeChatInput(interaction, RankingCommandSchema);
-          return await handleRankingCommand(interaction, data);
+          return await handleRankingCommand(interaction);
         }
       }
 

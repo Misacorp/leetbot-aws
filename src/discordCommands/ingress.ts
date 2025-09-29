@@ -1,17 +1,11 @@
 import logger from "@logger";
-import {
-  EventBridgeClient,
-  PutEventsCommand,
-} from "@aws-sdk/client-eventbridge";
 import nacl from "tweetnacl";
-import { json, hexToUint8, textToUint8, normalizeCommandToEvent } from "./util";
+import { json, hexToUint8, textToUint8 } from "./util";
 import { getParameter } from "@/src/util/ssm";
 import { publishMessage } from "@/src/util/sns";
 
 const PUBLIC_KEY_PARAM_NAME = process.env.PUBLIC_KEY_PARAM_NAME;
 const COMMAND_PROCESSING_TOPIC_ARN = process.env.COMMAND_PROCESSING_TOPIC_ARN;
-
-const eb = new EventBridgeClient({});
 
 /**
  * Ingress for Discord Interactions. Verifies signatures, acks within 3s,
@@ -167,78 +161,6 @@ export const handler = async (event: any) => {
     });
 
     return json(200, { type: 5, data: { flags: 64 } });
-    //
-    // // Normalize command → event
-    // const { detailType, detail } = normalizeCommandToEvent(interaction);
-    // logger.debug(
-    //   {
-    //     detailType,
-    //     guildId: detail.interaction?.guild_id,
-    //     channelId: detail.interaction?.channel_id,
-    //     invokerId: detail.interaction?.invoker_id,
-    //   },
-    //   "Normalized Discord interaction to EventBridge event",
-    // );
-    //
-    // // Publish to EventBridge (include token for now; migrate to token_ref later if desired)
-    // const eventPayload = {
-    //   Source: "discord.interactions",
-    //   DetailType: detailType,
-    //   EventBusName: EVENT_BUS_NAME,
-    //   Time: new Date(),
-    //   Detail: JSON.stringify(detail),
-    // };
-    //
-    // logger.debug(
-    //   {
-    //     eventBusName: EVENT_BUS_NAME,
-    //     detailType,
-    //     payloadSize: JSON.stringify(eventPayload).length,
-    //     hasEventBusName: !!EVENT_BUS_NAME,
-    //   },
-    //   "Publishing event to EventBridge",
-    // );
-    //
-    // try {
-    //   const result = await eb.send(
-    //     new PutEventsCommand({
-    //       Entries: [eventPayload],
-    //     }),
-    //   );
-    //
-    //   logger.debug(
-    //     {
-    //       result: result.Entries,
-    //       failedEntryCount: result.FailedEntryCount,
-    //     },
-    //     "EventBridge publish result",
-    //   );
-    //
-    //   if (result.FailedEntryCount && result.FailedEntryCount > 0) {
-    //     logger.error(
-    //       {
-    //         failedEntries: result.Entries?.filter((entry) => entry.ErrorCode),
-    //       },
-    //       "Some EventBridge entries failed",
-    //     );
-    //   }
-    // } catch (ebError) {
-    //   logger.error(
-    //     {
-    //       error: ebError,
-    //       eventBusName: EVENT_BUS_NAME,
-    //       payloadSize: JSON.stringify(eventPayload).length,
-    //     },
-    //     "EventBridge publish failed",
-    //   );
-    //   throw ebError; // Re-throw to hit the outer catch
-    // }
-    //
-    // logger.debug("Successfully published event to EventBridge");
-    //
-    // // Deferred ack (ephemeral by default)
-    // logger.debug("Sending deferred acknowledgment to Discord");
-    // return json(200, { type: 5, data: { flags: 64 } });
   } catch (err) {
     logger.error({ error: err }, "Discord ingress error");
     return json(500, { error: "internal error" });
