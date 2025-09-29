@@ -5,10 +5,13 @@ import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
-import * as logs from "aws-cdk-lib/aws-logs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
-import { getRemovalPolicy } from "@/src/util/infra";
+import {
+  createLogGroup,
+  getDefaultLambdaConfig,
+  getRemovalPolicy,
+} from "@/src/util/infra";
 import { type ITable } from "@/lib/constructs/Table";
 import type { ILambdaLayers } from "../LambdaLayers";
 
@@ -87,16 +90,16 @@ export class DiscordBot extends Construct {
 
     // Discord bot Lambda function
     this.discordWatcher = new NodejsFunction(this, "DiscordWatcher", {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      architecture: lambda.Architecture.ARM_64,
+      ...getDefaultLambdaConfig(),
       entry: "src/discordWatcher/discordWatcher.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(60 * 4 + 15),
       memorySize: 256,
-      logGroup: new logs.LogGroup(this, "DiscordWatcherLogGroup", {
-        retention: logs.RetentionDays.THREE_DAYS,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
+      logGroup: createLogGroup(
+        this,
+        "DiscordWatcherLogGroup",
+        props.environment,
+      ),
       bundling: {
         minify: false,
         externalModules: [
@@ -149,16 +152,15 @@ export class DiscordBot extends Construct {
 
     // Lambda that writes messages to the database
     const messageEvaluator = new NodejsFunction(this, "MessageEvaluator", {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      architecture: lambda.Architecture.ARM_64,
+      ...getDefaultLambdaConfig(),
       entry: "src/messageEvaluator/messageEvaluator.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(15),
-      memorySize: 256,
-      logGroup: new logs.LogGroup(this, "MessageEvaluatorLogGroup", {
-        retention: logs.RetentionDays.THREE_DAYS,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
+      logGroup: createLogGroup(
+        this,
+        "MessageEvaluatorLogGroup",
+        props.environment,
+      ),
       layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
       bundling: {
         minify: false,

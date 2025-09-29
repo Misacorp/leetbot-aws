@@ -3,15 +3,17 @@ import { Construct } from "constructs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as sqs from "aws-cdk-lib/aws-sqs";
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import * as logs from "aws-cdk-lib/aws-logs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as apigwv2Integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
 import { ILambdaLayers } from "@/lib/constructs/Discord/LambdaLayers";
-import { getRemovalPolicy } from "@/src/util/infra";
+import {
+  createLogGroup,
+  getDefaultLambdaConfig,
+  getRemovalPolicy,
+} from "@/src/util/infra";
 import { IDiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 import {
   IInteractionsApi,
@@ -62,20 +64,15 @@ export class DiscordCommandHandler extends Construct {
 
     // The ingress function verifies Discord request integrity and passes commands forward
     this.ingressFunction = new NodejsFunction(this, "InteractionsIngress", {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      architecture: lambda.Architecture.ARM_64,
+      ...getDefaultLambdaConfig(),
       entry: "src/discordCommands/ingress.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(5), // Needs to respond to Discord within 3 seconds
-      memorySize: 256,
-      logGroup: new logs.LogGroup(this, "InteractionsIngressLogGroup", {
-        retention: logs.RetentionDays.THREE_DAYS,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
-      bundling: {
-        minify: false,
-        externalModules: ["@aws-sdk/*"],
-      },
+      logGroup: createLogGroup(
+        this,
+        "InteractionsIngressLogGroup",
+        props.environment,
+      ),
       environment: {
         PUBLIC_KEY_PARAM_NAME: props.parameters.publicKey.parameterName,
         COMMAND_PROCESSING_TOPIC_ARN: this.commandProcessingTopic.topicArn,
@@ -103,20 +100,16 @@ export class DiscordCommandHandler extends Construct {
 
     // Worker that handles all slash commands
     this.slashCommandWorker = new NodejsFunction(this, "SlashCommandWorker", {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      architecture: lambda.Architecture.ARM_64,
+      ...getDefaultLambdaConfig(),
       entry: "src/discordCommands/slashCommandWorker.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
-      logGroup: new logs.LogGroup(this, "SlashCommandWorkerLogGroup", {
-        retention: logs.RetentionDays.THREE_DAYS,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
-      bundling: {
-        minify: false,
-        externalModules: ["@aws-sdk/*"],
-      },
+      logGroup: createLogGroup(
+        this,
+        "SlashCommandWorkerLogGroup",
+        props.environment,
+      ),
       environment: {
         TABLE_NAME: props.table.tableName,
       },
