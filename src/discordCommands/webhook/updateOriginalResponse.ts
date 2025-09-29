@@ -1,5 +1,6 @@
 import logger from "@logger";
 import {
+  APIEmbed,
   APIInteraction,
   MessageFlags,
   RESTPatchAPIWebhookWithTokenMessageJSONBody,
@@ -8,9 +9,17 @@ import {
 import { DiscordWebhookResponse } from "./types";
 import { combineMessageFlags } from "@/src/discordCommands/webhook/common";
 
-interface UpdateOriginalResponseArgs {
-  interaction: APIInteraction;
-  payload: RESTPatchAPIWebhookWithTokenMessageJSONBody;
+export interface UpdateOriginalResponseArgs {
+  interaction: Pick<APIInteraction, "id" | "token" | "application_id">;
+  payload: RESTPatchAPIWebhookWithTokenMessageJSONBody &
+    (
+      | {
+          content?: string;
+        }
+      | {
+          embeds?: APIEmbed[];
+        }
+    );
   ephemeral?: boolean;
 }
 

@@ -42,13 +42,13 @@ export function getDateRange(window?: CommandWindow) {
 export function getWindowDisplayText(window?: CommandWindow): string {
   switch (window) {
     case "this_week":
-      return "(This Week)";
+      return "this week";
     case "this_year":
-      return "(This Year)";
+      return "this year";
     case "all_time":
-      return "(All Time)";
+      return "all time";
     case "this_season":
     default:
-      return "(This Season)";
+      return "this season";
   }
 }
