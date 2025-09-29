@@ -110,6 +110,11 @@ export class DiscordCommandHandler extends Construct {
         "SlashCommandWorkerLogGroup",
         props.environment,
       ),
+      bundling: {
+        minify: false,
+        externalModules: ["@aws-sdk/*", "date-fns", "date-fns-tz"],
+      },
+      layers: [props.layers.dateFnsLayer],
       environment: {
         TABLE_NAME: props.table.tableName,
       },

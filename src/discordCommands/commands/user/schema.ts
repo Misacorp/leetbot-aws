@@ -8,13 +8,13 @@ import { windowOption } from "@/src/discordCommands/core/common";
 
 export const UserInfoCommandSchema = {
   name: "user",
-  description: "Get user information",
+  description: "Get user info and stats",
   type: ApplicationCommandType.ChatInput,
   options: [
     {
       type: ApplicationCommandOptionType.User,
       name: "username",
-      description: "Discord user to get information about",
+      description: "Server member whose stats to get",
       required: true,
     },
     windowOption,
