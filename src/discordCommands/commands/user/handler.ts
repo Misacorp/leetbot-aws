@@ -1,6 +1,5 @@
 import logger from "@logger";
 import { type APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
-import { updateOriginalResponse } from "../../discordWebhook";
 import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
@@ -8,6 +7,7 @@ import { MessageTypes } from "@/src/types";
 import type { Message } from "@/src/repository/message/types";
 import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
 import { UserInfoCommand, UserInfoCommandSchema } from "./schema";
+import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
 
 /**
  * Handles the Discord interaction (slash command) to get user info
@@ -78,8 +78,11 @@ export async function handleUserInfoCommand(
     }
   }
 
-  const result = await updateOriginalResponse(interaction, {
-    content: responseContent,
+  const result = await updateOriginalResponse({
+    interaction: interaction,
+    payload: {
+      content: responseContent,
+    },
   });
 
   if (!result.success) {

@@ -1,10 +1,10 @@
 import logger from "@logger";
 import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
-import { sendErrorResponse } from "./discordWebhook";
 import { isAPIChatInputCommandInteraction } from "@/src/discordCommands/typeGuards";
 import { type APIInteraction } from "discord-api-types/v10";
 import { handleRankingCommand } from "./commands/ranking/handler";
 import { handleUserInfoCommand } from "./commands/user/handler";
+import { sendErrorMessage } from "@/src/discordCommands/webhook/sendErrorMessage";
 
 /**
  * Discord interaction (slash command) worker.
@@ -52,7 +52,7 @@ export const handler = async (event: SQSEvent) => {
         "Failed to process command",
       );
 
-      await sendErrorResponse(
+      await sendErrorMessage(
         interaction,
         "❌ Sorry, there was an error processing your command. Please try again later.",
       );

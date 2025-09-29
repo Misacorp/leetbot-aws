@@ -1,5 +1,4 @@
 import { type APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
-import { updateOriginalResponse } from "../../discordWebhook";
 import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
@@ -12,6 +11,7 @@ import {
   RankingCommandSchema,
 } from "@/src/discordCommands/commands/ranking/schema";
 import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
+import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -35,8 +35,11 @@ export async function handleRankingCommand(
   );
 
   if (!data.subcommand) {
-    await updateOriginalResponse(interaction, {
-      content: `No subcommand specified. Give me a leet, leeb or failed_leet`,
+    await updateOriginalResponse({
+      interaction: interaction,
+      payload: {
+        content: `No subcommand specified. Give me a leet, leeb or failed_leet`,
+      },
     });
     return {
       statusCode: 200,
@@ -91,8 +94,11 @@ export async function handleRankingCommand(
     responseContent = `**${data.subcommand?.toUpperCase()} Rankings** ${windowText}\n\n${rankings.join("\n")}`;
   }
 
-  const result = await updateOriginalResponse(interaction, {
-    content: responseContent,
+  const result = await updateOriginalResponse({
+    interaction: interaction,
+    payload: {
+      content: responseContent,
+    },
   });
 
   if (!result.success) {

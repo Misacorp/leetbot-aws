@@ -3,10 +3,7 @@ import {
   ApplicationCommandType,
   RESTPostAPIApplicationCommandsJSONBody,
 } from "discord-api-types/v10";
-import {
-  CommandInput,
-  CommandInputTagged,
-} from "@/src/discordCommands/core/schemaParser";
+import { CommandInputTagged } from "@/src/discordCommands/core/schemaParser";
 
 export const UserInfoCommandSchema = {
   name: "user",
