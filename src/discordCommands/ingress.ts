@@ -8,7 +8,7 @@ import {
 } from "./utils/discordResponses";
 import { getParameter } from "@/src/util/ssm";
 import { publishMessage } from "@/src/util/sns";
-import { verifyDiscordSignature } from "./utils/discordVerification";
+import { verifyDiscordSignature } from "./utils/discordSignatureVerification";
 
 const PUBLIC_KEY_PARAM_NAME = process.env.PUBLIC_KEY_PARAM_NAME;
 const COMMAND_PROCESSING_TOPIC_ARN = process.env.COMMAND_PROCESSING_TOPIC_ARN;

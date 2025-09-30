@@ -12,6 +12,10 @@ import { findEmoji } from "@/src/util/emoji";
 import { capitalize } from "@/src/util/format";
 import { getUserMessagesByDateRange } from "@/src/repository/message/getUserMessagesByDateRange";
 import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
+import {
+  ensureGuildId,
+  ensureTableName,
+} from "@/src/discordCommands/utils/validateInteractions";
 
 /**
  * Handles the Discord interaction (slash command) to get user info
@@ -19,19 +23,12 @@ import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 export async function handleUserInfoCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<void> {
-  // Ensure the table name is present and return gracefully if not (do not retry)
-  const TABLE_NAME = process.env.TABLE_NAME;
-  if (!TABLE_NAME) {
-    await updateOriginalResponse({
-      interaction,
-      payload: {
-        content:
-          "🤖 Oopsie! I don't know where to look for messages. Please let my creator know.",
-      },
-    });
-    logger.error(
-      "TABLE_NAME environment variable is not defined. Processing this event is not possible and it will not be retried.",
-    );
+  const tableName = await ensureTableName(interaction);
+  if (!tableName) {
+    return;
+  }
+  const guildId = await ensureGuildId(interaction);
+  if (!guildId) {
     return;
   }
 
@@ -56,37 +53,21 @@ export async function handleUserInfoCommand(
   const { startDate, endDate } = getDateRange(window);
   const windowText = getWindowDisplayText(window);
 
-  // Ensure the guild id is defined and return gracefully if not (do not retry)
-  if (!interaction.guild_id) {
-    await updateOriginalResponse({
-      interaction,
-      payload: {
-        content:
-          "🤖 Oopsie! Discord didn't give me enough data to complete your request. There's nothing you can do about it so please let my creator know.",
-      },
-    });
-    logger.error(
-      { guild_id: interaction.guild_id, "user.id": interaction.user?.id },
-      "Guild id is not defined in the interaction. Processing this event is not possible and it will not be retried.",
-    );
-    return;
-  }
-
   // Get all the data we need
   const [user, guild, userMessages] = await Promise.all([
     getGuildUserById({
-      tableName: TABLE_NAME,
+      tableName,
       userId,
-      guildId: interaction.guild_id,
+      guildId,
     }),
     getGuildById({
-      tableName: TABLE_NAME,
-      id: interaction.guild_id,
+      tableName,
+      id: guildId,
     }),
     getUserMessagesByDateRange({
-      tableName: TABLE_NAME,
+      tableName,
       userId,
-      guildId: interaction.guild_id,
+      guildId,
       startDate,
       endDate,
     }),

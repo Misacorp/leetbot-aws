@@ -12,6 +12,10 @@ import {
 } from "@/src/discordCommands/commands/ranking/schema";
 import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
 import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
+import {
+  ensureGuildId,
+  ensureTableName,
+} from "@/src/discordCommands/utils/validateInteractions";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -19,17 +23,27 @@ import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOrig
 export async function handleRankingCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<void> {
+  const tableName = await ensureTableName(interaction);
+  if (!tableName) {
+    return;
+  }
+  const guildId = await ensureGuildId(interaction);
+  if (!guildId) {
+    return;
+  }
+
   const data: RankingCommand = normalizeChatInput(
     interaction,
     RankingCommandSchema,
   );
 
+  // `when` is the user-facing option name
   const window = data.options.when;
 
   logger.info(
     {
-      subcommand: data.subcommand, // Fully typed: "leet" | "leeb" | "failed_leet"
-      window: window, // Using type assertion temporarily
+      subcommand: data.subcommand,
+      window: window,
     },
     "Processing ranking command",
   );
@@ -49,56 +63,47 @@ export async function handleRankingCommand(
     leeb: MessageTypes.LEEB,
     failed_leet: MessageTypes.FAILED_LEET,
   } as const;
-
   const messageType = messageTypeMap[data.subcommand];
   const { startDate, endDate } = getDateRange(window);
 
-  let responseContent = "No data available";
+  const guildMessages = await getGuildMessages({
+    tableName,
+    guildId,
+    type: messageType,
+    startDate,
+    endDate,
+  });
 
-  if (interaction.guild_id) {
-    const guildMessages = await getGuildMessages({
-      tableName: process.env.TABLE_NAME,
-      guildId: interaction.guild_id,
-      type: messageType,
-      startDate,
-      endDate,
-    });
+  const messagesByUser: Map<Message["userId"], Message[]> =
+    guildMessages.reduce((acc, message) => {
+      const existing = acc.get(message.userId) ?? [];
+      acc.set(message.userId, [...existing, message]);
+      return acc;
+    }, new Map<Message["userId"], Message[]>());
 
-    const messagesByUser: Map<Message["userId"], Message[]> =
-      guildMessages.reduce((acc, message) => {
-        const existing = acc.get(message.userId) ?? [];
-        acc.set(message.userId, [...existing, message]);
-        return acc;
-      }, new Map<Message["userId"], Message[]>());
+  const guildMembers = await getGuildMembersByGuildId({
+    tableName,
+    guildId,
+  });
 
-    const guildMembers = await getGuildMembersByGuildId({
-      tableName: process.env.TABLE_NAME,
-      guildId: interaction.guild_id,
-    });
+  const userMap: Map<User["id"], User> = new Map(
+    guildMembers.map((u) => [u.id, u]),
+  );
 
-    const userMap: Map<User["id"], User> = new Map(
-      guildMembers.map((u) => [u.id, u]),
+  const rankings = [...messagesByUser.entries()]
+    .sort(([, a], [, b]) => b.length - a.length)
+    .map(
+      ([userId, messages], index) =>
+        `${index + 1}. ${userMap.get(userId)?.displayName ?? "Unknown User"}: ${messages.length}`,
     );
 
-    const rankings = [...messagesByUser.entries()]
-      .sort(([, a], [, b]) => b.length - a.length)
-      .map(
-        ([userId, messages], index) =>
-          `${index + 1}. ${userMap.get(userId)?.displayName ?? "Unknown User"}: ${messages.length}`,
-      );
+  const windowText = getWindowDisplayText(window);
+  const responseContent = `**${data.subcommand?.toUpperCase()} Rankings** ${windowText}\n\n${rankings.join("\n")}`;
 
-    const windowText = getWindowDisplayText(window);
-    responseContent = `**${data.subcommand?.toUpperCase()} Rankings** ${windowText}\n\n${rankings.join("\n")}`;
-  }
-
-  const result = await updateOriginalResponse({
+  await updateOriginalResponse({
     interaction: interaction,
     payload: {
       content: responseContent,
     },
   });
-
-  if (!result.success) {
-    throw new Error(result.error || "Failed to send Discord response");
-  }
 }
