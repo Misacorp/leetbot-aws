@@ -8,7 +8,7 @@ import { windowOption } from "@/src/discordCommands/core/common";
 
 export const RankingCommandSchema = {
   name: "ranking",
-  description: "Get ranking information",
+  description: "Get rankings for this server",
   type: ApplicationCommandType.ChatInput,
   options: [
     {

@@ -1,7 +1,6 @@
 import logger from "@logger";
 import { type APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
 import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
-import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
 import { type MessageType, MessageTypes } from "@/src/types";
 import type { Message } from "@/src/repository/message/types";
 import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
