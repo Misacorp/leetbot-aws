@@ -4,7 +4,6 @@ import {
   RESTPostAPIWebhookWithTokenJSONBody,
   Routes,
 } from "discord-api-types/v10";
-import { DiscordWebhookResponse } from "./types";
 import { combineMessageFlags } from "@/src/discordCommands/webhook/common";
 
 /**
@@ -27,7 +26,7 @@ export const sendFollowupMessage = async ({
   interaction,
   payload,
   ephemeral = true,
-}: SendFollowupMessageArgs): Promise<DiscordWebhookResponse> => {
+}: SendFollowupMessageArgs): Promise<void> => {
   const { id, token, application_id } = interaction;
 
   const finalPayload: RESTPostAPIWebhookWithTokenJSONBody = {
@@ -48,57 +47,35 @@ export const sendFollowupMessage = async ({
     "Sending Discord followup message",
   );
 
-  try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(finalPayload),
-    });
+  const response = await fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(finalPayload),
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error(
-        {
-          status: response.status,
-          error: errorText,
-          interactionId: id,
-        },
-        "Discord followup message failed",
-      );
-
-      return {
-        success: false,
-        status: response.status,
-        error: `Discord API error: ${response.status} ${response.statusText}`,
-      };
-    }
-
-    logger.debug(
-      {
-        status: response.status,
-        interactionId: id,
-      },
-      "Successfully sent Discord followup message",
-    );
-
-    return {
-      success: true,
-      status: response.status,
-    };
-  } catch (error) {
+  if (!response.ok) {
+    const errorText = await response.text();
     logger.error(
       {
-        error,
+        status: response.status,
+        error: errorText,
         interactionId: id,
       },
-      "Failed to send Discord followup message",
+      "Discord followup message failed",
     );
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    throw new Error(
+      `Discord API error: ${response.status} ${response.statusText}`,
+    );
   }
+
+  logger.debug(
+    {
+      status: response.status,
+      interactionId: id,
+    },
+    "Successfully sent Discord followup message",
+  );
 };

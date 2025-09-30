@@ -6,7 +6,6 @@ import {
   RESTPatchAPIWebhookWithTokenMessageJSONBody,
   Routes,
 } from "discord-api-types/v10";
-import { DiscordWebhookResponse } from "./types";
 import { combineMessageFlags } from "@/src/discordCommands/webhook/common";
 
 export interface UpdateOriginalResponseArgs {
@@ -37,10 +36,10 @@ export const updateOriginalResponse = async ({
   interaction,
   payload,
   ephemeral = true,
-}: UpdateOriginalResponseArgs): Promise<DiscordWebhookResponse> => {
+}: UpdateOriginalResponseArgs): Promise<void> => {
   const { id, token, application_id } = interaction;
 
-  // Apply an ephemeral flag if needed using Discord.js MessageFlags enum
+  // Apply an ephemeral flag if needed
   const finalPayload: RESTPatchAPIWebhookWithTokenMessageJSONBody = {
     ...payload,
     flags: combineMessageFlags(
@@ -60,58 +59,36 @@ export const updateOriginalResponse = async ({
     "Sending Discord webhook response",
   );
 
-  try {
-    const response = await fetch(webhookUrl, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(finalPayload),
-    });
+  const response = await fetch(webhookUrl, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(finalPayload),
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error(
-        {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText,
-          interactionId: id,
-        },
-        "Discord webhook response failed",
-      );
-
-      return {
-        success: false,
-        status: response.status,
-        error: `Discord API error: ${response.status} ${response.statusText}`,
-      };
-    }
-
-    logger.debug(
-      {
-        status: response.status,
-        interactionId: id,
-      },
-      "Successfully sent Discord webhook response",
-    );
-
-    return {
-      success: true,
-      status: response.status,
-    };
-  } catch (error) {
+  if (!response.ok) {
+    const errorText = await response.text();
     logger.error(
       {
-        error,
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
         interactionId: id,
       },
-      "Failed to send Discord webhook response",
+      "Discord webhook response failed",
     );
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    throw new Error(
+      `Discord API error: ${response.status} ${response.statusText}`,
+    );
   }
+
+  logger.debug(
+    {
+      status: response.status,
+      interactionId: id,
+    },
+    "Successfully sent Discord webhook response",
+  );
 };

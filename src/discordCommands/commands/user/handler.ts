@@ -7,11 +7,11 @@ import type { Message } from "@/src/repository/message/types";
 import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
 import { UserInfoCommand, UserInfoCommandSchema } from "./schema";
 import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
-import { DiscordWebhookResponse } from "@/src/discordCommands/webhook/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { findEmoji } from "@/src/util/emoji";
 import { capitalize } from "@/src/util/format";
 import { getUserMessagesByDateRange } from "@/src/repository/message/getUserMessagesByDateRange";
+import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 
 /**
  * Handles the Discord interaction (slash command) to get user info
@@ -19,6 +19,22 @@ import { getUserMessagesByDateRange } from "@/src/repository/message/getUserMess
 export async function handleUserInfoCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<void> {
+  // Ensure the table name is present and return gracefully if not (do not retry)
+  const TABLE_NAME = process.env.TABLE_NAME;
+  if (!TABLE_NAME) {
+    await updateOriginalResponse({
+      interaction,
+      payload: {
+        content:
+          "🤖 Oopsie! I don't know where to look for messages. Please let my creator know.",
+      },
+    });
+    logger.error(
+      "TABLE_NAME environment variable is not defined. Processing this event is not possible and it will not be retried.",
+    );
+    return;
+  }
+
   const data: UserInfoCommand = normalizeChatInput(
     interaction,
     UserInfoCommandSchema,
@@ -40,124 +56,125 @@ export async function handleUserInfoCommand(
   const { startDate, endDate } = getDateRange(window);
   const windowText = getWindowDisplayText(window);
 
-  if (interaction.guild_id) {
-    const [guildMembers, guild, userMessages] = await Promise.all([
-      getGuildMembersByGuildId({
-        tableName: process.env.TABLE_NAME, // TODO: Get this from a param
-        guildId: interaction.guild_id,
-      }),
-      getGuildById({
-        tableName: process.env.TABLE_NAME,
-        id: interaction.guild_id,
-      }),
-      getUserMessagesByDateRange({
-        tableName: process.env.TABLE_NAME,
-        userId,
-        guildId: interaction.guild_id,
-        startDate,
-        endDate,
-      }),
-    ]);
-
-    const user = guildMembers.find((u) => u.id === userId);
-
-    let result: DiscordWebhookResponse;
-
-    if (!user) {
-      result = await updateOriginalResponse({
-        interaction,
-        payload: {
-          content: `Who? I don't know anyone with that name. Tell them to leet more.`,
-        },
-      });
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return;
-    }
-
-    if (!userMessages) {
-      result = await updateOriginalResponse({
-        interaction,
-        payload: {
-          content: `Couldn't find any messages for that user 🥲`,
-        },
-      });
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return;
-    }
-
-    // Sort all the user's messages by type
-    const messagesByType: Map<MessageType, Message[]> = new Map();
-    userMessages.forEach((message) => {
-      messagesByType.set(message.messageType, [
-        ...(messagesByType.get(message.messageType) ?? []),
-        message,
-      ]);
-    });
-
-    const leetEmojiId = guild
-      ? findEmoji(guild, "leet")?.identifier
-      : undefined;
-    const leebEmojiId = guild
-      ? findEmoji(guild, "leeb")?.identifier
-      : undefined;
-
-    result = await updateOriginalResponse({
+  // Ensure the guild id is defined and return gracefully if not (do not retry)
+  if (!interaction.guild_id) {
+    await updateOriginalResponse({
       interaction,
       payload: {
-        embeds: [
-          {
-            title: `Stats for ${windowText}`,
-            description: `${capitalize(windowText)} started <t:${startDate.getTime() / 1000}:R>.`,
-            timestamp: new Date().toISOString(),
-            author: {
-              name: user.displayName ?? user.username,
-              icon_url: user.avatarUrl ?? undefined,
-            },
-            color: 10181046,
-            thumbnail: {
-              url: "https://cdn.discordapp.com/emojis/532902550593077249.webp", // Leet emoji
-            },
-            footer: guild
-              ? {
-                  text: guild.name,
-                  icon_url: guild.iconUrl ?? undefined,
-                }
-              : undefined,
-            fields: [
-              {
-                name: leetEmojiId ? `<:${leetEmojiId}>` : "LEET",
-                value:
-                  messagesByType.get(MessageTypes.LEET)?.length.toString() ??
-                  "-",
-                inline: true,
-              },
-              {
-                name: leebEmojiId ? `<:${leebEmojiId}>` : "LEEB",
-                value:
-                  messagesByType.get(MessageTypes.LEEB)?.length.toString() ??
-                  "-",
-                inline: true,
-              },
-              {
-                name: leetEmojiId ? `🤡` : "FAILED_LEET",
-                value:
-                  messagesByType
-                    .get(MessageTypes.FAILED_LEET)
-                    ?.length.toString() ?? "-",
-                inline: true,
-              },
-            ],
-          },
-        ],
+        content:
+          "🤖 Oopsie! Discord didn't give me enough data to complete your request. There's nothing you can do about it so please let my creator know.",
+      },
+    });
+    logger.error(
+      { guild_id: interaction.guild_id, "user.id": interaction.user?.id },
+      "Guild id is not defined in the interaction. Processing this event is not possible and it will not be retried.",
+    );
+    return;
+  }
+
+  // Get all the data we need
+  const [user, guild, userMessages] = await Promise.all([
+    getGuildUserById({
+      tableName: TABLE_NAME,
+      userId,
+      guildId: interaction.guild_id,
+    }),
+    getGuildById({
+      tableName: TABLE_NAME,
+      id: interaction.guild_id,
+    }),
+    getUserMessagesByDateRange({
+      tableName: TABLE_NAME,
+      userId,
+      guildId: interaction.guild_id,
+      startDate,
+      endDate,
+    }),
+  ]);
+
+  if (!user) {
+    await updateOriginalResponse({
+      interaction,
+      payload: {
+        content: `Who? I don't know anyone with that name. Tell them to leet more.`,
       },
     });
 
-    if (!result.success) {
-      throw new Error(result.error || "Failed to send Discord response");
-    }
+    return;
   }
+
+  if (!userMessages) {
+    await updateOriginalResponse({
+      interaction,
+      payload: {
+        content: `Couldn't find any messages for that user 🥲`,
+      },
+    });
+
+    return;
+  }
+
+  // Sort all the user's messages by type
+  const messagesByType: Map<MessageType, Message[]> = new Map();
+  userMessages.forEach((message) => {
+    messagesByType.set(message.messageType, [
+      ...(messagesByType.get(message.messageType) ?? []),
+      message,
+    ]);
+  });
+
+  // Emoji string representations
+  const leetEmojiId = guild ? findEmoji(guild, "leet")?.identifier : undefined;
+  const leetEmojiString = leetEmojiId ? `<:${leetEmojiId}>` : "LEET";
+  const leebEmojiId = guild ? findEmoji(guild, "leeb")?.identifier : undefined;
+  const leebEmojiString = leebEmojiId ? `<:${leebEmojiId}>` : "LEEB";
+
+  await updateOriginalResponse({
+    interaction,
+    payload: {
+      embeds: [
+        {
+          title: `Stats for ${windowText}`,
+          description: `${capitalize(windowText)} started <t:${startDate.getTime() / 1000}:R>.`,
+          timestamp: new Date().toISOString(),
+          author: {
+            name: user.displayName ?? user.username,
+            icon_url: user.avatarUrl ?? undefined,
+          },
+          color: 10181046,
+          thumbnail: {
+            url: "https://cdn.discordapp.com/emojis/532902550593077249.webp", // Leet emoji
+          },
+          footer: guild
+            ? {
+                text: guild.name,
+                icon_url: guild.iconUrl ?? undefined,
+              }
+            : undefined,
+          fields: [
+            {
+              name: leetEmojiString,
+              value:
+                messagesByType.get(MessageTypes.LEET)?.length.toString() ?? "-",
+              inline: true,
+            },
+            {
+              name: leebEmojiString,
+              value:
+                messagesByType.get(MessageTypes.LEEB)?.length.toString() ?? "-",
+              inline: true,
+            },
+            {
+              name: "🤡",
+              value:
+                messagesByType
+                  .get(MessageTypes.FAILED_LEET)
+                  ?.length.toString() ?? "-",
+              inline: true,
+            },
+          ],
+        },
+      ],
+    },
+  });
 }
