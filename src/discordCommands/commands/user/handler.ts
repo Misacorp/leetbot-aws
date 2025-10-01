@@ -15,6 +15,7 @@ import {
   ensureGuildId,
   ensureTableName,
 } from "@/src/discordCommands/utils/validateInteractions";
+import { createEmojiString } from "@/src/util/discord";
 
 /**
  * Handles the Discord interaction (slash command) to get user info
@@ -104,10 +105,10 @@ export async function handleUserInfoCommand(
   });
 
   // Emoji string representations
-  const leetEmojiId = guild ? findEmoji(guild, "leet")?.identifier : undefined;
-  const leetEmojiString = leetEmojiId ? `<:${leetEmojiId}>` : "LEET";
-  const leebEmojiId = guild ? findEmoji(guild, "leeb")?.identifier : undefined;
-  const leebEmojiString = leebEmojiId ? `<:${leebEmojiId}>` : "LEEB";
+  const leetEmoji = guild ? findEmoji(guild, "leet") : undefined;
+  const leebEmoji = guild ? findEmoji(guild, "leeb") : undefined;
+  const leetEmojiString = createEmojiString(leetEmoji, "LEET");
+  const leebEmojiString = createEmojiString(leebEmoji, "LEEB");
 
   await updateOriginalResponse({
     interaction,
@@ -122,9 +123,11 @@ export async function handleUserInfoCommand(
             icon_url: user.avatarUrl ?? undefined,
           },
           color: 10181046,
-          thumbnail: {
-            url: "https://cdn.discordapp.com/emojis/532902550593077249.webp", // Leet emoji
-          },
+          thumbnail: user.avatarUrl
+            ? {
+                url: user.avatarUrl,
+              }
+            : undefined,
           footer: guild
             ? {
                 text: guild.name,

@@ -23,6 +23,7 @@ import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersB
 import { findEmoji } from "@/src/util/emoji";
 import { type RankingCommand, RankingCommandSchema } from "./schema";
 import { createRankingFields } from "./createRankingFields";
+import { createEmojiString } from "@/src/util/discord";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -137,10 +138,10 @@ export async function handleRankingCommand(
   const windowText = getWindowDisplayText(window);
 
   // Emoji string representations
-  const leetEmojiId = guild ? findEmoji(guild, "leet")?.identifier : undefined;
-  const leetEmojiString = leetEmojiId ? `<:${leetEmojiId}>` : "LEET";
-  const leebEmojiId = guild ? findEmoji(guild, "leeb")?.identifier : undefined;
-  const leebEmojiString = leebEmojiId ? `<:${leebEmojiId}>` : "LEEB";
+  const leetEmoji = guild ? findEmoji(guild, "leet") : undefined;
+  const leebEmoji = guild ? findEmoji(guild, "leeb") : undefined;
+  const leetEmojiString = createEmojiString(leetEmoji, "LEET");
+  const leebEmojiString = createEmojiString(leebEmoji, "LEEB");
   const subcommandToEmojiStringMap: Record<typeof data.subcommand, string> = {
     leet: leetEmojiString,
     leeb: leebEmojiString,
@@ -161,12 +162,10 @@ export async function handleRankingCommand(
     }
   }
 
-  const leetEmojiUrl =
-    "https://cdn.discordapp.com/emojis/532902550593077249.webp";
-  const leebEmojiUrl =
-    "https://cdn.discordapp.com/emojis/549557200796778496.webp";
   const emojiUrl =
-    data.subcommand === MessageTypes.LEET ? leetEmojiUrl : leebEmojiUrl;
+    data.subcommand === MessageTypes.LEET
+      ? leetEmoji?.imageUrl
+      : leebEmoji?.imageUrl;
 
   await updateOriginalResponse({
     interaction: interaction,
@@ -181,9 +180,11 @@ export async function handleRankingCommand(
             icon_url: guild.iconUrl ?? undefined,
           },
           color: 10181046,
-          thumbnail: {
-            url: emojiUrl,
-          },
+          thumbnail: emojiUrl
+            ? {
+                url: emojiUrl,
+              }
+            : undefined,
           fields: createRankingFields(rankings),
           footer,
         },
