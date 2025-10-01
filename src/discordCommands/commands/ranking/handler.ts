@@ -1,28 +1,28 @@
+import logger from "@logger";
 import {
   APIEmbed,
   type APIChatInputApplicationCommandInteraction,
 } from "discord-api-types/v10";
-import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
-import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
-import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
 import { MessageTypes } from "@/src/types";
-import type { Message } from "@/src/repository/message/types";
-import type { User } from "@/src/repository/user/types";
-import logger from "@logger";
-import {
-  type RankingCommand,
-  RankingCommandSchema,
-} from "@/src/discordCommands/commands/ranking/schema";
 import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
 import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
 import {
   ensureGuildId,
   ensureTableName,
 } from "@/src/discordCommands/utils/validateInteractions";
+import {
+  getDateRange,
+  getWindowDisplayText,
+} from "@/src/discordCommands/utils/dateUtils";
+import type { Message } from "@/src/repository/message/types";
+import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
+import type { User } from "@/src/repository/user/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
-import { findEmoji } from "@/src/util/emoji";
 import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
-import { createRankingFields } from "@/src/discordCommands/commands/ranking/createRankingFields";
+import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
+import { findEmoji } from "@/src/util/emoji";
+import { type RankingCommand, RankingCommandSchema } from "./schema";
+import { createRankingFields } from "./createRankingFields";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -72,15 +72,16 @@ export async function handleRankingCommand(
   } as const;
   const messageType = messageTypeMap[data.subcommand];
   const { startDate, endDate } = getDateRange(window);
+  const userId = interaction.member?.user.id;
 
-  const [guildMessages, guildMembers, guild] = await Promise.all([
-    // TODO: A narrow projection expression would optimize this query
+  const [guildMessages, guildMembers, guild, user] = await Promise.all([
     getGuildMessages({
       tableName,
       guildId,
       type: messageType,
       startDate,
       endDate,
+      // TODO: A narrow projection expression would optimize this query - maybe even COUNT
     }),
     getGuildMembersByGuildId({
       tableName,
@@ -90,6 +91,13 @@ export async function handleRankingCommand(
       tableName,
       id: guildId,
     }),
+    userId
+      ? getGuildUserById({
+          tableName,
+          guildId,
+          userId,
+        })
+      : Promise.resolve(null as User | null),
   ]);
 
   if (!guild) {
@@ -139,18 +147,6 @@ export async function handleRankingCommand(
     failed_leet: "🤡",
   };
   const emojiString = subcommandToEmojiStringMap[data.subcommand];
-
-  const userId = interaction.member?.user.id;
-  // TODO: Move this into the Promise.all statement above
-  // Info specific to the caller
-  let user: User | null = null;
-  if (userId) {
-    user = await getGuildUserById({
-      tableName,
-      guildId,
-      userId,
-    });
-  }
 
   let footer: APIEmbed["footer"] | undefined = undefined;
   if (user) {

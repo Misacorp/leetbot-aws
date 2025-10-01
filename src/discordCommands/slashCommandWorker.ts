@@ -27,8 +27,19 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         "Received command",
       );
 
+      // We only support certain types of interactions
       if (!isAPIChatInputCommandInteraction(interaction)) {
-        throw new Error("Invalid interaction type");
+        await sendErrorMessage(
+          interaction,
+          "❌ Sorry, there was an error processing your command. Please try again later.",
+        );
+
+        logger.warn(
+          { interaction },
+          "Invalid interaction type (not a APIChatInputCommandInteraction)",
+        );
+
+        return;
       }
 
       try {
