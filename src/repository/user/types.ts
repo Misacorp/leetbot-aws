@@ -3,6 +3,7 @@ export interface User {
   username: string; // Discord-wide username
   displayName: string | null; // Guild-specific username
   avatarUrl: string | null;
+  bannerUrl: string | null;
 }
 
 export interface UserDbo extends User {

@@ -67,6 +67,9 @@ export const onMessageCreate = async ({
       member: guildMember && {
         displayName: guildMember.displayName,
         avatarUrl: guildMember.displayAvatarURL({ forceStatic: true }),
+        bannerUrl: guildMember.bannerURL({
+          forceStatic: true,
+        }),
       },
       guild: message.guild,
     },

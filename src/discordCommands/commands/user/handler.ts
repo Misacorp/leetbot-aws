@@ -128,6 +128,12 @@ export async function handleUserInfoCommand(
                 url: user.avatarUrl,
               }
             : undefined,
+
+          image: user?.bannerUrl
+            ? {
+                url: user.bannerUrl,
+              }
+            : undefined,
           footer: guild
             ? {
                 text: guild.name,

@@ -19,7 +19,7 @@ export const getGuildUserById = async ({
       pk1: `guild#${guildId}`,
       sk1: `user#${userId}`,
     },
-    ProjectionExpression: "id, username, displayName, avatarUrl",
+    ProjectionExpression: "id, username, displayName, avatarUrl, bannerUrl",
   });
 
   const response = await dbClient.send(command);
