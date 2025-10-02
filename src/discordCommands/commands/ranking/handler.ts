@@ -3,7 +3,6 @@ import {
   APIEmbed,
   type APIChatInputApplicationCommandInteraction,
 } from "discord-api-types/v10";
-import { MessageTypes } from "@/src/types";
 import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
 import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
 import {
@@ -20,10 +19,9 @@ import type { User } from "@/src/repository/user/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
-import { findEmoji } from "@/src/util/emoji";
 import { type RankingCommand, RankingCommandSchema } from "./schema";
 import { createRankingFields } from "./createRankingFields";
-import { createEmojiString } from "@/src/util/discord";
+import { createEmojiString, getGameEmojis } from "@/src/util/discord";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -66,12 +64,7 @@ export async function handleRankingCommand(
     return;
   }
 
-  const messageTypeMap = {
-    leet: MessageTypes.LEET,
-    leeb: MessageTypes.LEEB,
-    failed_leet: MessageTypes.FAILED_LEET, // From the user-facing options
-  } as const;
-  const messageType = messageTypeMap[data.subcommand];
+  const messageType = data.subcommand;
   const { startDate, endDate } = getDateRange(window);
   const userId = interaction.member?.user.id;
 
@@ -137,17 +130,16 @@ export async function handleRankingCommand(
 
   const windowText = getWindowDisplayText(window);
 
-  // Emoji string representations
-  const leetEmoji = guild ? findEmoji(guild, "leet") : undefined;
-  const leebEmoji = guild ? findEmoji(guild, "leeb") : undefined;
-  const leetEmojiString = createEmojiString(leetEmoji, "LEET");
-  const leebEmojiString = createEmojiString(leebEmoji, "LEEB");
-  const subcommandToEmojiStringMap: Record<typeof data.subcommand, string> = {
-    leet: leetEmojiString,
-    leeb: leebEmojiString,
-    failed_leet: "🤡",
+  // Emojis used in the final embed
+  const { leetEmoji, leebEmoji, failedLeetEmoji } = getGameEmojis(guild);
+  const subcommandToEmojiMap = {
+    leet: leetEmoji,
+    leeb: leebEmoji,
+    failed_leet: failedLeetEmoji,
   };
-  const emojiString = subcommandToEmojiStringMap[data.subcommand];
+  const targetEmoji = subcommandToEmojiMap[data.subcommand];
+  const emojiString = createEmojiString(targetEmoji);
+  const emojiUrl = targetEmoji?.imageUrl;
 
   let footer: APIEmbed["footer"] | undefined = undefined;
   if (user) {
@@ -161,11 +153,6 @@ export async function handleRankingCommand(
       };
     }
   }
-
-  const emojiUrl =
-    data.subcommand === MessageTypes.LEET
-      ? leetEmoji?.imageUrl
-      : leebEmoji?.imageUrl;
 
   await updateOriginalResponse({
     interaction: interaction,

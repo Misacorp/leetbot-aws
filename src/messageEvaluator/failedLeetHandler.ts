@@ -36,8 +36,9 @@ export const failedLeetHandler = async ({
   // Find emojis
   const leetEmoji = findEmoji(guild, "leet");
   const leebEmoji = findEmoji(guild, "leeb");
-  if (!leetEmoji || !leebEmoji) {
-    throw new Error("Could not find 'leet' or 'leeb' emoji");
+  const failedLeetEmoji = findEmoji(guild, "failed_leet");
+  if (!leetEmoji || !leebEmoji || !failedLeetEmoji) {
+    throw new Error("Could not find game emojis");
   }
 
   // Check message content
@@ -97,7 +98,7 @@ export const failedLeetHandler = async ({
 
   await publishReaction({
     messageId: message.id,
-    emoji: leebEmoji.identifier,
+    emoji: failedLeetEmoji.identifier,
     channelId: message.channelId,
     topicArn,
   });

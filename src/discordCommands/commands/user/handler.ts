@@ -7,7 +7,6 @@ import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
 import { UserInfoCommand, UserInfoCommandSchema } from "./schema";
 import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
-import { findEmoji } from "@/src/util/emoji";
 import { capitalize } from "@/src/util/format";
 import { getUserMessagesByDateRange } from "@/src/repository/message/getUserMessagesByDateRange";
 import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
@@ -15,7 +14,7 @@ import {
   ensureGuildId,
   ensureTableName,
 } from "@/src/discordCommands/utils/validateInteractions";
-import { createEmojiString } from "@/src/util/discord";
+import { getEmojiStrings, getGameEmojis } from "@/src/util/discord";
 
 /**
  * Handles the Discord interaction (slash command) to get user info
@@ -105,10 +104,12 @@ export async function handleUserInfoCommand(
   });
 
   // Emoji string representations
-  const leetEmoji = guild ? findEmoji(guild, "leet") : undefined;
-  const leebEmoji = guild ? findEmoji(guild, "leeb") : undefined;
-  const leetEmojiString = createEmojiString(leetEmoji, "LEET");
-  const leebEmojiString = createEmojiString(leebEmoji, "LEEB");
+  const { leetEmoji, leebEmoji, failedLeetEmoji } = getGameEmojis(guild);
+  const [
+    leetEmojiString = "LEET",
+    leebEmojiString = "LEEB",
+    failedLeetEmojiString = "FAILED_LEET",
+  ] = getEmojiStrings([leetEmoji, leebEmoji, failedLeetEmoji]);
 
   await updateOriginalResponse({
     interaction,
@@ -154,7 +155,7 @@ export async function handleUserInfoCommand(
               inline: true,
             },
             {
-              name: "🤡",
+              name: failedLeetEmojiString,
               value:
                 messagesByType
                   .get(MessageTypes.FAILED_LEET)
