@@ -1,10 +1,10 @@
 import logger from "@logger";
 import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
-import { isAPIChatInputCommandInteraction } from "@/src/discordCommands/typeGuards";
+import { isAPIChatInputCommandInteraction } from "@/src/discord/interactions/typeGuards";
 import { type APIInteraction } from "discord-api-types/v10";
 import { handleRankingCommand } from "./commands/ranking/handler";
 import { handleUserInfoCommand } from "./commands/user/handler";
-import { sendErrorMessage } from "@/src/discordCommands/webhook/sendErrorMessage";
+import { sendErrorMessage } from "@/src/discord/interactions/webhook/sendErrorMessage";
 
 /**
  * Discord interaction (slash command) worker.

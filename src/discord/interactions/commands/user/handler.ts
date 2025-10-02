@@ -3,9 +3,9 @@ import { type APIChatInputApplicationCommandInteraction } from "discord-api-type
 import { getDateRange, getWindowDisplayText } from "../../utils/dateUtils";
 import { type MessageType, MessageTypes } from "@/src/types";
 import type { Message } from "@/src/repository/message/types";
-import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
+import { normalizeChatInput } from "@/src/discord/interactions/core/schemaParser";
 import { UserInfoCommand, UserInfoCommandSchema } from "./schema";
-import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
+import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updateOriginalResponse";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { capitalize } from "@/src/util/format";
 import { getUserMessagesByDateRange } from "@/src/repository/message/getUserMessagesByDateRange";
@@ -13,8 +13,8 @@ import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 import {
   ensureGuildId,
   ensureTableName,
-} from "@/src/discordCommands/utils/validateInteractions";
-import { getEmojiStrings, getGameEmojis } from "@/src/util/discord";
+} from "@/src/discord/interactions/utils/validateInteractions";
+import { getEmojiStrings, getGameEmojis } from "@/src/discord/discordUtils";
 
 /**
  * Handles the Discord interaction (slash command) to get user info

@@ -3,8 +3,8 @@ import {
   ApplicationCommandType,
   ApplicationCommandOptionType,
 } from "discord-api-types/v10";
-import { CommandInputTagged } from "@/src/discordCommands/core/schemaParser";
-import { windowOption } from "@/src/discordCommands/core/common";
+import { CommandInputTagged } from "@/src/discord/interactions/core/schemaParser";
+import { windowOption } from "@/src/discord/interactions/core/common";
 
 export const RankingCommandSchema = {
   name: "ranking",

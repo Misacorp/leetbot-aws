@@ -91,7 +91,7 @@ export class DiscordBot extends Construct {
     // Discord bot Lambda function
     this.discordWatcher = new NodejsFunction(this, "DiscordWatcher", {
       ...getDefaultLambdaConfig(),
-      entry: "src/discordWatcher/discordWatcher.ts",
+      entry: "src/discord/discordWatcher/discordWatcher.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(60 * 4 + 15),
       memorySize: 256,
@@ -153,7 +153,7 @@ export class DiscordBot extends Construct {
     // Lambda that writes messages to the database
     const messageEvaluator = new NodejsFunction(this, "MessageEvaluator", {
       ...getDefaultLambdaConfig(),
-      entry: "src/messageEvaluator/messageEvaluator.ts",
+      entry: "src/discord/messageEvaluator/messageEvaluator.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(15),
       logGroup: createLogGroup(

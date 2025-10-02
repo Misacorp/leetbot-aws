@@ -3,16 +3,16 @@ import {
   APIEmbed,
   type APIChatInputApplicationCommandInteraction,
 } from "discord-api-types/v10";
-import { normalizeChatInput } from "@/src/discordCommands/core/schemaParser";
-import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
+import { normalizeChatInput } from "@/src/discord/interactions/core/schemaParser";
+import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updateOriginalResponse";
 import {
   ensureGuildId,
   ensureTableName,
-} from "@/src/discordCommands/utils/validateInteractions";
+} from "@/src/discord/interactions/utils/validateInteractions";
 import {
   getDateRange,
   getWindowDisplayText,
-} from "@/src/discordCommands/utils/dateUtils";
+} from "@/src/discord/interactions/utils/dateUtils";
 import type { Message } from "@/src/repository/message/types";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 import type { User } from "@/src/repository/user/types";
@@ -21,7 +21,7 @@ import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
 import { type RankingCommand, RankingCommandSchema } from "./schema";
 import { createRankingFields } from "./createRankingFields";
-import { createEmojiString, getGameEmojis } from "@/src/util/discord";
+import { createEmojiString, getGameEmojis } from "@/src/discord/discordUtils";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.

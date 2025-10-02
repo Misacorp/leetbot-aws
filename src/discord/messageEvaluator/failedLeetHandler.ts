@@ -1,70 +1,65 @@
 import baseLogger from "@logger";
-import { isLeet } from "@/src/util/dateTime";
+import { isLeeb } from "@/src/util/dateTime";
 import { findEmoji } from "@/src/util/emoji";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
-import { publishReaction } from "@/src/messageEvaluator/publishReaction";
+import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
 
-interface LeetHandlerProps {
+interface FailedLeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
   tableName: string;
   topicArn: string;
-  alwaysAllowLeet?: boolean;
+  alwaysAllowFailedLeet?: boolean;
   skipUniquenessCheck?: boolean;
 }
 
-const logger = baseLogger.child({ function: "leetHandler" });
+const logger = baseLogger.child({ function: "failedLeetHandler" });
 
 /**
- * Handles LEET messages
+ * Handles FAILED_LEET messages.
+ * I.e., when users post "leet" during LEEB time.
  */
-export const leetHandler = async ({
+export const failedLeetHandler = async ({
   message,
   guild,
   tableName,
   topicArn,
-  alwaysAllowLeet = false,
+  alwaysAllowFailedLeet = false,
   skipUniquenessCheck = false,
-}: LeetHandlerProps) => {
+}: FailedLeetHandlerProps) => {
   logger.info(
-    `Processing LEET from ${message.author.id} created at ${message.createdTimestamp}`,
+    `Processing FAILED_LEET from ${message.author.id} created at ${message.createdTimestamp}`,
   );
 
-  // Find LEET emoji
+  // Find emojis
   const leetEmoji = findEmoji(guild, "leet");
-  if (!leetEmoji) {
-    throw new Error("Could not find 'leet' emoji");
+  const leebEmoji = findEmoji(guild, "leeb");
+  const failedLeetEmoji = findEmoji(guild, "failed_leet");
+  if (!leetEmoji || !leebEmoji || !failedLeetEmoji) {
+    throw new Error("Could not find game emojis");
   }
 
   // Check message content
   const content = message.content.trim().toLowerCase();
-  logger.debug({ content }, "leetHandler extracted message content:");
+  logger.debug({ content }, "failedLeetHandler extracted message content:");
 
   if (!(content === "leet" || content.includes(leetEmoji.identifier))) {
     logger.debug(
-      "Message content does not warrant processing the LEET handler any further. Exiting leet handler…",
+      "Message content does not contain 'leet'. Exiting failed leet handler…",
     );
     return;
   }
 
-  // Verify the timestamp
-  if (!isLeet(message.createdTimestamp)) {
-    logger.info("Received LEET with a non-LEET timestamp.");
+  // Verify the timestamp - must be LEEB time (not LEET time)
+  if (!isLeeb(message.createdTimestamp)) {
+    logger.debug("Received 'leet' content but not during LEEB timestamp.");
 
-    if (alwaysAllowLeet) {
-      logger.info("This is a test event where LEET is always allowed.");
+    if (alwaysAllowFailedLeet) {
+      logger.info("This is a test event where FAILED_LEET is always allowed.");
     } else {
-      logger.info("❌ Not allowed.");
-
-      await publishReaction({
-        messageId: message.id,
-        emoji: "🤡",
-        channelId: message.channelId,
-        topicArn,
-      });
-
+      logger.debug("❌ Not LEEB time. Exiting failed leet handler…");
       return;
     }
   }
@@ -92,18 +87,18 @@ export const leetHandler = async ({
     return;
   }
 
-  logger.debug("Saving message to the database…");
+  logger.debug("Saving FAILED_LEET message to the database…");
 
   await saveMessageAndUser({
+    tableName,
     message,
     guild,
-    messageType: MessageTypes.LEET,
-    tableName,
+    messageType: MessageTypes.FAILED_LEET,
   });
 
   await publishReaction({
     messageId: message.id,
-    emoji: leetEmoji.identifier,
+    emoji: failedLeetEmoji.identifier,
     channelId: message.channelId,
     topicArn,
   });

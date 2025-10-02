@@ -4,7 +4,7 @@ import {
   RESTPostAPIWebhookWithTokenJSONBody,
   Routes,
 } from "discord-api-types/v10";
-import { combineMessageFlags } from "@/src/discordCommands/webhook/common";
+import { combineMessageFlags } from "@/src/discord/interactions/webhook/common";
 
 /**
  * Builds the Discord webhook URL for creating a followup message

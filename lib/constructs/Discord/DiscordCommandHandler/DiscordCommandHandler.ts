@@ -65,7 +65,7 @@ export class DiscordCommandHandler extends Construct {
     // The ingress function verifies Discord request integrity and passes commands forward
     this.ingressFunction = new NodejsFunction(this, "InteractionsIngress", {
       ...getDefaultLambdaConfig(),
-      entry: "src/discordCommands/ingress.ts",
+      entry: "src/discord/interactions/ingress.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(5), // Needs to respond to Discord within 3 seconds
       logGroup: createLogGroup(
@@ -101,7 +101,7 @@ export class DiscordCommandHandler extends Construct {
     // Worker that handles all slash commands
     this.slashCommandWorker = new NodejsFunction(this, "SlashCommandWorker", {
       ...getDefaultLambdaConfig(),
-      entry: "src/discordCommands/slashCommandWorker.ts",
+      entry: "src/discord/interactions/slashCommandWorker.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,

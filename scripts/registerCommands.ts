@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { REST, Routes } from "/opt/nodejs/discord";
-import { ALL_COMMAND_SCHEMAS } from "@/src/discordCommands/core/registry";
+import { ALL_COMMAND_SCHEMAS } from "@/src/discord/interactions/core/registry";
 
 // Determine the correct environment for loading environment variables
 const env = process.env.NODE_ENV || "dev";

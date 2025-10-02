@@ -1,4 +1,4 @@
-import { CommandWindow } from "@/src/discordCommands/core/common";
+import { CommandWindow } from "@/src/discord/interactions/core/common";
 
 export function getDateRange(window?: CommandWindow) {
   const now = new Date();

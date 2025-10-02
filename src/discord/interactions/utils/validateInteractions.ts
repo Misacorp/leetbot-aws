@@ -1,6 +1,6 @@
 import logger from "@logger";
 import { APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
-import { updateOriginalResponse } from "@/src/discordCommands/webhook/updateOriginalResponse";
+import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updateOriginalResponse";
 
 /**
  * Validates that a TABLE_NAME variable is present in the environment and returns it if yes.
