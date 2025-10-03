@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { REST, Routes } from "/opt/nodejs/discord";
-import { ALL_COMMAND_SCHEMAS } from "@/src/discord/interactions/core/registry";
+import { COMMAND_SCHEMAS } from "@/src/discord/interactions/core/registry";
 
 // Determine the correct environment for loading environment variables
 const env = process.env.NODE_ENV || "dev";
@@ -28,7 +28,7 @@ async function registerCommands() {
     console.log("Started refreshing application (/) commands.");
 
     // Convert your command schemas to the format Discord expects
-    const commands = ALL_COMMAND_SCHEMAS.map((originalSchema) => {
+    const commands = Object.values(COMMAND_SCHEMAS).map((originalSchema) => {
       const schema: typeof originalSchema & {
         dm_permission?: boolean;
         default_member_permissions?: string | undefined;

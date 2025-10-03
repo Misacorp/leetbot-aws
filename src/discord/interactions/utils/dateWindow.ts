@@ -1,5 +1,10 @@
 import { CommandWindow } from "@/src/discord/interactions/core/common";
 
+/**
+ * Transforms a 'window' option of a Discord interaction into start and end date objects.
+ * Date windows are relative to the current day.
+ * @param window
+ */
 export function getDateRange(window?: CommandWindow) {
   const now = new Date();
 
@@ -39,6 +44,10 @@ export function getDateRange(window?: CommandWindow) {
   return { startDate, endDate };
 }
 
+/**
+ * Transforms a 'window' parameter to a readable string
+ * @param window Window option of a Discord interaction
+ */
 export function getWindowDisplayText(window?: CommandWindow): string {
   switch (window) {
     case "this_week":

@@ -68,7 +68,7 @@ type SubOptions<
   K extends SubNames<Os>,
 > = SubcommandValue<Extract<Os[number], { name: K }>>;
 
-/** If an option provides choices, narrow to the union of their values. */
+// If an option provides choices, narrow to the union of their values.
 export type ChoiceValue<
   O extends { choices?: readonly { value: unknown }[] } | unknown,
 > = O extends { choices: readonly (infer C)[] }
@@ -77,31 +77,31 @@ export type ChoiceValue<
     : never
   : never;
 
-/** Value type for a single option object, honoring `choices` if present. */
+// Value type for a single option object, honoring `choices` if present.
 type ValueForOption<O extends { type: ApplicationCommandOptionType }> = [
   ChoiceValue<O>,
 ] extends [never]
   ? PrimitiveForType<O["type"]>
   : ChoiceValue<O>;
 
-/** Convert an options tuple to a `{ [name]: value }` record. */
+// Convert an options tuple to a `{ [name]: value }` record.
 type OptionsToRecord<
   Os extends readonly { name: string; type: ApplicationCommandOptionType }[],
 > = {
   [O in Os[number] as O["name"]]: ValueForOption<O>;
 };
 
-/** Names of required options in a tuple. */
+// Names of required options in a tuple.
 type RequiredNames<Os extends readonly { name: string; required?: boolean }[]> =
   Extract<Os[number], { required: true }>["name"];
 
-/** Make only K required; everything else optional. */
+// Make only K required; everything else optional.
 type PartialExcept<T, K extends PropertyKey> = Omit<
   Partial<T>,
   Extract<keyof T, K>
 > & { [P in Extract<keyof T, K>]-?: T[P] };
 
-/** Final input type for a command schema. */
+// Final input type for a command schema.
 export type CommandInput<
   S extends RESTPostAPIApplicationCommandsJSONBody & {
     options?: readonly { name: string; type: ApplicationCommandOptionType }[];

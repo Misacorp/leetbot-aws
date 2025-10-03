@@ -12,7 +12,7 @@ import {
 import {
   getDateRange,
   getWindowDisplayText,
-} from "@/src/discord/interactions/utils/dateUtils";
+} from "@/src/discord/interactions/utils/dateWindow";
 import type { Message } from "@/src/repository/message/types";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 import type { User } from "@/src/repository/user/types";
@@ -135,13 +135,8 @@ export async function handleRankingCommand(
   const windowText = getWindowDisplayText(window);
 
   // Emojis used in the final embed
-  const { leetEmoji, leebEmoji, failedLeetEmoji } = getGameEmojis(guild);
-  const subcommandToEmojiMap = {
-    leet: leetEmoji,
-    leeb: leebEmoji,
-    failed_leet: failedLeetEmoji,
-  };
-  const targetEmoji = subcommandToEmojiMap[data.subcommand];
+  const emojis = getGameEmojis(guild);
+  const targetEmoji = emojis[data.subcommand];
   const emojiString = createEmojiString(targetEmoji);
   const emojiUrl = targetEmoji?.imageUrl;
 
@@ -164,7 +159,8 @@ export async function handleRankingCommand(
       embeds: [
         {
           title: `${emojiString} Ranking`,
-          description: `**Top 10** positions ${windowText}, which started ${createDateString(startDate, "R")}.`,
+          // It's silly to say when "all time" started.
+          description: `**Top 10** positions ${windowText}${window === "all_time" ? "." : `, which started ${createDateString(startDate, "R")}.`}`,
           timestamp: new Date().toISOString(),
           author: {
             name: guild.name,

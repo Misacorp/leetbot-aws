@@ -56,6 +56,12 @@ const getZonedDate = (
   return toZonedTime(date, timezone);
 };
 
+/**
+ * Creates a new date at the desired time in a given timezone
+ * @param dateInput Date to create a copy of
+ * @param timezone Target timezone
+ * @param options Target hours, minutes, seconds, and milliseconds
+ */
 export const setZonedTime = (
   dateInput: number | string | Date,
   timezone = DEFAULT_TIMEZONE,
@@ -65,11 +71,40 @@ export const setZonedTime = (
   const zonedDate = toZonedTime(date, timezone);
 
   const y = zonedDate.getFullYear();
-  const m = zonedDate.getMonth(); // 0-based
+  const m = zonedDate.getMonth();
   const d = zonedDate.getDate();
 
-  // 13:37 on that calendar day in the target TZ -> absolute instant
-  return fromZonedTime(new Date(y, m, d, 13, 37, 0, 0), timezone);
+  return fromZonedTime(
+    new Date(
+      y,
+      m,
+      d,
+      options.hours,
+      options.minutes,
+      options.seconds,
+      options.ms,
+    ),
+    timezone,
+  );
+};
+
+/**
+ * Creates a new date with the hours and minutes set to 13:37 in the given timezone.
+ * @param originalDate Date to change
+ * @param timezone Target timezone
+ * @returns New date object, leaving the original as-is.
+ */
+export const setTimeToLeet = (
+  originalDate: string,
+  timezone?: string,
+): Date => {
+  const date = toDateObject(originalDate);
+  return setZonedTime(originalDate, timezone, {
+    hours: 13,
+    minutes: 13,
+    seconds: date.getSeconds(),
+    ms: date.getMilliseconds(),
+  });
 };
 
 /**

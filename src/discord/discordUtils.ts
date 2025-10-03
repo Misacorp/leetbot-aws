@@ -23,11 +23,11 @@ export const createEmojiString = (
  * Built to handle an undefined guild (returns undefined for each emoji)
  */
 export const getGameEmojis = (guild: Guild | null) => {
-  const leetEmoji = guild ? findEmoji(guild, "leet") : undefined;
-  const leebEmoji = guild ? findEmoji(guild, "leeb") : undefined;
-  const failedLeetEmoji = guild ? findEmoji(guild, "failed_leet") : undefined;
+  const leet = guild ? findEmoji(guild, "leet") : undefined;
+  const leeb = guild ? findEmoji(guild, "leeb") : undefined;
+  const failed_leet = guild ? findEmoji(guild, "failed_leet") : undefined;
 
-  return { leetEmoji, leebEmoji, failedLeetEmoji };
+  return { leet, leeb, failed_leet }; // Using snake_case for failed_leet to match the Discord subcommand naming
 };
 
 /**
