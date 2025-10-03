@@ -4,7 +4,7 @@ import type { DiscordBotOutPayload } from "@/src/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { leetHandler } from "./leetHandler";
 import { leebHandler } from "./leebHandler";
-import { failedLeetHandler } from "@/src/messageEvaluator/failedLeetHandler";
+import { failedLeetHandler } from "@/src/discord/messageEvaluator/failedLeetHandler";
 
 declare global {
   namespace NodeJS {
@@ -78,5 +78,6 @@ export const handler = async (event: SQSEvent) => {
     ]);
   });
 
-  await Promise.all(promises);
+  // Treat each message in the batch independently
+  await Promise.allSettled(promises);
 };

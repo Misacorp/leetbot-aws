@@ -5,6 +5,7 @@
 node_modules
 dist
 !dist/layer/nodejs/node_modules
+.env*
 
 # CDK outputs file
 cdk-outputs*.json

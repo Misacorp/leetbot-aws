@@ -1,4 +1,3 @@
-import type { ScheduledEvent } from "aws-lambda";
 import type { GuildMember, Message } from "/opt/nodejs/discord";
 
 /**
@@ -48,6 +47,7 @@ export type AuthorSummary = Pick<
  */
 export type GuildMemberSummary = Pick<GuildMember, "displayName"> & {
   avatarUrl: string;
+  bannerUrl: string | null;
 };
 
 /**

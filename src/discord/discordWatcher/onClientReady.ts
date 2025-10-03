@@ -47,6 +47,6 @@ export const onClientReady = async ({
 
   if (sqsPoller) {
     logger.info("Starting SQS polling…");
-    sqsPoller.startPolling(client);
+    sqsPoller.startPolling();
   }
 };
