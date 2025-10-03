@@ -38,10 +38,10 @@ export class InteractionsApi extends Construct implements IInteractionsApi {
       description: "HTTP endpoint for Discord Interactions webhook",
     });
 
-    // Create a stage with access logging enabled
     const defaultStage = this.api.defaultStage?.node
       .defaultChild as apigwV2.CfnStage;
     if (defaultStage) {
+      // Add access logging to the stage
       defaultStage.accessLogSettings = {
         destinationArn: apiGatewayLogGroup.logGroupArn,
         format: JSON.stringify({
@@ -62,6 +62,12 @@ export class InteractionsApi extends Construct implements IInteractionsApi {
           integrationStatus: "$context.integration.status",
           integrationLatency: "$context.integration.latency",
         }),
+      };
+
+      // Add rate-limiting to the stage
+      defaultStage.defaultRouteSettings = {
+        throttlingRateLimit: 3,
+        throttlingBurstLimit: 10,
       };
     }
 
