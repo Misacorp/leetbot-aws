@@ -4,11 +4,21 @@
  * Unix timestamps like `1697262436284` do not contain any locale information.
  * Dates created from such values will be in the server's timezone (?).
  */
-import { toZonedTime, format } from "/opt/nodejs/date-fns";
+import { toZonedTime, format, fromZonedTime } from "/opt/nodejs/date-fns";
 
 export { toZonedTime };
 
 const DEFAULT_TIMEZONE = "Europe/Helsinki";
+
+/**
+ * Converts any date representation into a Date object
+ */
+export const toDateObject = (dateInput: number | string | Date) => {
+  if (!(dateInput instanceof Date)) {
+    return new Date(dateInput);
+  }
+  return dateInput;
+};
 
 /**
  * Determines if a message was created within the time window of [13:37, 13:38[
@@ -42,15 +52,24 @@ const getZonedDate = (
   dateInput: number | string | Date,
   timezone = DEFAULT_TIMEZONE,
 ): Date => {
-  let date: Date;
-
-  if (!(dateInput instanceof Date)) {
-    date = new Date(dateInput);
-  } else {
-    date = dateInput;
-  }
-
+  const date = toDateObject(dateInput);
   return toZonedTime(date, timezone);
+};
+
+export const setZonedTime = (
+  dateInput: number | string | Date,
+  timezone = DEFAULT_TIMEZONE,
+  options: { hours: number; minutes: number; seconds: number; ms: number },
+): Date => {
+  const date = toDateObject(dateInput);
+  const zonedDate = toZonedTime(date, timezone);
+
+  const y = zonedDate.getFullYear();
+  const m = zonedDate.getMonth(); // 0-based
+  const d = zonedDate.getDate();
+
+  // 13:37 on that calendar day in the target TZ -> absolute instant
+  return fromZonedTime(new Date(y, m, d, 13, 37, 0, 0), timezone);
 };
 
 /**
