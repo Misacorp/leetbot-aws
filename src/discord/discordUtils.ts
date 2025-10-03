@@ -35,3 +35,19 @@ export const getGameEmojis = (guild: Guild | null) => {
  */
 export const getEmojiStrings = (emojis: (Emoji | undefined)[]) =>
   emojis.map((emoji) => createEmojiString(emoji));
+
+/**
+ * Timestamp display modes
+ * @see https://sesh.fyi/timestamp/
+ */
+type DateRepresentationMode = "F" | "f" | "D" | "d" | "T" | "t" | "R";
+
+/**
+ * Creates a Discord timestamp expression
+ * @param date Date
+ * @param mode Date representation mode
+ */
+export const createDateString = (
+  date: Date,
+  mode: DateRepresentationMode = "D",
+) => `<t:${Math.floor(date.getTime() / 1000)}:${mode}>`;

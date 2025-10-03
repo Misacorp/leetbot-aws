@@ -14,7 +14,11 @@ import {
   ensureGuildId,
   ensureTableName,
 } from "@/src/discord/interactions/utils/validateInteractions";
-import { getEmojiStrings, getGameEmojis } from "@/src/discord/discordUtils";
+import {
+  createDateString,
+  getEmojiStrings,
+  getGameEmojis,
+} from "@/src/discord/discordUtils";
 import { getDatePrefix, setZonedTime, toDateObject } from "@/src/util/dateTime";
 
 /**
@@ -244,10 +248,10 @@ export async function handleUserInfoCommand(
       const today = new Date();
 
       if (today.toDateString() === endDate.toDateString()) {
-        return `${longestStreak.length} days ongoing from <t:${startDate.getTime() / 1000}:d>!`;
+        return `${longestStreak.length} days ongoing from ${createDateString(startDate, "D")}!`;
       }
 
-      return `${longestStreak.length} days from <t:${startDate.getTime() / 1000}:d> to <t:${endDate.getTime() / 1000}:d>`;
+      return `${longestStreak.length} days from ${createDateString(startDate, "D")} to ${createDateString(endDate, "D")}`;
     }
 
     return "No streaks to speak of.";
@@ -259,7 +263,7 @@ export async function handleUserInfoCommand(
       embeds: [
         {
           title: `Stats for ${windowText}`,
-          description: `${capitalize(windowText)} started <t:${startDate.getTime() / 1000}:R>.`,
+          description: `${capitalize(windowText)} started ${createDateString(startDate, "R")}.`,
           timestamp: new Date().toISOString(),
           author: {
             name: user.displayName ?? user.username,
@@ -311,10 +315,7 @@ export async function handleUserInfoCommand(
             {
               name: `Fastest ${leetEmojiString}`,
               value: `${fastestMessageMs} ms on ${fastestMessages
-                .map(
-                  (msg) =>
-                    `<t:${Math.floor(new Date(msg.createdAt).getTime() / 1000)}:d>`,
-                )
+                .map((msg) => createDateString(new Date(msg.createdAt), "D"))
                 .join(" and ")}.`,
             },
           ],

@@ -21,7 +21,11 @@ import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
 import { type RankingCommand, RankingCommandSchema } from "./schema";
 import { createRankingFields } from "./createRankingFields";
-import { createEmojiString, getGameEmojis } from "@/src/discord/discordUtils";
+import {
+  createDateString,
+  createEmojiString,
+  getGameEmojis,
+} from "@/src/discord/discordUtils";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -160,7 +164,7 @@ export async function handleRankingCommand(
       embeds: [
         {
           title: `${emojiString} Ranking`,
-          description: `**Top 10** positions ${windowText}, which started <t:${startDate.getTime() / 1000}:R>.`,
+          description: `**Top 10** positions ${windowText}, which started ${createDateString(startDate, "R")}.`,
           timestamp: new Date().toISOString(),
           author: {
             name: guild.name,
