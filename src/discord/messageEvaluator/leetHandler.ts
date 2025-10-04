@@ -42,7 +42,7 @@ export const leetHandler = async ({
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "leetHandler extracted message content:");
 
-  if (!(content === "leet" || content.includes(leetEmoji.identifier))) {
+  if (!(content === "leet" || content === leetEmoji.identifier)) {
     logger.debug(
       "Message content does not warrant processing the LEET handler any further. Exiting leet handler…",
     );

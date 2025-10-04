@@ -42,7 +42,7 @@ export const leebHandler = async ({
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "leebHandler extracted message content:");
 
-  if (!(content === "leeb" || content.includes(leebEmoji.identifier))) {
+  if (!(content === "leeb" || content === leebEmoji.identifier)) {
     logger.debug(
       "Message content does not warrant processing the LEEB handler any further. Exiting leeb handler…",
     );
