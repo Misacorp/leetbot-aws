@@ -2,6 +2,7 @@ import logger from "@logger";
 import {
   APIEmbed,
   APIInteraction,
+  APIMessage,
   MessageFlags,
   RESTPatchAPIWebhookWithTokenMessageJSONBody,
   Routes,
@@ -36,7 +37,7 @@ export const updateOriginalResponse = async ({
   interaction,
   payload,
   ephemeral = true,
-}: UpdateOriginalResponseArgs): Promise<void> => {
+}: UpdateOriginalResponseArgs): Promise<APIMessage> => {
   const { id, token, application_id } = interaction;
 
   // Apply an ephemeral flag if needed
@@ -91,4 +92,6 @@ export const updateOriginalResponse = async ({
     },
     "Successfully sent Discord webhook response",
   );
+
+  return (await response.json()) as APIMessage;
 };

@@ -2,8 +2,8 @@ import logger from "@logger";
 import {
   discordAuthError,
   discordDeferEphemeral,
+  discordDeferPublic,
   discordPong,
-  discordReplyEphemeral,
   json,
 } from "./utils/discordResponses";
 import { getParameter } from "@/src/util/ssm";
@@ -69,25 +69,19 @@ export const handler = async (event: any) => {
       return discordPong();
     }
 
-    // Reject interactions that are not application commands or component interactions
-    if (interaction?.type !== 2) {
-      logger.debug(
-        { interactionType: interaction?.type },
-        "Interaction type not supported, sending deferred response",
-      );
-
-      return discordReplyEphemeral(
-        "Sorry, that interaction type is not supported.",
-      );
-    }
-
     // ✅ Pass the interaction onward for further processing
     await publishMessage({
       TopicArn: COMMAND_PROCESSING_TOPIC_ARN,
       Message: JSON.stringify(interaction),
     });
 
-    return discordDeferEphemeral();
+    // Application commands are ephemeral
+    if (interaction?.type === 2) {
+      return discordDeferEphemeral();
+    }
+
+    // Handle other interactions as public
+    return discordDeferPublic();
   } catch (err) {
     logger.error({ error: err }, "Discord ingress error");
 

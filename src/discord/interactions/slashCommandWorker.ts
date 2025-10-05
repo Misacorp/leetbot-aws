@@ -1,10 +1,14 @@
 import logger from "@logger";
 import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
-import { isAPIChatInputCommandInteraction } from "@/src/discord/interactions/typeGuards";
+import {
+  isAPIChatInputCommandInteraction,
+  isComponentInteraction,
+} from "@/src/discord/interactions/typeGuards";
 import { type APIInteraction } from "discord-api-types/v10";
 import { handleRankingCommand } from "./commands/ranking/handler";
 import { handleUserInfoCommand } from "./commands/user/handler";
 import { sendErrorMessage } from "@/src/discord/interactions/webhook/sendErrorMessage";
+import { makePublicHandler } from "@/src/discord/interactions/components/makePublicHandler";
 
 /**
  * Discord interaction (slash command) worker.
@@ -27,24 +31,34 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         "Received command",
       );
 
-      // We only support certain types of interactions
-      if (!isAPIChatInputCommandInteraction(interaction)) {
-        await sendErrorMessage(
-          interaction,
-          "❌ Sorry, there was an error processing your command. Please try again later.",
-        );
-
-        logger.warn(
-          { interaction },
-          "Invalid interaction type (not a APIChatInputCommandInteraction)",
-        );
-
-        return;
-      }
-
       try {
-        const commandName = interaction.data.name;
+        if (isComponentInteraction(interaction)) {
+          // Route by `custom_id`
+          if (interaction.data.custom_id.startsWith("make_public")) {
+            return await makePublicHandler({
+              interaction,
+            });
+          }
+        }
 
+        // We only support certain types of interactions from here on out.
+        // Return early if needed.
+        if (!isAPIChatInputCommandInteraction(interaction)) {
+          await sendErrorMessage(
+            interaction,
+            "🤖 I got your request but can't process it. Sorry!",
+          );
+
+          logger.warn(
+            { interaction },
+            "Invalid interaction type (not a APIChatInputCommandInteraction)",
+          );
+
+          return;
+        }
+
+        // Route by command name
+        const commandName = interaction.data.name;
         switch (commandName) {
           case "user": {
             return await handleUserInfoCommand(interaction);
@@ -67,7 +81,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
         await sendErrorMessage(
           interaction,
-          "❌ Sorry, there was an error processing your command. Please try again later.",
+          "🤖 Sorry, there was an error processing your command. Please let my creator know and maybe try again later.",
         );
       }
     },

@@ -3,6 +3,7 @@ import { Construct } from "constructs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
@@ -12,6 +13,7 @@ import { ILambdaLayers } from "@/lib/constructs/Discord/LambdaLayers";
 import {
   createLogGroup,
   getDefaultLambdaConfig,
+  getLogLevel,
   getRemovalPolicy,
 } from "@/src/util/infra";
 import { IDiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
@@ -19,13 +21,16 @@ import {
   IInteractionsApi,
   InteractionsApi,
 } from "@/lib/constructs/Discord/DiscordCommandHandler/InteractionsApi";
-import { ITable } from "@/lib/constructs/Table";
+import type { ITable } from "@/lib/constructs/Table";
+import type { ICacheTable } from "@/lib/constructs/CacheTable";
 
 interface Props {
   readonly layers: ILambdaLayers;
   readonly environment: string;
   readonly parameters: IDiscordParameters;
   readonly table: ITable;
+  readonly cacheTable: ICacheTable;
+  readonly botTokenSecret: ISecret;
 }
 
 /**
@@ -76,6 +81,7 @@ export class DiscordCommandHandler extends Construct {
       environment: {
         PUBLIC_KEY_PARAM_NAME: props.parameters.publicKey.parameterName,
         COMMAND_PROCESSING_TOPIC_ARN: this.commandProcessingTopic.topicArn,
+        LOG_LEVEL: getLogLevel(props.environment),
       },
       description:
         "Discord Interactions ingress: verifies signatures, handles PING, enqueues command events.",
@@ -117,10 +123,17 @@ export class DiscordCommandHandler extends Construct {
       layers: [props.layers.dateFnsLayer],
       environment: {
         TABLE_NAME: props.table.tableName,
+        CACHE_TABLE_NAME: props.cacheTable.tableName,
+        APPLICATION_ID_PARAM_NAME: props.parameters.applicationId.parameterName,
+        TOKEN_SECRET_ID: props.botTokenSecret.secretName,
+        LOG_LEVEL: getLogLevel(props.environment),
       },
       description: "Handles all slash commands.",
     });
     props.table.grantReadWriteData(this.slashCommandWorker);
+    props.cacheTable.grantReadWriteData(this.slashCommandWorker);
+    props.parameters.applicationId.grantRead(this.slashCommandWorker);
+    props.botTokenSecret.grantRead(this.slashCommandWorker);
 
     // Ingress (Lambda-handled publish) - SNS - SQS - Worker
     this.commandProcessingTopic.addSubscription(

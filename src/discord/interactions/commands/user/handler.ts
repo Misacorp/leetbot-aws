@@ -12,7 +12,7 @@ import { getUserMessagesByDateRange } from "@/src/repository/message/getUserMess
 import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 import {
   ensureGuildId,
-  ensureTableName,
+  ensureEnvironmentVariable,
 } from "@/src/discord/interactions/utils/validateInteractions";
 import {
   createDateString,
@@ -31,12 +31,11 @@ import { getFastestMessages } from "@/src/discord/interactions/utils/speed";
 export async function handleUserInfoCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<void> {
-  const tableName = await ensureTableName(interaction);
-  if (!tableName) {
-    return;
-  }
-  const guildId = await ensureGuildId(interaction);
-  if (!guildId) {
+  const [tableName, guildId] = await Promise.all([
+    ensureEnvironmentVariable(interaction, "TABLE_NAME"),
+    ensureGuildId(interaction),
+  ]);
+  if (!tableName || !guildId) {
     return;
   }
 

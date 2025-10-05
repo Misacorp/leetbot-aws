@@ -50,7 +50,7 @@ export const handler = async (event: SQSEvent) => {
 
     // Pass the message to each handler that would be interested in processing it.
     // Handlers can be mutually exclusive, or they can have overlapping functionality.
-    return Promise.all([
+    return Promise.allSettled([
       leetHandler({
         message,
         guild,

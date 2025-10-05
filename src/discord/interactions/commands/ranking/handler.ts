@@ -7,7 +7,7 @@ import { normalizeChatInput } from "@/src/discord/interactions/core/schemaParser
 import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updateOriginalResponse";
 import {
   ensureGuildId,
-  ensureTableName,
+  ensureEnvironmentVariable,
 } from "@/src/discord/interactions/utils/validateInteractions";
 import {
   getDateRange,
@@ -26,6 +26,7 @@ import {
   createEmojiString,
   getGameEmojis,
 } from "@/src/discord/discordUtils";
+import { createMakePublicButton } from "@/src/discord/interactions/components/makePublicButton";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -33,12 +34,11 @@ import {
 export async function handleRankingCommand(
   interaction: APIChatInputApplicationCommandInteraction,
 ): Promise<void> {
-  const tableName = await ensureTableName(interaction);
-  if (!tableName) {
-    return;
-  }
-  const guildId = await ensureGuildId(interaction);
-  if (!guildId) {
+  const [tableName, guildId] = await Promise.all([
+    ensureEnvironmentVariable(interaction, "TABLE_NAME"),
+    ensureGuildId(interaction),
+  ]);
+  if (!tableName || !guildId) {
     return;
   }
 
@@ -153,6 +153,11 @@ export async function handleRankingCommand(
     }
   }
 
+  const makePublicButton = await createMakePublicButton({
+    interaction,
+    messageId: interaction.message?.id ?? "@original", // Not sure if this fallback works
+  });
+
   await updateOriginalResponse({
     interaction: interaction,
     payload: {
@@ -176,6 +181,8 @@ export async function handleRankingCommand(
           footer,
         },
       ],
+      components: [makePublicButton],
+      allowed_mentions: { parse: [] }, // Don't ping anyone
     },
   });
 }

@@ -1,17 +1,21 @@
 import logger from "@logger";
-import { APIChatInputApplicationCommandInteraction } from "discord-api-types/v10";
+import {
+  APIChatInputApplicationCommandInteraction,
+  APIInteraction,
+} from "discord-api-types/v10";
 import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updateOriginalResponse";
 
 /**
- * Validates that a TABLE_NAME variable is present in the environment and returns it if yes.
+ * Validates that a given variable is present in the environment and returns it if yes.
  * If not, handles error response to Discord and logging.
- * @return Table name if valid, null if invalid (for an early return pattern).
+ * @return Environment variable value if valid, null if invalid (for an early return pattern).
  */
-export async function ensureTableName(
-  interaction: APIChatInputApplicationCommandInteraction,
+export async function ensureEnvironmentVariable(
+  interaction: Pick<APIInteraction, "id" | "token" | "application_id">,
+  variableName: string,
 ): Promise<string | null> {
-  const TABLE_NAME = process.env.TABLE_NAME;
-  if (!TABLE_NAME) {
+  const ENV_VALUE = process.env[variableName];
+  if (!ENV_VALUE) {
     await updateOriginalResponse({
       interaction,
       payload: {
@@ -20,12 +24,12 @@ export async function ensureTableName(
       },
     });
     logger.error(
-      "TABLE_NAME environment variable is not defined. Processing this event is not possible and it will not be retried.",
+      `${variableName} environment variable is not defined. Processing this event is not possible and it will not be retried.`,
     );
     return null;
   }
 
-  return TABLE_NAME;
+  return ENV_VALUE;
 }
 
 /**

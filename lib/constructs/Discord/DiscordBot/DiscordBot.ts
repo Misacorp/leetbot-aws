@@ -10,6 +10,7 @@ import { Construct } from "constructs";
 import {
   createLogGroup,
   getDefaultLambdaConfig,
+  getLogLevel,
   getRemovalPolicy,
 } from "@/src/util/infra";
 import { type ITable } from "@/lib/constructs/Table";
@@ -48,6 +49,8 @@ export class DiscordBot extends Construct {
    */
   public readonly discordInQueue: sqs.IQueue;
 
+  public readonly botTokenSecret: secretsManager.Secret;
+
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
@@ -56,6 +59,7 @@ export class DiscordBot extends Construct {
       description: "Discord bot token secret",
       removalPolicy: getRemovalPolicy(props.environment),
     });
+    this.botTokenSecret = secret;
 
     // Output the secret ARN after deployment
     new cdk.CfnOutput(this, "DiscordBotTokenArn", {
@@ -115,6 +119,7 @@ export class DiscordBot extends Construct {
         TABLE_NAME: props.table.tableName,
         DISCORD_OUT_TOPIC_ARN: this.discordBotOutTopic.topicArn,
         DISCORD_IN_QUEUE_URL: this.discordInQueue.queueUrl,
+        LOG_LEVEL: getLogLevel(props.environment),
       },
       reservedConcurrentExecutions: 1,
       description:
@@ -175,6 +180,7 @@ export class DiscordBot extends Construct {
         TABLE_NAME: props.table.tableName,
         MESSAGE_EVALUATOR_OUT_TOPIC_ARN:
           this.messageEvaluationOutTopic.topicArn,
+        LOG_LEVEL: getLogLevel(props.environment),
       },
       description:
         "Determines which Discord messages are interesting for the 'leet game', and processes them further.",

@@ -3,6 +3,9 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
 
+export const getLogLevel = (environment: string = "dev") =>
+  environment === "dev" ? "DEBUG" : "INFO";
+
 export const getRemovalPolicy = (environment: string = "dev") => {
   if (environment === "prd") {
     return cdk.RemovalPolicy.RETAIN;

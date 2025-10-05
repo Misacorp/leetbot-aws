@@ -6,6 +6,7 @@ import { EventScheduler } from "./constructs/EventScheduler";
 import { Table } from "./constructs/Table";
 import { DiscordCommandHandler } from "@/lib/constructs/Discord/DiscordCommandHandler/DiscordCommandHandler";
 import { DiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
+import { CacheTable } from "@/lib/constructs/CacheTable";
 
 /**
  * Main CloudFormation stack
@@ -13,6 +14,7 @@ import { DiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 export class LeetbotAwsStack extends Stack {
   private readonly lambdaLayers: LambdaLayers;
   private readonly table: Table;
+  private readonly cacheTable: CacheTable;
   private readonly discordBot: DiscordBot;
   private readonly scheduler: EventScheduler;
   private readonly discordParameters: DiscordParameters;
@@ -30,6 +32,8 @@ export class LeetbotAwsStack extends Stack {
     this.table = new Table(this, "LeetbotTable", {
       environment: deploymentEnvironment,
     });
+
+    this.cacheTable = new CacheTable(this, "CacheTable");
 
     this.discordBot = new DiscordBot(this, "DiscordBot", {
       layers: this.lambdaLayers,
@@ -51,6 +55,8 @@ export class LeetbotAwsStack extends Stack {
       environment: deploymentEnvironment,
       parameters: this.discordParameters,
       table: this.table,
+      cacheTable: this.cacheTable,
+      botTokenSecret: this.discordBot.botTokenSecret,
     });
   }
 
