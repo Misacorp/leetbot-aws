@@ -1,7 +1,7 @@
 import logger from "@logger";
 import {
-  APIMessageComponentInteraction,
-  RESTPostAPIWebhookWithTokenJSONBody,
+  type APIMessageComponentInteraction,
+  type RESTPostAPIWebhookWithTokenJSONBody,
 } from "discord-api-types/v10";
 import { getFromCache } from "@/src/util/cache";
 import { decodeMakePublicPayload } from "@/src/discord/interactions/components/makePublicButton";

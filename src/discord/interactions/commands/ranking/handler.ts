@@ -1,6 +1,6 @@
 import logger from "@logger";
 import {
-  APIEmbed,
+  type APIEmbed,
   type APIChatInputApplicationCommandInteraction,
 } from "discord-api-types/v10";
 import { normalizeChatInput } from "@/src/discord/interactions/core/schemaParser";

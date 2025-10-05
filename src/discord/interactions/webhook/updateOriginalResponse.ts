@@ -1,11 +1,10 @@
 import logger from "@logger";
 import {
-  APIEmbed,
-  APIInteraction,
-  APIMessage,
+  type APIEmbed,
+  type APIInteraction,
+  type APIMessage,
   MessageFlags,
-  RESTPatchAPIWebhookWithTokenMessageJSONBody,
-  Routes,
+  type RESTPatchAPIWebhookWithTokenMessageJSONBody,
 } from "discord-api-types/v10";
 import { combineMessageFlags } from "@/src/discord/interactions/webhook/common";
 
@@ -24,13 +23,6 @@ export interface UpdateOriginalResponseArgs {
 }
 
 /**
- * Builds the Discord webhook URL for updating the original interaction response
- */
-export function buildWebhookUrl(applicationId: string, token: string): string {
-  return `https://discord.com/api/v10${Routes.webhookMessage(applicationId, token, "@original")}`;
-}
-
-/**
  * Sends a response to Discord by updating the original deferred interaction
  */
 export const updateOriginalResponse = async ({
@@ -39,6 +31,7 @@ export const updateOriginalResponse = async ({
   ephemeral = true,
 }: UpdateOriginalResponseArgs): Promise<APIMessage> => {
   const { id, token, application_id } = interaction;
+  const url = `https://discord.com/api/v10/webhooks/${application_id}/${token}/messages/@original`;
 
   // Apply an ephemeral flag if needed
   const finalPayload: RESTPatchAPIWebhookWithTokenMessageJSONBody = {
@@ -49,18 +42,16 @@ export const updateOriginalResponse = async ({
     ),
   };
 
-  const webhookUrl = buildWebhookUrl(application_id, token);
-
   logger.debug(
     {
-      webhookUrl: webhookUrl.replace(token, "[TOKEN]"),
+      webhookUrl: url.replace(token, "[TOKEN]"),
       payloadSize: JSON.stringify(finalPayload).length,
       interactionId: id,
     },
     "Sending Discord webhook response",
   );
 
-  const response = await fetch(webhookUrl, {
+  const response = await fetch(url, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

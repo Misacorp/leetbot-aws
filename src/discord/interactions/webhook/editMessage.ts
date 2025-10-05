@@ -1,5 +1,5 @@
 import logger from "@logger";
-import { RESTPatchAPIWebhookWithTokenMessageJSONBody } from "discord-api-types/v10";
+import type { RESTPatchAPIWebhookWithTokenMessageJSONBody } from "discord-api-types/v10";
 
 interface EditDiscordMessageArgs {
   // The Discord bot's application id

@@ -1,5 +1,5 @@
 import {
-  RESTPostAPIWebhookWithTokenJSONBody,
+  type RESTPostAPIWebhookWithTokenJSONBody,
   MessageFlags,
 } from "discord-api-types/v10";
 import logger from "@logger";

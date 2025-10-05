@@ -1,7 +1,7 @@
 import logger from "@logger";
 import {
-  APIChatInputApplicationCommandInteraction,
-  APIInteraction,
+  type APIChatInputApplicationCommandInteraction,
+  type APIInteraction,
 } from "discord-api-types/v10";
 import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updateOriginalResponse";
 
