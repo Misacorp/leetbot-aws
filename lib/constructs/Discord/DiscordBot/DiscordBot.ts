@@ -4,13 +4,17 @@ import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources"; // Add this import
-import * as logs from "aws-cdk-lib/aws-logs";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
-import { getRemovalPolicy } from "@/src/util/infra";
+import {
+  createLogGroup,
+  getDefaultLambdaConfig,
+  getLogLevel,
+  getRemovalPolicy,
+} from "@/src/util/infra";
 import { type ITable } from "@/lib/constructs/Table";
-import type { ILambdaLayers } from "./LambdaLayers";
+import type { ILambdaLayers } from "../LambdaLayers";
 
 interface Props {
   readonly layers: ILambdaLayers;
@@ -45,6 +49,8 @@ export class DiscordBot extends Construct {
    */
   public readonly discordInQueue: sqs.IQueue;
 
+  public readonly botTokenSecret: secretsManager.Secret;
+
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
@@ -53,6 +59,7 @@ export class DiscordBot extends Construct {
       description: "Discord bot token secret",
       removalPolicy: getRemovalPolicy(props.environment),
     });
+    this.botTokenSecret = secret;
 
     // Output the secret ARN after deployment
     new cdk.CfnOutput(this, "DiscordBotTokenArn", {
@@ -87,16 +94,16 @@ export class DiscordBot extends Construct {
 
     // Discord bot Lambda function
     this.discordWatcher = new NodejsFunction(this, "DiscordWatcher", {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      architecture: lambda.Architecture.ARM_64,
-      entry: "src/discordWatcher/discordWatcher.ts",
+      ...getDefaultLambdaConfig(),
+      entry: "src/discord/discordWatcher/discordWatcher.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(60 * 4 + 15),
       memorySize: 256,
-      logGroup: new logs.LogGroup(this, "DiscordWatcherLogGroup", {
-        retention: logs.RetentionDays.THREE_DAYS,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
+      logGroup: createLogGroup(
+        this,
+        "DiscordWatcherLogGroup",
+        props.environment,
+      ),
       bundling: {
         minify: false,
         externalModules: [
@@ -112,6 +119,7 @@ export class DiscordBot extends Construct {
         TABLE_NAME: props.table.tableName,
         DISCORD_OUT_TOPIC_ARN: this.discordBotOutTopic.topicArn,
         DISCORD_IN_QUEUE_URL: this.discordInQueue.queueUrl,
+        LOG_LEVEL: getLogLevel(props.environment),
       },
       reservedConcurrentExecutions: 1,
       description:
@@ -149,24 +157,30 @@ export class DiscordBot extends Construct {
 
     // Lambda that writes messages to the database
     const messageEvaluator = new NodejsFunction(this, "MessageEvaluator", {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      architecture: lambda.Architecture.ARM_64,
-      entry: "src/messageEvaluator/messageEvaluator.ts",
+      ...getDefaultLambdaConfig(),
+      entry: "src/discord/messageEvaluator/messageEvaluator.ts",
       handler: "handler",
       timeout: cdk.Duration.seconds(15),
-      memorySize: 256,
-      logGroup: new logs.LogGroup(this, "MessageEvaluatorLogGroup", {
-        retention: logs.RetentionDays.THREE_DAYS,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
+      logGroup: createLogGroup(
+        this,
+        "MessageEvaluatorLogGroup",
+        props.environment,
+      ),
+      layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
       bundling: {
         minify: false,
-        externalModules: ["@aws-sdk/*"],
+        externalModules: [
+          "@aws-sdk/*",
+          "discord.js",
+          "date-fns",
+          "date-fns-tz",
+        ],
       },
       environment: {
         TABLE_NAME: props.table.tableName,
         MESSAGE_EVALUATOR_OUT_TOPIC_ARN:
           this.messageEvaluationOutTopic.topicArn,
+        LOG_LEVEL: getLogLevel(props.environment),
       },
       description:
         "Determines which Discord messages are interesting for the 'leet game', and processes them further.",

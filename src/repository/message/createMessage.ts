@@ -1,7 +1,7 @@
 import { PutCommand, type PutCommandOutput } from "@aws-sdk/lib-dynamodb";
 import { getDbClient } from "@/src/repository/util";
 import type { Message, MessageDbo } from "./types";
-import { isGameMessage } from "@/src/messageEvaluator/util";
+import { isGameMessage } from "@/src/discord/messageEvaluator/util";
 
 const dbClient = getDbClient();
 

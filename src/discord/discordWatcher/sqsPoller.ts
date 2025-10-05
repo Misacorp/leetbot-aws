@@ -56,7 +56,7 @@ export class SQSPoller {
         const response = await this.sqsClient.send(command);
 
         if (response.Messages) {
-          await Promise.all(
+          await Promise.allSettled(
             response.Messages.map(async (message) => {
               if (message.Body && message.ReceiptHandle) {
                 await this.processReactCommand(

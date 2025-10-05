@@ -17,7 +17,8 @@
     "aws:deploy": "npx cdk deploy --outputs-file cdk-outputs.json",
     "aws:deploy:dev": "aws-vault exec leetbot-dev -- npx cdk deploy --context deploymentEnvironment=dev --outputs-file cdk-outputs-dev.json",
     "aws:deploy:prd": "aws-vault exec leetbot-prd -- npx cdk deploy --context deploymentEnvironment=prd --outputs-file cdk-outputs-prd.json",
-    "aws:destroy": "npx cdk destroy"
+    "aws:destroy": "npx cdk destroy",
+    "discord:register": "npx ts-node scripts/registerCommands.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.0",
@@ -26,6 +27,7 @@
     "@types/prettier": "2.7.3",
     "@typescript-eslint/parser": "^8.38.0",
     "aws-cdk": "2.1022.0",
+    "dotenv": "^17.2.2",
     "esbuild": "^0.25.8",
     "eslint": "^9.30.0",
     "eslint-cdk-plugin": "^3.0.3",
@@ -44,13 +46,17 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.848.0",
+    "@aws-sdk/client-eventbridge": "^3.888.0",
     "@aws-sdk/client-secrets-manager": "^3.848.0",
     "@aws-sdk/client-sns": "^3.859.0",
     "@aws-sdk/client-sqs": "^3.854.0",
+    "@aws-sdk/client-ssm": "^3.893.0",
     "@aws-sdk/lib-dynamodb": "^3.850.0",
     "@types/aws-lambda": "^8.10.152",
     "aws-cdk-lib": "2.207.0",
     "constructs": "^10.4.2",
-    "pino": "^9.9.0"
+    "discord-api-types": "^0.38.26",
+    "pino": "^9.9.0",
+    "tweetnacl": "^1.0.3"
   }
 }

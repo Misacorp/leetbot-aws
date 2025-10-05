@@ -78,6 +78,7 @@ export const saveMessageAndUser = async ({
         username: message.author.username,
         avatarUrl: message.member?.avatarUrl ?? message.author.avatarUrl,
         displayName: message.member?.displayName ?? null,
+        bannerUrl: message.member?.bannerUrl ?? null,
       },
       guildId: guild.id,
     }),

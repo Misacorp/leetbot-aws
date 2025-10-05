@@ -16,10 +16,10 @@ export const getGuildUserById = async ({
   const command = new GetCommand({
     TableName: tableName,
     Key: {
-      pk1: `user#${userId}`,
-      sk1: `guild#${guildId}`,
+      pk1: `guild#${guildId}`,
+      sk1: `user#${userId}`,
     },
-    ProjectionExpression: "id, username, displayName, avatarUrl",
+    ProjectionExpression: "id, username, displayName, avatarUrl, bannerUrl",
   });
 
   const response = await dbClient.send(command);
