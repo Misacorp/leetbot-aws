@@ -11,12 +11,14 @@ export interface ILambdaLayers {
   discordLayer: ILayerVersion;
   dateFnsLayer: ILayerVersion;
   pinoLayer: ILayerVersion;
+  tweetnaclLayer: ILayerVersion;
 }
 
 export class LambdaLayers extends Construct implements ILambdaLayers {
   public readonly discordLayer: ILayerVersion;
   public readonly dateFnsLayer: ILayerVersion;
   public readonly pinoLayer: ILayerVersion;
+  public readonly tweetnaclLayer: ILayerVersion;
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
@@ -46,6 +48,15 @@ export class LambdaLayers extends Construct implements ILambdaLayers {
       code: Code.fromAsset("./src/layers/pino"),
       compatibleArchitectures: [Architecture.ARM_64],
       description: "pino Lambda layer",
+    });
+
+    // tweetnacl
+    this.tweetnaclLayer = new LayerVersion(this, "TweetnaclLayer", {
+      layerVersionName: "TweetnaclLambdaLayer",
+      compatibleRuntimes: [Runtime.NODEJS_22_X],
+      code: Code.fromAsset("./src/layers/tweetnacl"),
+      compatibleArchitectures: [Architecture.ARM_64],
+      description: "tweetnacl Lambda layer",
     });
   }
 }

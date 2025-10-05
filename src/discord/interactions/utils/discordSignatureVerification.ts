@@ -1,5 +1,5 @@
 import logger from "@logger";
-import nacl from "tweetnacl";
+import nacl from "/opt/nodejs/tweetnacl";
 
 export interface DiscordVerificationParams {
   headers: Record<string, string | undefined>;

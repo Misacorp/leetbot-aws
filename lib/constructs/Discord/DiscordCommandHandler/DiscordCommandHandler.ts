@@ -80,9 +80,9 @@ export class DiscordCommandHandler extends Construct {
       ),
       bundling: {
         minify: false,
-        externalModules: ["@aws-sdk/*", "pino"],
+        externalModules: ["@aws-sdk/*", "pino", "tweetnacl"],
       },
-      layers: [props.layers.pinoLayer],
+      layers: [props.layers.pinoLayer, props.layers.tweetnaclLayer],
       environment: {
         PUBLIC_KEY_PARAM_NAME: props.parameters.publicKey.parameterName,
         COMMAND_PROCESSING_TOPIC_ARN: this.commandProcessingTopic.topicArn,
