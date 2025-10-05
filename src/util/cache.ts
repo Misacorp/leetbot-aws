@@ -14,12 +14,11 @@ const memoryCache: Map<CacheEntry["id"], CacheEntry> = new Map();
 
 /**
  * Creates a TTL for cache entries.
- * @param msFromNow How many milliseconds in the future the TTL should be.
- *                  Default: 5 minutes.
+ * @param minutesFromNow How many minutes in the future the TTL should be.
  * @returns Unix timestamp (seconds since epoch) suitable for DynamoDB TTL fields
  */
-const createTtl = (msFromNow: number = 5 * 60 * 1000) =>
-  Math.floor((Date.now() + msFromNow) / 1000);
+const createTtl = (minutesFromNow: number = 14.5) =>
+  Math.floor((Date.now() + minutesFromNow * 60 * 1000) / 1000);
 
 /**
  * Checks if a cached entry is still valid (TTL check).

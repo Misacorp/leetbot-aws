@@ -24,3 +24,17 @@ Generally, when a slash command is received, this app responds with a "deferred 
 - SQS
 - Parameter Store; public key
 - Worker Lambda
+
+## Lessons Learned
+
+Lessons learned when developing application interactions.
+
+- An ephemeral response can't later be changed to a non-ephemeral response.
+  - The same applies vice-versa.
+  - The ingress handler needs to determine if a command should be public or ephemeral.
+  - **Workaround:** remove the ephemeral response and send a new message to the channel.
+- Discord interaction tokens are valid for 15 minutes.
+  - Their length is around 200 characters.
+- The `custom_id` property of a Discord interaction component e.g., button has a length limit of 100 characters.
+  - A token doesn't fit here.
+  - Implemented a memory and DynamoDB-backed cached system to store and fetch tokens between interactions.
