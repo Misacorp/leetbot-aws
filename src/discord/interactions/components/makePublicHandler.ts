@@ -66,7 +66,6 @@ export const makePublicHandler = async ({
     deleteEphemeralMessage({
       applicationId,
       token: info.token,
-      messageId: info.messageId, // TODO: Check how this behaves when omitted (left to @original)
     }),
     // Remove the deferred response sent by the interaction ingress
     deleteMessage({

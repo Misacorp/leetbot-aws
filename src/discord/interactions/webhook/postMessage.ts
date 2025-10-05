@@ -23,7 +23,9 @@ interface PostMessageArgsWithBotToken {
 type PostMessageArgs = PostMessageArgsWithToken | PostMessageArgsWithBotToken;
 
 /**
- * Post an entirely new message to Discord.
+ * Post a message to Discord.
+ * When given a `botToken` and `channelId`, the message will be 100% new and not linked to anything.
+ * When using a `token` from a previous interaction, the message will be linked to the previous interaction.
  */
 export const postMessage = async (args: PostMessageArgs): Promise<void> => {
   const { applicationId, payload, ephemeral = false } = args;
