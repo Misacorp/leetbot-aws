@@ -78,6 +78,11 @@ export class DiscordCommandHandler extends Construct {
         "InteractionsIngressLogGroup",
         props.environment,
       ),
+      bundling: {
+        minify: false,
+        externalModules: ["@aws-sdk/*", "pino"],
+      },
+      layers: [props.layers.pinoLayer],
       environment: {
         PUBLIC_KEY_PARAM_NAME: props.parameters.publicKey.parameterName,
         COMMAND_PROCESSING_TOPIC_ARN: this.commandProcessingTopic.topicArn,
@@ -118,9 +123,9 @@ export class DiscordCommandHandler extends Construct {
       ),
       bundling: {
         minify: false,
-        externalModules: ["@aws-sdk/*", "date-fns", "date-fns-tz"],
+        externalModules: ["@aws-sdk/*", "date-fns", "date-fns-tz", "pino"],
       },
-      layers: [props.layers.dateFnsLayer],
+      layers: [props.layers.dateFnsLayer, props.layers.pinoLayer],
       environment: {
         TABLE_NAME: props.table.tableName,
         CACHE_TABLE_NAME: props.cacheTable.tableName,

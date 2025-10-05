@@ -111,9 +111,14 @@ export class DiscordBot extends Construct {
           "discord.js",
           "date-fns",
           "date-fns-tz",
+          "pino",
         ],
       },
-      layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
+      layers: [
+        props.layers.discordLayer,
+        props.layers.dateFnsLayer,
+        props.layers.pinoLayer,
+      ],
       environment: {
         TOKEN_SECRET_ID: secret.secretName,
         TABLE_NAME: props.table.tableName,
@@ -166,7 +171,11 @@ export class DiscordBot extends Construct {
         "MessageEvaluatorLogGroup",
         props.environment,
       ),
-      layers: [props.layers.discordLayer, props.layers.dateFnsLayer],
+      layers: [
+        props.layers.discordLayer,
+        props.layers.dateFnsLayer,
+        props.layers.pinoLayer,
+      ],
       bundling: {
         minify: false,
         externalModules: [
@@ -174,6 +183,7 @@ export class DiscordBot extends Construct {
           "discord.js",
           "date-fns",
           "date-fns-tz",
+          "pino",
         ],
       },
       environment: {

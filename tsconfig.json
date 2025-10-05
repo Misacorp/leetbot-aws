@@ -25,7 +25,8 @@
       "@/*": ["./*"],
       "@logger": ["./src/util/logger"],
       "/opt/nodejs/discord": ["src/layers/discord/nodejs/discord"],
-      "/opt/nodejs/date-fns": ["src/layers/date-fns/nodejs/date-fns"]
+      "/opt/nodejs/date-fns": ["src/layers/date-fns/nodejs/date-fns"],
+      "/opt/nodejs/pino": ["src/layers/pino/nodejs/pino"]
     },
     "allowJs": false
   },
