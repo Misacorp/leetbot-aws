@@ -155,7 +155,6 @@ export async function handleRankingCommand(
 
   const makePublicButton = await createMakePublicButton({
     interaction,
-    messageId: interaction.message?.id ?? "@original", // Not sure if this fallback works
   });
 
   await updateOriginalResponse({

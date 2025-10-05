@@ -28,10 +28,10 @@ export const decodeMakePublicPayload = (args: string): MakePublicButtonInfo =>
  */
 export const createMakePublicButton = async ({
   interaction,
-  messageId,
+  messageId = "@original",
 }: {
   interaction: APIChatInputApplicationCommandInteraction;
-  messageId: string;
+  messageId?: string;
 }): Promise<APIActionRowComponent<APIButtonComponent>> => {
   // Cache the interaction token and any other useful data
   const cachePayload = {

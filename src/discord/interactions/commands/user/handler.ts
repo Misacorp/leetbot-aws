@@ -24,6 +24,7 @@ import {
   formatStreakMessage,
 } from "@/src/discord/interactions/utils/streak";
 import { getFastestMessages } from "@/src/discord/interactions/utils/speed";
+import { createMakePublicButton } from "@/src/discord/interactions/components/makePublicButton";
 
 /**
  * Handles the Discord interaction (slash command) to get user info
@@ -126,6 +127,10 @@ export async function handleUserInfoCommand(
     failedLeetEmojiString = "FAILED_LEET",
   ] = getEmojiStrings([leet, leeb, failed_leet]);
 
+  const makePublicButton = await createMakePublicButton({
+    interaction,
+  });
+
   await updateOriginalResponse({
     interaction,
     payload: {
@@ -197,6 +202,8 @@ export async function handleUserInfoCommand(
           ],
         },
       ],
+      components: [makePublicButton],
+      allowed_mentions: { parse: [] }, // Don't ping anyone
     },
   });
 }
