@@ -6,6 +6,24 @@ import { Emoji, Guild } from "@/src/repository/guild/types";
 import { findEmoji } from "@/src/util/emoji";
 
 /**
+ * Detects if a string a custom Discord emoji.
+ * Can be given an emoji identifier to match against.
+ * @param input Input string
+ * @param emojiIdToMatch Emoji id to match (numeric identifier)
+ */
+export function isCustomDiscordEmoji(
+  input: string,
+  emojiIdToMatch?: string,
+): boolean {
+  // Matches <a:name:id>, <:name:id>, or <:id>
+  const match = input.match(/^<a?:(?:\w+:)?(\d+)>$/);
+  if (!match) return false;
+
+  const [, id] = match;
+  return emojiIdToMatch ? id === emojiIdToMatch : true;
+}
+
+/**
  * Creates a string that renders as a custom emoji on a Discord server
  * @param emoji Emoji object - can be undefined
  * @param fallback Fallback string when the emoji is undefined.
