@@ -1,9 +1,6 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { getDbClient } from "@/src/repository/util";
 import { Message, MessageDbo } from "./types";
 import { getDatePrefix, getEndOfDayPrefix } from "@/src/util/dateTime";
-
-const dbClient = getDbClient();
+import { queryAll } from "@/src/repository/queryAll";
 
 // TODO: Could probably be merged with `getUserMessagesByDate`
 export const getUserMessagesByDateRange = async ({
@@ -25,7 +22,7 @@ export const getUserMessagesByDateRange = async ({
   const startDatePrefix = `createdAt#${getDatePrefix(startDate)}`;
   const endDatePrefix = `createdAt#${getEndOfDayPrefix(endDate)}`;
 
-  const command = new QueryCommand({
+  return queryAll<Message>({
     TableName: tableName,
     IndexName: "gsi2",
     KeyConditionExpression:
@@ -37,8 +34,4 @@ export const getUserMessagesByDateRange = async ({
     },
     ProjectionExpression: "messageType, createdAt, userId, guildId, id",
   });
-
-  const response = await dbClient.send(command);
-
-  return (response.Items as Message[]) ?? [];
 };

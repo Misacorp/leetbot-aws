@@ -1,8 +1,5 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { getDbClient } from "@/src/repository/util";
 import { User } from "./types";
-
-const dbClient = getDbClient();
+import { queryAll } from "@/src/repository/queryAll";
 
 export const getGuildMembersByGuildId = async ({
   tableName,
@@ -10,8 +7,8 @@ export const getGuildMembersByGuildId = async ({
 }: {
   tableName: string;
   guildId: string;
-}): Promise<User[]> => {
-  const command = new QueryCommand({
+}): Promise<User[]> =>
+  queryAll<User>({
     TableName: tableName,
     KeyConditionExpression: "pk1 = :pk AND begins_with(sk1, :skPrefix)",
     ExpressionAttributeValues: {
@@ -20,8 +17,3 @@ export const getGuildMembersByGuildId = async ({
     },
     ProjectionExpression: "id, username, displayName, avatarUrl",
   });
-
-  const response = await dbClient.send(command);
-
-  return (response.Items as User[]) ?? [];
-};

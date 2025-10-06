@@ -1,10 +1,7 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { getDbClient } from "@/src/repository/util";
 import { Message, MessageDbo } from "./types";
 import { getDatePrefix } from "@/src/util/dateTime";
 import { MessageType } from "@/src/types";
-
-const dbClient = getDbClient();
+import { queryAll } from "@/src/repository/queryAll";
 
 export const getGuildMessages = async ({
   tableName,
@@ -25,7 +22,7 @@ export const getGuildMessages = async ({
   const skFrom = `createdAt#${getDatePrefix(startDate)}`;
   const skTo = `createdAt#${getDatePrefix(endDate)}`;
 
-  const command = new QueryCommand({
+  return queryAll<Message>({
     TableName: tableName,
     KeyConditionExpression: "pk1 = :pk AND sk1 BETWEEN :from AND :to",
     ExpressionAttributeValues: {
@@ -35,8 +32,4 @@ export const getGuildMessages = async ({
     },
     ProjectionExpression: "messageType, createdAt, userId, guildId, id",
   });
-
-  const response = await dbClient.send(command);
-
-  return (response.Items as Message[]) ?? [];
 };

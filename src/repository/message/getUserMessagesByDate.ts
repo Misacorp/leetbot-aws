@@ -1,9 +1,6 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { getDbClient } from "@/src/repository/util";
 import { Message, MessageDbo } from "./types";
 import { getDatePrefix } from "@/src/util/dateTime";
-
-const dbClient = getDbClient();
+import { queryAll } from "@/src/repository/queryAll";
 
 export const getUserMessagesByDate = async ({
   tableName,
@@ -22,7 +19,7 @@ export const getUserMessagesByDate = async ({
   const datePrefix = getDatePrefix(date);
   const skPrefix = `createdAt#${datePrefix}`;
 
-  const command = new QueryCommand({
+  return queryAll<Message>({
     TableName: tableName,
     IndexName: "gsi2",
     KeyConditionExpression: "pk2 = :pk AND begins_with(sk2, :skPrefix)",
@@ -32,8 +29,4 @@ export const getUserMessagesByDate = async ({
     },
     ProjectionExpression: "messageType, createdAt, userId, guildId, id",
   });
-
-  const response = await dbClient.send(command);
-
-  return (response.Items as Message[]) ?? [];
 };
