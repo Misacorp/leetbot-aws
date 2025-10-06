@@ -14,6 +14,7 @@ import {
   createLogGroup,
   getDefaultLambdaConfig,
   getLogLevel,
+  getMinify,
   getRemovalPolicy,
 } from "@/src/util/infra";
 import { IDiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
@@ -79,7 +80,7 @@ export class DiscordCommandHandler extends Construct {
         props.environment,
       ),
       bundling: {
-        minify: false,
+        minify: getMinify(props.environment),
         externalModules: ["@aws-sdk/*", "pino", "tweetnacl"],
       },
       layers: [props.layers.pinoLayer, props.layers.tweetnaclLayer],
@@ -122,7 +123,7 @@ export class DiscordCommandHandler extends Construct {
         props.environment,
       ),
       bundling: {
-        minify: false,
+        minify: getMinify(props.environment),
         externalModules: ["@aws-sdk/*", "date-fns", "date-fns-tz", "pino"],
       },
       layers: [props.layers.dateFnsLayer, props.layers.pinoLayer],

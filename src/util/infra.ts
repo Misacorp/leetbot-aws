@@ -3,6 +3,15 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
 
+/**
+ * Minify Lambda code?
+ * @param environment Deployment environment
+ */
+export const getMinify = (environment: string | undefined) => {
+  if (!environment) return true;
+  return environment !== "dev";
+};
+
 export const getLogLevel = (environment: string = "dev") =>
   environment === "dev" ? "DEBUG" : "INFO";
 

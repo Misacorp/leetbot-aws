@@ -11,6 +11,7 @@ import {
   createLogGroup,
   getDefaultLambdaConfig,
   getLogLevel,
+  getMinify,
   getRemovalPolicy,
 } from "@/src/util/infra";
 import { type ITable } from "@/lib/constructs/Table";
@@ -105,7 +106,7 @@ export class DiscordBot extends Construct {
         props.environment,
       ),
       bundling: {
-        minify: false,
+        minify: getMinify(props.environment),
         externalModules: [
           "@aws-sdk/*",
           "discord.js",
@@ -177,7 +178,7 @@ export class DiscordBot extends Construct {
         props.layers.pinoLayer,
       ],
       bundling: {
-        minify: false,
+        minify: getMinify(props.environment),
         externalModules: [
           "@aws-sdk/*",
           "discord.js",
