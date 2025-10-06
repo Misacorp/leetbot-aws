@@ -5,6 +5,7 @@ import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
+import { isCustomDiscordEmoji } from "@/src/discord/discordUtils";
 
 interface LeebHandlerProps {
   message: DiscordMessage;
@@ -42,7 +43,9 @@ export const leebHandler = async ({
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "leebHandler extracted message content:");
 
-  if (!(content === "leeb" || content.includes(leebEmoji.identifier))) {
+  if (
+    !(content === "leeb" || isCustomDiscordEmoji(content, leebEmoji.identifier))
+  ) {
     logger.debug(
       "Message content does not warrant processing the LEEB handler any further. Exiting leeb handler…",
     );

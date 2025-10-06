@@ -5,6 +5,7 @@ import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
+import { isCustomDiscordEmoji } from "@/src/discord/discordUtils";
 
 interface FailedLeetHandlerProps {
   message: DiscordMessage;
@@ -45,7 +46,9 @@ export const failedLeetHandler = async ({
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "failedLeetHandler extracted message content:");
 
-  if (!(content === "leet" || content.includes(leetEmoji.identifier))) {
+  if (
+    !(content === "leet" || isCustomDiscordEmoji(content, leetEmoji.identifier))
+  ) {
     logger.debug(
       "Message content does not contain 'leet'. Exiting failed leet handler…",
     );
