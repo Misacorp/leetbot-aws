@@ -24,6 +24,7 @@ import {
 } from "@/lib/constructs/Discord/DiscordCommandHandler/InteractionsApi";
 import type { ITable } from "@/lib/constructs/Table";
 import type { ICacheTable } from "@/lib/constructs/CacheTable";
+import { Metrics } from "@/lib/constructs/Discord/DiscordCommandHandler/Metrics";
 
 interface Props {
   readonly layers: ILambdaLayers;
@@ -150,5 +151,12 @@ export class DiscordCommandHandler extends Construct {
         batchSize: 10,
       }),
     );
+
+    // Gather metrics from command usage
+    new Metrics(this, "Metrics", {
+      topic: this.commandProcessingTopic,
+      layers: props.layers,
+      environment: props.environment,
+    });
   }
 }
