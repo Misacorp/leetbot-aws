@@ -6,6 +6,11 @@ node_modules
 dist
 !dist/layer/nodejs/node_modules
 .env*
+batch.json
+
+# SQLite databases
+*.db
+*.db-*
 
 # CDK outputs file
 cdk-outputs*.json
@@ -20,6 +25,9 @@ cdk.out
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/dataSources.xml
+.idea/dataSources/
+.idea/data_source_mapping.xml
 
 # AWS User-specific
 .idea/**/aws.xml

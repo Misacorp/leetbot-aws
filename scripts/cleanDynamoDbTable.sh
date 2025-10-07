@@ -18,22 +18,9 @@ table_name_arg=${3:-}
 outputs_file="cdk-outputs-${environment}.json"
 stack_name="${environment}-LeetbotCloud"
 
-# Handle table name parameter - use CDK output if not provided
-if [ -z "$table_name_arg" ]; then
-  if [ ! -f "$outputs_file" ]; then
-    echo "Error: $outputs_file not found. Make sure you've deployed the $environment environment."
-    exit 1
-  fi
-  
-  TABLE=$(jq -r ".[\"$stack_name\"] | to_entries[] | select(.key | startswith(\"LeetbotTableTableName\")) | .value" "$outputs_file")
-  if [ "$TABLE" = "null" ] || [ -z "$TABLE" ]; then
-    echo "Error: Could not find DynamoDB table name in $outputs_file for stack $stack_name"
-    exit 1
-  fi
-  echo "Using table from CDK outputs ($outputs_file): $TABLE"
-else
-  TABLE=$table_name_arg
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TABLE="$("$SCRIPT_DIR/getTableName.sh" "$environment" "LeetbotCloud" "$table_name_arg")"
+echo "Using table: $TABLE"
 
 av() { aws-vault exec "$aws_profile" -- aws "$@"; }
 
@@ -80,7 +67,7 @@ batch_write() {
   # Write ONLY the value for --request-items (table->array), not { "RequestItems": ... }
   printf '{ "%s": %s }\n' "$TABLE" "$input_json" > "$BATCH_FILE"
 
-  local backoff=0.25
+  local backoff=0.05
   while :; do
     RESP="$(av dynamodb batch-write-item --request-items "file://$BATCH_FILE" --no-cli-pager --output json)"
     UNPROC="$(jq -c --arg t "$TABLE" '.UnprocessedItems[$t] // []' <<<"$RESP")"
@@ -88,7 +75,7 @@ batch_write() {
       break
     fi
     sleep "$backoff"
-    backoff=$(awk -v b="$backoff" 'BEGIN{ b*=1.8; if (b>5) b=5; print b }')
+    backoff=$(awk -v b="$backoff" 'BEGIN{ b*=1.3; if (b>2) b=2; print b }')
     # Retry only unprocessed items — again as the value for --request-items
     printf '{ "%s": %s }\n' "$TABLE" "$UNPROC" > "$BATCH_FILE"
   done
