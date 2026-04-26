@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
+import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as sqs from "aws-cdk-lib/aws-sqs";
@@ -26,6 +27,7 @@ interface Props {
 export class Metrics extends Construct {
   public readonly metricsFunction: NodejsFunction; // Queue for the metrics function
   public readonly metricsQueue: sqs.Queue;
+  private readonly metricsDlq: sqs.Queue;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -54,10 +56,27 @@ export class Metrics extends Construct {
       }),
     );
 
+    this.metricsDlq = new sqs.Queue(this, "MetricsDlq", {
+      removalPolicy: getRemovalPolicy(props.environment),
+      retentionPeriod: cdk.Duration.days(14),
+    });
+
     this.metricsQueue = new sqs.Queue(this, "MetricsQueue", {
       removalPolicy: getRemovalPolicy(props.environment),
       fifo: false,
       retentionPeriod: cdk.Duration.minutes(5),
+      receiveMessageWaitTime: cdk.Duration.seconds(20),
+      deadLetterQueue: {
+        queue: this.metricsDlq,
+        maxReceiveCount: 5,
+      },
+    });
+
+    new cloudwatch.Alarm(this, "MetricsDlqAlarm", {
+      metric: this.metricsDlq.metricApproximateNumberOfMessagesVisible(),
+      threshold: 1,
+      evaluationPeriods: 1,
+      alarmDescription: "Metrics queue DLQ has failed messages.",
     });
 
     // SNS -> SQS -> Lambda

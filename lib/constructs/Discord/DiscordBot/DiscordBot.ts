@@ -4,7 +4,6 @@ import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import {
@@ -14,6 +13,7 @@ import {
   getMinify,
   getRemovalPolicy,
 } from "@/src/util/infra";
+import { SnsLambdaSubscriptionWithFailureHandling } from "@/lib/constructs/SnsLambdaSubscriptionWithFailureHandling";
 import { type ITable } from "@/lib/constructs/Table";
 import type { ILambdaLayers } from "../LambdaLayers";
 
@@ -34,11 +34,6 @@ export class DiscordBot extends Construct {
    * SNS topic where the Discord bot will send all relevant messages it receives.
    */
   public readonly discordBotOutTopic: sns.ITopic;
-
-  /**
-   * SQS queue that writes Discord messages to the database.
-   */
-  public readonly messageEvaluationQueue: sqs.IQueue;
 
   /**
    * SNS topic where the message evaluator will send information about processed messages.
@@ -70,8 +65,7 @@ export class DiscordBot extends Construct {
     // Create an SNS topic where the bot will send all relevant messages
     // it receives for further processing.
     this.discordBotOutTopic = new sns.Topic(this, "DiscordBotOutTopic", {
-      fifo: true,
-      contentBasedDeduplication: true,
+      fifo: false,
     });
 
     // Message evaluator output topic
@@ -145,22 +139,6 @@ export class DiscordBot extends Construct {
       description: "Discord watcher Lambda function name",
     });
 
-    // Queue that reads from the Discord outgoing SNS topic
-    this.messageEvaluationQueue = new sqs.Queue(
-      this,
-      "MessageEvaluationQueue",
-      {
-        removalPolicy: getRemovalPolicy(props.environment),
-        contentBasedDeduplication: true,
-        fifo: true,
-        retentionPeriod: cdk.Duration.days(7),
-      },
-    );
-
-    this.discordBotOutTopic.addSubscription(
-      new subs.SqsSubscription(this.messageEvaluationQueue),
-    );
-
     // Lambda that writes messages to the database
     const messageEvaluator = new NodejsFunction(this, "MessageEvaluator", {
       ...getDefaultLambdaConfig(),
@@ -200,11 +178,18 @@ export class DiscordBot extends Construct {
     props.table.grantReadWriteData(messageEvaluator);
     this.messageEvaluationOutTopic.grantPublish(messageEvaluator);
 
-    // Add SQS event source to trigger Lambda when messages arrive
-    messageEvaluator.addEventSource(
-      new lambdaEventSources.SqsEventSource(this.messageEvaluationQueue, {
-        batchSize: 10,
-      }),
+    new SnsLambdaSubscriptionWithFailureHandling(
+      this,
+      "MessageEvaluationSubscription",
+      {
+        environment: props.environment,
+        topic: this.discordBotOutTopic,
+        target: messageEvaluator,
+        subscriptionDlqAlarmDescription:
+          "Message evaluation subscription DLQ has undelivered SNS messages.",
+        lambdaFailureAlarmDescription:
+          "Message evaluation Lambda has failed async invocations.",
+      },
     );
   }
 }

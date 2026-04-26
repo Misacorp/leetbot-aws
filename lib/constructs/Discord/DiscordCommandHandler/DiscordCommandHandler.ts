@@ -1,10 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as sns from "aws-cdk-lib/aws-sns";
-import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
-import * as sqs from "aws-cdk-lib/aws-sqs";
 import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
-import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as apigwv2Integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -15,7 +12,6 @@ import {
   getDefaultLambdaConfig,
   getLogLevel,
   getMinify,
-  getRemovalPolicy,
 } from "@/src/util/infra";
 import { IDiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 import {
@@ -24,6 +20,7 @@ import {
 } from "@/lib/constructs/Discord/DiscordCommandHandler/InteractionsApi";
 import type { ITable } from "@/lib/constructs/Table";
 import type { ICacheTable } from "@/lib/constructs/CacheTable";
+import { SnsLambdaSubscriptionWithFailureHandling } from "@/lib/constructs/SnsLambdaSubscriptionWithFailureHandling";
 import { Metrics } from "@/lib/constructs/Discord/DiscordCommandHandler/Metrics";
 
 interface Props {
@@ -44,8 +41,6 @@ export class DiscordCommandHandler extends Construct {
   public readonly slashCommandWorker: NodejsFunction;
   // Slash commands received from Discord are fanned out to this topic
   public readonly commandProcessingTopic: sns.Topic;
-  // Queues Discord slash commands for further processing
-  public readonly commandProcessingQueue: sqs.Queue;
   private readonly interactionsApi: IInteractionsApi;
 
   constructor(scope: Construct, id: string, props: Props) {
@@ -56,16 +51,6 @@ export class DiscordCommandHandler extends Construct {
       "CommandProcessingTopic",
       {
         fifo: false,
-      },
-    );
-
-    this.commandProcessingQueue = new sqs.Queue(
-      this,
-      "CommandProcessingQueue",
-      {
-        removalPolicy: getRemovalPolicy(props.environment),
-        fifo: false,
-        retentionPeriod: cdk.Duration.minutes(5),
       },
     );
 
@@ -142,14 +127,18 @@ export class DiscordCommandHandler extends Construct {
     props.parameters.applicationId.grantRead(this.slashCommandWorker);
     props.botTokenSecret.grantRead(this.slashCommandWorker);
 
-    // Ingress (Lambda-handled publish) - SNS - SQS - Worker
-    this.commandProcessingTopic.addSubscription(
-      new subs.SqsSubscription(this.commandProcessingQueue),
-    );
-    this.slashCommandWorker.addEventSource(
-      new lambdaEventSources.SqsEventSource(this.commandProcessingQueue, {
-        batchSize: 10,
-      }),
+    new SnsLambdaSubscriptionWithFailureHandling(
+      this,
+      "CommandProcessingSubscription",
+      {
+        environment: props.environment,
+        topic: this.commandProcessingTopic,
+        target: this.slashCommandWorker,
+        subscriptionDlqAlarmDescription:
+          "Command processing subscription DLQ has undelivered SNS messages.",
+        lambdaFailureAlarmDescription:
+          "Command processing Lambda has failed async invocations.",
+      },
     );
 
     // Gather metrics from command usage

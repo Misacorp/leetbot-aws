@@ -33,9 +33,6 @@ export const publishDiscordMessage = async ({
   const success = await publishMessage({
     TopicArn: topicArn,
     Message: JSON.stringify(payload),
-    MessageDeduplicationId: message.id,
-    // Ensure messages from the same author are processed to prevent abuse
-    MessageGroupId: message.author.id,
   });
 
   return Boolean(success);

@@ -1,5 +1,5 @@
 import logger from "@logger";
-import type { SNSMessage, SQSEvent, SQSRecord } from "aws-lambda";
+import type { SNSEvent } from "aws-lambda";
 import {
   isAPIChatInputCommandInteraction,
   isComponentInteraction,
@@ -14,12 +14,11 @@ import { makePublicHandler } from "@/src/discord/interactions/components/makePub
  * Discord interaction (slash command) worker.
  * Routes interactions to their own handlers.
  */
-export const handler = async (event: SQSEvent): Promise<void> => {
+export const handler = async (event: SNSEvent): Promise<void> => {
   const promises = event.Records.map(
-    async (record: SQSRecord): Promise<void> => {
-      logger.debug({ record }, "Raw SQS record");
-      const snsRecord = JSON.parse(record.body) as SNSMessage;
-      const interaction = JSON.parse(snsRecord.Message) as APIInteraction;
+    async (record: SNSEvent["Records"][number]): Promise<void> => {
+      logger.debug({ record }, "Raw SNS record");
+      const interaction = JSON.parse(record.Sns.Message) as APIInteraction;
 
       logger.debug(
         {
