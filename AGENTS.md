@@ -13,6 +13,19 @@ Domain, at high level:
 
 This is not a generic Discord app. Most code exists to support one specific game/workflow around timed messages and statistics.
 
+## AI agent instructions
+
+Maintain repo-specific instructions for AI agents here.
+
+- When running TypeScript builds for validation, prefer `tsc --noEmit` over emitting build output unless emitting files is explicitly required.
+- See the agent-instructions library in [docs/agent-instructions/README.md](/Users/misjok/Projects/Misacorp/leetbot-aws/docs/agent-instructions/README.md).
+- Validation guidance: [validation.md](/Users/misjok/Projects/Misacorp/leetbot-aws/docs/agent-instructions/validation.md)
+- Testing guidance: [testing.md](/Users/misjok/Projects/Misacorp/leetbot-aws/docs/agent-instructions/testing.md)
+- Naming guidance: [naming.md](/Users/misjok/Projects/Misacorp/leetbot-aws/docs/agent-instructions/naming.md)
+- Refactoring guidance: [refactoring.md](/Users/misjok/Projects/Misacorp/leetbot-aws/docs/agent-instructions/refactoring.md)
+- Documentation guidance: [documentation.md](/Users/misjok/Projects/Misacorp/leetbot-aws/docs/agent-instructions/documentation.md)
+- Commit guidance: [commits.md](/Users/misjok/Projects/Misacorp/leetbot-aws/docs/agent-instructions/commits.md)
+
 ## Runtime shape
 
 There are 2 main runtime paths:
