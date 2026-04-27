@@ -39,6 +39,8 @@ interface Props {
 export class DiscordCommandHandler extends Construct {
   public readonly ingressFunction: NodejsFunction;
   public readonly slashCommandWorker: NodejsFunction;
+  public readonly commandProcessingSubscription: SnsLambdaSubscriptionWithFailureHandling;
+  public readonly metrics: Metrics;
   // Slash commands received from Discord are fanned out to this topic
   public readonly commandProcessingTopic: sns.Topic;
   private readonly interactionsApi: IInteractionsApi;
@@ -127,22 +129,23 @@ export class DiscordCommandHandler extends Construct {
     props.parameters.applicationId.grantRead(this.slashCommandWorker);
     props.botTokenSecret.grantRead(this.slashCommandWorker);
 
-    new SnsLambdaSubscriptionWithFailureHandling(
-      this,
-      "CommandProcessingSubscription",
-      {
-        environment: props.environment,
-        topic: this.commandProcessingTopic,
-        target: this.slashCommandWorker,
-        subscriptionDlqAlarmDescription:
-          "Command processing subscription DLQ has undelivered SNS messages.",
-        lambdaFailureAlarmDescription:
-          "Command processing Lambda has failed async invocations.",
-      },
-    );
+    this.commandProcessingSubscription =
+      new SnsLambdaSubscriptionWithFailureHandling(
+        this,
+        "CommandProcessingSubscription",
+        {
+          environment: props.environment,
+          topic: this.commandProcessingTopic,
+          target: this.slashCommandWorker,
+          subscriptionDlqAlarmDescription:
+            "Command processing subscription DLQ has undelivered SNS messages.",
+          lambdaFailureAlarmDescription:
+            "Command processing Lambda has failed async invocations.",
+        },
+      );
 
     // Gather metrics from command usage
-    new Metrics(this, "Metrics", {
+    this.metrics = new Metrics(this, "Metrics", {
       topic: this.commandProcessingTopic,
       layers: props.layers,
       environment: props.environment,

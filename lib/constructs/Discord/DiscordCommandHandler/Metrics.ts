@@ -27,6 +27,7 @@ interface Props {
 export class Metrics extends Construct {
   public readonly metricsFunction: NodejsFunction; // Queue for the metrics function
   public readonly metricsQueue: sqs.Queue;
+  public readonly dlqAlarm: cloudwatch.Alarm;
   private readonly metricsDlq: sqs.Queue;
 
   constructor(scope: Construct, id: string, props: Props) {
@@ -72,7 +73,7 @@ export class Metrics extends Construct {
       },
     });
 
-    new cloudwatch.Alarm(this, "MetricsDlqAlarm", {
+    this.dlqAlarm = new cloudwatch.Alarm(this, "MetricsDlqAlarm", {
       metric: this.metricsDlq.metricApproximateNumberOfMessagesVisible(),
       threshold: 1,
       evaluationPeriods: 1,

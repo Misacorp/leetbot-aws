@@ -29,6 +29,7 @@ interface Props {
  */
 export class DiscordBot extends Construct {
   public readonly discordWatcher: lambda.IFunction;
+  public readonly messageEvaluationSubscription: SnsLambdaSubscriptionWithFailureHandling;
 
   /**
    * SNS topic where the Discord bot will send all relevant messages it receives.
@@ -178,18 +179,19 @@ export class DiscordBot extends Construct {
     props.table.grantReadWriteData(messageEvaluator);
     this.messageEvaluationOutTopic.grantPublish(messageEvaluator);
 
-    new SnsLambdaSubscriptionWithFailureHandling(
-      this,
-      "MessageEvaluationSubscription",
-      {
-        environment: props.environment,
-        topic: this.discordBotOutTopic,
-        target: messageEvaluator,
-        subscriptionDlqAlarmDescription:
-          "Message evaluation subscription DLQ has undelivered SNS messages.",
-        lambdaFailureAlarmDescription:
-          "Message evaluation Lambda has failed async invocations.",
-      },
-    );
+    this.messageEvaluationSubscription =
+      new SnsLambdaSubscriptionWithFailureHandling(
+        this,
+        "MessageEvaluationSubscription",
+        {
+          environment: props.environment,
+          topic: this.discordBotOutTopic,
+          target: messageEvaluator,
+          subscriptionDlqAlarmDescription:
+            "Message evaluation subscription DLQ has undelivered SNS messages.",
+          lambdaFailureAlarmDescription:
+            "Message evaluation Lambda has failed async invocations.",
+        },
+      );
   }
 }

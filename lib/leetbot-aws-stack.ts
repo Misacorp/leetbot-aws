@@ -7,6 +7,7 @@ import { Table } from "./constructs/Table";
 import { DiscordCommandHandler } from "@/lib/constructs/Discord/DiscordCommandHandler/DiscordCommandHandler";
 import { DiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 import { CacheTable } from "@/lib/constructs/CacheTable";
+import { DiscordAlarmNotifications } from "@/lib/constructs/DiscordAlarmNotifications";
 
 /**
  * Main CloudFormation stack
@@ -16,6 +17,8 @@ export class LeetbotAwsStack extends Stack {
   private readonly table: Table;
   private readonly cacheTable: CacheTable;
   private readonly discordBot: DiscordBot;
+  private readonly discordCommandHandler: DiscordCommandHandler;
+  private readonly discordAlarmNotifications: DiscordAlarmNotifications;
   private readonly scheduler: EventScheduler;
   private readonly discordParameters: DiscordParameters;
 
@@ -50,13 +53,39 @@ export class LeetbotAwsStack extends Stack {
 
     this.discordParameters = new DiscordParameters(this, "DiscordParameters");
 
-    new DiscordCommandHandler(this, "DiscordCommands", {
-      layers: this.lambdaLayers,
-      environment: deploymentEnvironment,
-      parameters: this.discordParameters,
-      table: this.table,
-      cacheTable: this.cacheTable,
-      botTokenSecret: this.discordBot.botTokenSecret,
+    this.discordCommandHandler = new DiscordCommandHandler(
+      this,
+      "DiscordCommands",
+      {
+        layers: this.lambdaLayers,
+        environment: deploymentEnvironment,
+        parameters: this.discordParameters,
+        table: this.table,
+        cacheTable: this.cacheTable,
+        botTokenSecret: this.discordBot.botTokenSecret,
+      },
+    );
+
+    this.discordAlarmNotifications = new DiscordAlarmNotifications(
+      this,
+      "DiscordAlarmNotifications",
+      {
+        layers: this.lambdaLayers,
+        environment: deploymentEnvironment,
+      },
+    );
+
+    // Register alarms from various constructs to be sent to Discord for monitoring
+    [
+      this.discordBot.messageEvaluationSubscription.subscriptionAlarm,
+      this.discordBot.messageEvaluationSubscription.lambdaFailureAlarm,
+      this.discordCommandHandler.commandProcessingSubscription
+        .subscriptionAlarm,
+      this.discordCommandHandler.commandProcessingSubscription
+        .lambdaFailureAlarm,
+      this.discordCommandHandler.metrics.dlqAlarm,
+    ].forEach((alarm) => {
+      this.discordAlarmNotifications.registerAlarm(alarm);
     });
   }
 
