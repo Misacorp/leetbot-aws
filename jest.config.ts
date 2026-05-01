@@ -14,5 +14,7 @@ module.exports = {
     "^@logger$": "<rootDir>/src/util/logger",
     "^/opt/nodejs/discord": "<rootDir>/src/layers/discord/nodejs/discord",
     "^/opt/nodejs/date-fns": "<rootDir>/src/layers/date-fns/nodejs/date-fns",
+    "^/opt/nodejs/pino": "<rootDir>/src/layers/pino/nodejs/pino",
+    "^/opt/nodejs/tweetnacl": "<rootDir>/src/layers/tweetnacl/nodejs/tweetnacl",
   },
 };
