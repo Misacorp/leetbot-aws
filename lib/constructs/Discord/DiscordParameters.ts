@@ -2,11 +2,16 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { PLACEHOLDER_PARAM_VALUE } from "@/src/util/constants";
+import {
+  type ISecureStringParameter,
+  SecureStringParameter,
+} from "@/lib/constructs/generic/SecureStringParameter/SecureStringParameter";
+import { getRemovalPolicy } from "@/src/util/infra";
 
 export interface IDiscordParameters {
   applicationId: ssm.StringParameter;
   publicKey: ssm.StringParameter;
-  botToken: ssm.StringParameter;
+  botToken: ISecureStringParameter;
 }
 
 /**
@@ -15,7 +20,7 @@ export interface IDiscordParameters {
 export class DiscordParameters extends Construct implements IDiscordParameters {
   public readonly applicationId: ssm.StringParameter;
   public readonly publicKey: ssm.StringParameter;
-  public readonly botToken: ssm.StringParameter;
+  public readonly botToken: ISecureStringParameter;
 
   constructor(scope: Construct, id: string, environment: string) {
     super(scope, id);
@@ -30,10 +35,12 @@ export class DiscordParameters extends Construct implements IDiscordParameters {
       description: "Discord Public Key for webhook signature verification",
     });
 
-    this.botToken = new ssm.StringParameter(this, "DiscordBotToken", {
+    this.botToken = new SecureStringParameter(this, "DiscordBotToken", {
       parameterName: `/leetbot/${environment}/discord/bot-token`,
-      stringValue: PLACEHOLDER_PARAM_VALUE,
-      type: ssm.ParameterType.SECURE_STRING,
+      placeholderValue: PLACEHOLDER_PARAM_VALUE,
+      removalPolicy: getRemovalPolicy(environment),
+      // Secrets Manager would be the stronger default here, but this stack
+      // intentionally uses SSM SecureString to save on costs.
       description: "Discord bot token",
     });
 

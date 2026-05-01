@@ -3,6 +3,7 @@ import { aws_iam as iam } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import { getDefaultLambdaConfig } from "@/src/util/infra";
+import { toCustomResourceRemovalPolicy } from "@/lib/utils";
 
 export interface ISecureStringParameter {
   readonly parameterArn: string;
@@ -88,7 +89,7 @@ export class SecureStringParameter
         parameterName: props.parameterName,
         description: props.description,
         placeholderValue: props.placeholderValue,
-        removalPolicy: props.removalPolicy,
+        removalPolicy: toCustomResourceRemovalPolicy(props.removalPolicy),
       },
     });
   }
