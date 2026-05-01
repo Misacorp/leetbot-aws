@@ -12,7 +12,7 @@ Commands need to be registered to Discord so that users know what commands are a
 
 ### High-Level Flow
 
-A user uses a slash command in Discord, which triggers a webhook and makes a request to the API Gateway of this app. After verifying the request, the command is sent through SNS and SQS to a different worker Lambda.
+A user uses a slash command in Discord, which triggers a webhook and makes a request to the API Gateway of this app. After verifying the request, the command is sent through SNS directly to a different worker Lambda.
 
 Generally, when a slash command is received, this app responds with a "deferred response". It'll show up to the user as a loading indicator. Once the command has been processed, the app edits the original "loading" response with the message's actual content.
 
@@ -21,9 +21,9 @@ Generally, when a slash command is received, this app responds with a "deferred 
 - API Gateway
 - Ingress Lambda
 - SNS
-- SQS
-- Parameter Store; public key
 - Worker Lambda
+- (SQS for metrics collection only)
+- Parameter Store; public key
 
 ## Lessons Learned
 

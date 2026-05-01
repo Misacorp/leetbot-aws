@@ -89,6 +89,9 @@ Leetbot needs to sit in a Discord server every day within the time window `]13:3
 Lambda that keeps itself alive for the duration. An EventBridge scheduled event invokes that Lambda at the same time on
 each day and even takes daylight savings into account.
 
+Low-latency Discord event paths use direct `SNS -> Lambda` delivery to avoid frequent SQS polling. The remaining
+metrics path is intentionally `SNS -> SQS -> Lambda` and uses long polling because it is not latency-sensitive.
+
 ```mermaid
 flowchart TD
     Discord((Discord))
@@ -96,7 +99,6 @@ flowchart TD
 
     DiscordWatcher{{Lambda: discordWatcher}}
     DiscordOutTopic[DiscordOutTopic]
-    MessageEvalQueue[MessageEvaluationQueue]
     MessageEvaluator{{Lambda: messageEvaluator}}
     MessageEvalOutTopic[MessageEvaluationOutTopic]
     DiscordInQueue[DiscordInQueue]
@@ -106,8 +108,7 @@ flowchart TD
     Discord <--> DiscordWatcher
     DiscordWatcher <-.-> DynamoDB
     DiscordWatcher --> DiscordOutTopic
-    DiscordOutTopic --> MessageEvalQueue
-    MessageEvalQueue --> MessageEvaluator
+    DiscordOutTopic --> MessageEvaluator
     MessageEvaluator <-.-> DynamoDB
     MessageEvaluator --> MessageEvalOutTopic
     MessageEvalOutTopic --> DiscordInQueue
@@ -123,10 +124,16 @@ flowchart TD
     class Discord discord
     class DiscordWatcher,MessageEvaluator lambda
     class DiscordOutTopic,MessageEvalOutTopic sns
-    class MessageEvalQueue,DiscordInQueue sqs
+    class DiscordInQueue sqs
     class DynamoDB dynamo
     class EventBridge schedule
 ```
+
+CloudWatch alarms are configured for the low-latency `SNS -> Lambda` paths:
+
+- SNS subscription DLQs alarm if SNS cannot deliver to the Lambda subscription
+- Lambda async failure queues alarm if the Lambda accepts an event but still fails after retries
+- the metrics queue DLQ also has an alarm
 
 ## Lambda Layers
 

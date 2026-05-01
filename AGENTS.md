@@ -33,14 +33,20 @@ There are 2 main runtime paths:
 1. Scheduled watcher flow
    - EventBridge Scheduler starts the `discordWatcher` Lambda daily.
    - That Lambda logs into Discord, watches messages for a short window, and publishes relevant events.
-   - Messages move through SNS/SQS to `messageEvaluator`.
+   - Low-latency message events move through direct SNS to `messageEvaluator`.
    - `messageEvaluator` decides whether a message is `leet`, `leeb`, `failed_leet`, etc, writes data, and can send reaction commands back toward the watcher path.
 
 2. Slash command flow
    - Discord sends interaction webhooks to API Gateway.
    - `ingress` verifies Discord signatures and acknowledges quickly.
-   - Interactions are fanned out through SNS/SQS to `slashCommandWorker`.
+   - Low-latency interactions are fanned out through direct SNS to `slashCommandWorker`.
    - The worker handles commands like `ranking` and `user`, then edits or posts Discord responses.
+   - Command metrics are secondary and still use `SNS -> SQS -> Lambda`, with long polling on the queue.
+
+Alarming side note:
+
+- The direct SNS-to-Lambda low-latency paths have DLQs and CloudWatch alarms for both SNS delivery failures and Lambda async failures.
+- The metrics queue path also has a DLQ alarm.
 
 ## Repo structure
 
