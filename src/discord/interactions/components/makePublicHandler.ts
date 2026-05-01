@@ -9,8 +9,7 @@ import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updat
 import { deleteEphemeralMessage } from "@/src/discord/interactions/webhook/deleteEphemeralMessage";
 import { postMessage } from "@/src/discord/interactions/webhook/postMessage";
 import { deleteMessage } from "@/src/discord/interactions/webhook/deleteMessage";
-import { getParameter } from "@/src/util/ssm";
-import { getSecret } from "@/src/util/secrets";
+import { getParameter, getValidatedParameter } from "@/src/util/ssm";
 import { ensureEnvironmentVariable } from "@/src/discord/interactions/utils/validateInteractions";
 
 /**
@@ -23,11 +22,11 @@ export const makePublicHandler = async ({
   interaction: APIMessageComponentInteraction;
 }) => {
   // Ensure environment variables are present
-  const [botTokenSecretId, applicationIdParamName] = await Promise.all([
-    ensureEnvironmentVariable(interaction, "TOKEN_SECRET_ID"),
+  const [botTokenParameterName, applicationIdParamName] = await Promise.all([
+    ensureEnvironmentVariable(interaction, "TOKEN_PARAMETER_NAME"),
     ensureEnvironmentVariable(interaction, "APPLICATION_ID_PARAM_NAME"),
   ]);
-  if (!botTokenSecretId || !applicationIdParamName) {
+  if (!botTokenParameterName || !applicationIdParamName) {
     return;
   }
 
@@ -58,7 +57,7 @@ export const makePublicHandler = async ({
   const info = decodeMakePublicPayload(json);
 
   // Get bot token and application id
-  const botToken = await getSecret(botTokenSecretId);
+  const botToken = await getValidatedParameter(botTokenParameterName, true);
   const applicationId = await getParameter(applicationIdParamName, true);
 
   await Promise.all([

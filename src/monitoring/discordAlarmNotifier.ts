@@ -1,7 +1,7 @@
 import logger from "@logger";
 import type { SNSEvent } from "aws-lambda";
 import type { APIEmbed } from "discord-api-types/v10";
-import { getParameter } from "@/src/util/ssm";
+import { getValidatedParameter } from "@/src/util/ssm";
 
 declare global {
   namespace NodeJS {
@@ -27,13 +27,10 @@ interface CloudWatchAlarmNotification {
  * @param event
  */
 export const handler = async (event: SNSEvent) => {
-  const webhookUrl = await getParameter(
+  const webhookUrl = await getValidatedParameter(
     process.env.DISCORD_WEBHOOK_URL_PARAMETER_NAME,
+    false,
   );
-
-  if (!webhookUrl || webhookUrl === "change-me") {
-    throw new Error("Discord monitoring webhook URL is not configured");
-  }
 
   await Promise.all(
     event.Records.map(async (record: SNSEvent["Records"][number]) => {

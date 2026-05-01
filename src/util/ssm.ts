@@ -4,6 +4,7 @@ import {
   GetParameterCommand,
   PutParameterCommand,
 } from "@aws-sdk/client-ssm";
+import { PLACEHOLDER_PARAM_VALUE } from "@/src/util/constants";
 
 let ssmClient: SSMClient | undefined;
 
@@ -58,6 +59,23 @@ export async function getParameter(
     );
     throw error;
   }
+}
+
+/**
+ * Gets a value from Parameter Store and ensures it exists and isn't the default value.
+ */
+export async function getValidatedParameter(
+  parameterName: string,
+  withDecryption: boolean = false,
+  errorMessage: string = `SSM parameter ${parameterName} is not configured`,
+): Promise<string> {
+  const value = await getParameter(parameterName, withDecryption);
+
+  if (!value || value === PLACEHOLDER_PARAM_VALUE) {
+    throw new Error(errorMessage);
+  }
+
+  return value;
 }
 
 export async function putParameter(

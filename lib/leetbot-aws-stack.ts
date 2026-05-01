@@ -38,10 +38,17 @@ export class LeetbotAwsStack extends Stack {
 
     this.cacheTable = new CacheTable(this, "CacheTable");
 
+    this.discordParameters = new DiscordParameters(
+      this,
+      "DiscordParameters",
+      deploymentEnvironment,
+    );
+
     this.discordBot = new DiscordBot(this, "DiscordBot", {
       layers: this.lambdaLayers,
       table: this.table,
       environment: deploymentEnvironment,
+      parameters: this.discordParameters,
     });
 
     this.scheduler = new EventScheduler(this, "EventScheduler", {
@@ -50,8 +57,6 @@ export class LeetbotAwsStack extends Stack {
       scheduleExpression: "cron(35 13 * * ? *)",
       scheduleExpressionTimezone: "Europe/Helsinki",
     });
-
-    this.discordParameters = new DiscordParameters(this, "DiscordParameters");
 
     this.discordCommandHandler = new DiscordCommandHandler(
       this,
@@ -62,7 +67,6 @@ export class LeetbotAwsStack extends Stack {
         parameters: this.discordParameters,
         table: this.table,
         cacheTable: this.cacheTable,
-        botTokenSecret: this.discordBot.botTokenSecret,
       },
     );
 

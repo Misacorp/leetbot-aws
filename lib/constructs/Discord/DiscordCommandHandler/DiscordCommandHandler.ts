@@ -1,7 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as sns from "aws-cdk-lib/aws-sns";
-import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as apigwv2Integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -29,7 +28,6 @@ interface Props {
   readonly parameters: IDiscordParameters;
   readonly table: ITable;
   readonly cacheTable: ICacheTable;
-  readonly botTokenSecret: ISecret;
 }
 
 /**
@@ -119,7 +117,7 @@ export class DiscordCommandHandler extends Construct {
         TABLE_NAME: props.table.tableName,
         CACHE_TABLE_NAME: props.cacheTable.tableName,
         APPLICATION_ID_PARAM_NAME: props.parameters.applicationId.parameterName,
-        TOKEN_SECRET_ID: props.botTokenSecret.secretName,
+        TOKEN_PARAMETER_NAME: props.parameters.botToken.parameterName,
         LOG_LEVEL: getLogLevel(props.environment),
       },
       description: "Handles all slash commands.",
@@ -127,7 +125,7 @@ export class DiscordCommandHandler extends Construct {
     props.table.grantReadWriteData(this.slashCommandWorker);
     props.cacheTable.grantReadWriteData(this.slashCommandWorker);
     props.parameters.applicationId.grantRead(this.slashCommandWorker);
-    props.botTokenSecret.grantRead(this.slashCommandWorker);
+    props.parameters.botToken.grantRead(this.slashCommandWorker);
 
     this.commandProcessingSubscription =
       new SnsLambdaSubscriptionWithFailureHandling(

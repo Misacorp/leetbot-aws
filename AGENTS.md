@@ -129,5 +129,5 @@ The main DynamoDB table is single-table style:
 
 - Deployments are CDK-based.
 - The repo distinguishes at least `dev` and `prd`.
-- Discord secrets/public keys are stored in AWS Secrets Manager / SSM Parameter Store.
+- Discord secure values are stored in AWS Systems Manager Parameter Store.
 - The scheduled game window is tied to Helsinki time, not UTC.

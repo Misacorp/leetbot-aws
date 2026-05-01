@@ -1,5 +1,4 @@
 import * as cdk from "aws-cdk-lib";
-import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
@@ -16,11 +15,13 @@ import {
 import { SnsLambdaSubscriptionWithFailureHandling } from "@/lib/constructs/SnsLambdaSubscriptionWithFailureHandling";
 import { type ITable } from "@/lib/constructs/Table";
 import type { ILambdaLayers } from "../LambdaLayers";
+import type { IDiscordParameters } from "../DiscordParameters";
 
 interface Props {
   readonly layers: ILambdaLayers;
   readonly table: ITable;
   readonly environment: string;
+  readonly parameters: IDiscordParameters;
 }
 
 /**
@@ -46,22 +47,8 @@ export class DiscordBot extends Construct {
    */
   public readonly discordInQueue: sqs.IQueue;
 
-  public readonly botTokenSecret: secretsManager.Secret;
-
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
-
-    // Create a place in AWS Secrets Manager to store our bot token
-    const secret = new secretsManager.Secret(this, "DiscordBotToken", {
-      description: "Discord bot token secret",
-      removalPolicy: getRemovalPolicy(props.environment),
-    });
-    this.botTokenSecret = secret;
-
-    // Output the secret ARN after deployment
-    new cdk.CfnOutput(this, "DiscordBotTokenArn", {
-      value: secret.secretArn,
-    });
 
     // Create an SNS topic where the bot will send all relevant messages
     // it receives for further processing.
@@ -116,7 +103,7 @@ export class DiscordBot extends Construct {
         props.layers.pinoLayer,
       ],
       environment: {
-        TOKEN_SECRET_ID: secret.secretName,
+        TOKEN_PARAMETER_NAME: props.parameters.botToken.parameterName,
         TABLE_NAME: props.table.tableName,
         DISCORD_OUT_TOPIC_ARN: this.discordBotOutTopic.topicArn,
         DISCORD_IN_QUEUE_URL: this.discordInQueue.queueUrl,
@@ -128,7 +115,7 @@ export class DiscordBot extends Construct {
     });
 
     // Grant Lambda the permissions it needs
-    secret.grantRead(this.discordWatcher);
+    props.parameters.botToken.grantRead(this.discordWatcher);
     props.table.grantWriteData(this.discordWatcher);
     this.discordBotOutTopic.grantPublish(this.discordWatcher);
     this.discordInQueue.grantConsumeMessages(this.discordWatcher);

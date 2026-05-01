@@ -1,10 +1,12 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import { PLACEHOLDER_PARAM_VALUE } from "@/src/util/constants";
 
 export interface IDiscordParameters {
   applicationId: ssm.StringParameter;
   publicKey: ssm.StringParameter;
+  botToken: ssm.StringParameter;
 }
 
 /**
@@ -13,18 +15,26 @@ export interface IDiscordParameters {
 export class DiscordParameters extends Construct implements IDiscordParameters {
   public readonly applicationId: ssm.StringParameter;
   public readonly publicKey: ssm.StringParameter;
+  public readonly botToken: ssm.StringParameter;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, environment: string) {
     super(scope, id);
 
     this.applicationId = new ssm.StringParameter(this, "DiscordApplicationId", {
-      stringValue: "change-me",
+      stringValue: PLACEHOLDER_PARAM_VALUE,
       description: "Discord Application ID (Client ID)",
     });
 
     this.publicKey = new ssm.StringParameter(this, "DiscordPublicKey", {
-      stringValue: "change-me",
+      stringValue: PLACEHOLDER_PARAM_VALUE,
       description: "Discord Public Key for webhook signature verification",
+    });
+
+    this.botToken = new ssm.StringParameter(this, "DiscordBotToken", {
+      parameterName: `/leetbot/${environment}/discord/bot-token`,
+      stringValue: PLACEHOLDER_PARAM_VALUE,
+      type: ssm.ParameterType.SECURE_STRING,
+      description: "Discord bot token",
     });
 
     // Scripts rely on these outputs
@@ -36,6 +46,11 @@ export class DiscordParameters extends Construct implements IDiscordParameters {
     new cdk.CfnOutput(this, "DiscordPublicKeyParameter", {
       value: this.publicKey.parameterName,
       description: "SSM Parameter name for Discord Public Key",
+    });
+
+    new cdk.CfnOutput(this, "DiscordBotTokenParameter", {
+      value: this.botToken.parameterName,
+      description: "SSM parameter name for the Discord bot token",
     });
   }
 }

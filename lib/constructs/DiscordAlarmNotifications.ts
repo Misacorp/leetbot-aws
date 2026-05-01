@@ -13,6 +13,7 @@ import {
   getMinify,
 } from "@/src/util/infra";
 import type { ILambdaLayers } from "@/lib/constructs/Discord/LambdaLayers";
+import { PLACEHOLDER_PARAM_VALUE } from "@/src/util/constants";
 
 interface Props {
   readonly environment: string;
@@ -39,7 +40,7 @@ export class DiscordAlarmNotifications extends Construct {
       "DiscordWebhookUrl",
       {
         parameterName: "/leetbot/monitoring/discord-webhook-url",
-        stringValue: "change-me",
+        stringValue: PLACEHOLDER_PARAM_VALUE,
         description: "Discord webhook URL for Leetbot alarm notifications",
       },
     );

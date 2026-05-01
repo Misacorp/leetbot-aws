@@ -2,7 +2,7 @@ import logger from "@logger";
 import type { Context, ScheduledEvent } from "aws-lambda";
 import { Client, Events, IntentsBitField, Partials } from "/opt/nodejs/discord";
 import keepAlive from "@/src/util/lambda";
-import { getSecret } from "@/src/util/secrets";
+import { getValidatedParameter } from "@/src/util/ssm";
 import type { PartialDiscordMessage, TestEvent } from "@/src/types";
 import { onClientReady } from "./onClientReady";
 import { onMessageCreate } from "./onMessageCreate";
@@ -11,7 +11,7 @@ import { SQSPoller } from "./sqsPoller";
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      TOKEN_SECRET_ID: string;
+      TOKEN_PARAMETER_NAME: string;
       TABLE_NAME: string;
       DISCORD_OUT_TOPIC_ARN: string;
       DISCORD_IN_QUEUE_URL: string;
@@ -29,7 +29,10 @@ export const handler = async (
   event: ScheduledEvent | TestEvent,
   context: Context,
 ) => {
-  const token = await getSecret(process.env.TOKEN_SECRET_ID);
+  const token = await getValidatedParameter(
+    process.env.TOKEN_PARAMETER_NAME,
+    true,
+  );
 
   const client = new Client({
     intents: new IntentsBitField()
