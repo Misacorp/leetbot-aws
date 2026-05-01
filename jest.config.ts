@@ -2,13 +2,15 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  roots: ["<rootDir>/test", "<rootDir>/src"],
+  roots: ["<rootDir>/test", "<rootDir>/src", "<rootDir>/lib"],
+  setupFilesAfterEnv: ["<rootDir>/test/jest.setup.ts"],
   testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
   moduleFileExtensions: ["ts", "js", "mjs", "cjs", "json", "node"],
   transform: {
     "^.+\\.(ts)x?$": "ts-jest",
   },
   transformIgnorePatterns: ["^.+\\.js$"],
+  modulePathIgnorePatterns: ["<rootDir>/src/layers/.*/nodejs/package.json"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
     "^@logger$": "<rootDir>/src/util/logger",

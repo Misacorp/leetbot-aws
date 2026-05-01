@@ -59,8 +59,11 @@ Some scripts are included to help set up and test the application. They are loca
 This script sets the AWS Systems Manager Parameter Store `SecureString` value for the Discord bot token. Usage:
 
 ```shell
-./scrips/setBotToken.sh <bot_token> <aws_profile>
+./scripts/setBotToken.sh <bot_token> <aws_profile> <environment>
 ```
+
+The deployed stack creates the parameter shell, but the real bot token value is
+still written separately with this script after deployment.
 
 ### Start Discord Bot
 
