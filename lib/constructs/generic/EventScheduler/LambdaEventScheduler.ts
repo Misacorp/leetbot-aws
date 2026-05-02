@@ -1,6 +1,6 @@
 import type * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
-import { EventScheduler } from "@/lib/constructs/EventScheduler";
+import { EventScheduler } from "@/lib/constructs/generic/EventScheduler/EventScheduler";
 
 interface Props {
   readonly description: string;

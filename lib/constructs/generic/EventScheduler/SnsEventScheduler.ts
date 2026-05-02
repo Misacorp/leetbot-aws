@@ -3,7 +3,7 @@ import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
-import { EventScheduler } from "@/lib/constructs/EventScheduler";
+import { EventScheduler } from "@/lib/constructs/generic/EventScheduler/EventScheduler";
 import { getRemovalPolicy } from "@/src/util/infra";
 
 interface Props {

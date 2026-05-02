@@ -2,8 +2,6 @@ import type { SNSEvent } from "aws-lambda";
 import { getLastCompletedSeasonKey, isValidSeasonKey } from "@/src/util/season";
 import type { SeasonWinnerRoleUpdateRequest } from "../types";
 
-export const SYNC_SEASON_WINNER_ROLE_ACTION = "sync-season-winner-role";
-
 /**
  * Parses and validates incoming events to the handler.
  */
@@ -13,10 +11,6 @@ export const parseAndValidateRequestPayloads = (
   const payloads = parseRequestPayloads(event);
 
   payloads.forEach((payload) => {
-    if (payload.action && payload.action !== SYNC_SEASON_WINNER_ROLE_ACTION) {
-      throw new Error(`Unsupported action: ${payload.action}`);
-    }
-
     const seasonKey = payload.seasonKey ?? getLastCompletedSeasonKey();
     if (!isValidSeasonKey(seasonKey)) {
       throw new Error(`Invalid season key: ${seasonKey}`);

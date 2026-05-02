@@ -8,8 +8,8 @@ import { DiscordCommandHandler } from "@/lib/constructs/Discord/DiscordCommandHa
 import { DiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 import { CacheTable } from "@/lib/constructs/CacheTable";
 import { DiscordAlarmNotifications } from "@/lib/constructs/DiscordAlarmNotifications";
-import { LambdaEventScheduler } from "@/lib/constructs/LambdaEventScheduler";
-import { SnsEventScheduler } from "@/lib/constructs/SnsEventScheduler";
+import { LambdaEventScheduler } from "@/lib/constructs/generic/EventScheduler/LambdaEventScheduler";
+import { SnsEventScheduler } from "@/lib/constructs/generic/EventScheduler/SnsEventScheduler";
 import { SeasonEnd } from "@/lib/constructs/Discord/SeasonEnd/SeasonEnd";
 
 /**
@@ -85,9 +85,11 @@ export class LeetbotAwsStack extends Stack {
         scheduleExpression: "cron(40 13 L * ? *)",
         scheduleExpressionTimezone: "Europe/Helsinki",
         target: this.seasonEnd.seasonEndTopic,
+        /**
+         * @see SeasonWinnerRoleUpdateRequest
+         */
         targetInput: JSON.stringify({
           source: "season-end-scheduler",
-          action: "sync-season-winner-role",
         }),
         environment: deploymentEnvironment,
         maximumRetryAttempts: 2,
