@@ -13,6 +13,7 @@ import { SnsLambdaSubscriptionWithFailureHandling } from "@/lib/constructs/SnsLa
 import { type ITable } from "@/lib/constructs/Table";
 import type { ILambdaLayers } from "../LambdaLayers";
 import type { IDiscordParameters } from "../DiscordParameters";
+import { SnsEventScheduler } from "@/lib/constructs/generic/EventScheduler/SnsEventScheduler";
 
 interface Props {
   readonly layers: ILambdaLayers;
@@ -22,12 +23,13 @@ interface Props {
 }
 
 /**
- * Season-end Discord effects that do not use the gateway bot runtime.
+ * Season-end logic.
  */
 export class SeasonEnd extends Construct {
   public readonly seasonEndTopic: sns.ITopic;
   public readonly seasonWinnerRoleUpdater: lambda.Function;
   public readonly seasonWinnerRoleUpdateSubscription: SnsLambdaSubscriptionWithFailureHandling;
+  public readonly scheduler: SnsEventScheduler;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -98,5 +100,24 @@ export class SeasonEnd extends Construct {
             "Season winner role update Lambda has failed async invocations.",
         },
       );
+
+    this.scheduler = new SnsEventScheduler(this, "SeasonEndScheduler", {
+      description:
+        "Publishes season-end effects every month at 13:40 Helsinki time on the last day of the month.",
+      scheduleExpression: "cron(40 13 L * ? *)",
+      scheduleExpressionTimezone: "Europe/Helsinki",
+      target: this.seasonEndTopic,
+      /**
+       * @see SeasonWinnerRoleUpdateRequest
+       */
+      targetInput: JSON.stringify({
+        source: "season-end-scheduler",
+      }),
+      environment: props.environment,
+      maximumRetryAttempts: 2,
+      maxEventAge: cdk.Duration.hours(1),
+      deadLetterQueueAlarmDescription:
+        "Season end scheduler DLQ has undelivered schedule events.",
+    });
   }
 }

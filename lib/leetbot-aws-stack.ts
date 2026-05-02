@@ -1,4 +1,3 @@
-import * as cdk from "aws-cdk-lib";
 import { Stack, type StackProps, Tags } from "aws-cdk-lib";
 import { type Construct } from "constructs";
 import { LambdaLayers } from "./constructs/Discord/LambdaLayers";
@@ -9,7 +8,6 @@ import { DiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 import { CacheTable } from "@/lib/constructs/CacheTable";
 import { DiscordAlarmNotifications } from "@/lib/constructs/DiscordAlarmNotifications";
 import { LambdaEventScheduler } from "@/lib/constructs/generic/EventScheduler/LambdaEventScheduler";
-import { SnsEventScheduler } from "@/lib/constructs/generic/EventScheduler/SnsEventScheduler";
 import { SeasonEnd } from "@/lib/constructs/Discord/SeasonEnd/SeasonEnd";
 
 /**
@@ -23,8 +21,6 @@ export class LeetbotAwsStack extends Stack {
   private readonly seasonEnd: SeasonEnd;
   private readonly discordCommandHandler: DiscordCommandHandler;
   private readonly discordAlarmNotifications: DiscordAlarmNotifications;
-  private readonly discordWatcherScheduler: LambdaEventScheduler;
-  private readonly seasonEndScheduler: SnsEventScheduler;
   private readonly discordParameters: DiscordParameters;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -63,41 +59,13 @@ export class LeetbotAwsStack extends Stack {
       parameters: this.discordParameters,
     });
 
-    this.discordWatcherScheduler = new LambdaEventScheduler(
-      this,
-      "DiscordWatcherScheduler",
-      {
-        description:
-          "Runs the Discord watcher every day at 13:35 Helsinki time.",
-        // Run every day at 13:35 Helsinki time
-        scheduleExpression: "cron(35 13 * * ? *)",
-        scheduleExpressionTimezone: "Europe/Helsinki",
-        target: this.discordBot.discordWatcher,
-      },
-    );
-
-    this.seasonEndScheduler = new SnsEventScheduler(
-      this,
-      "SeasonEndScheduler",
-      {
-        description:
-          "Publishes season-end effects every month at 13:40 Helsinki time on the last day of the month.",
-        scheduleExpression: "cron(40 13 L * ? *)",
-        scheduleExpressionTimezone: "Europe/Helsinki",
-        target: this.seasonEnd.seasonEndTopic,
-        /**
-         * @see SeasonWinnerRoleUpdateRequest
-         */
-        targetInput: JSON.stringify({
-          source: "season-end-scheduler",
-        }),
-        environment: deploymentEnvironment,
-        maximumRetryAttempts: 2,
-        maxEventAge: cdk.Duration.hours(1),
-        deadLetterQueueAlarmDescription:
-          "Season end scheduler DLQ has undelivered schedule events.",
-      },
-    );
+    new LambdaEventScheduler(this, "DiscordWatcherScheduler", {
+      description: "Runs the Discord watcher every day at 13:35 Helsinki time.",
+      // Run every day at 13:35 Helsinki time
+      scheduleExpression: "cron(35 13 * * ? *)",
+      scheduleExpressionTimezone: "Europe/Helsinki",
+      target: this.discordBot.discordWatcher,
+    });
 
     this.discordCommandHandler = new DiscordCommandHandler(
       this,
@@ -131,7 +99,7 @@ export class LeetbotAwsStack extends Stack {
       this.discordCommandHandler.commandProcessingSubscription
         .lambdaFailureAlarm,
       this.discordCommandHandler.metrics.dlqAlarm,
-      this.seasonEndScheduler.deadLetterQueueAlarm,
+      this.seasonEnd.scheduler.deadLetterQueueAlarm,
     ].forEach((alarm) => {
       if (alarm) {
         this.discordAlarmNotifications.registerAlarm(alarm);
