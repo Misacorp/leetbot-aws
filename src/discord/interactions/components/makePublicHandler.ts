@@ -6,9 +6,9 @@ import {
 import { getFromCache } from "@/src/util/cache";
 import { decodeMakePublicPayload } from "@/src/discord/interactions/components/makePublicButton";
 import { updateOriginalResponse } from "@/src/discord/interactions/webhook/updateOriginalResponse";
-import { deleteEphemeralMessage } from "@/src/discord/interactions/webhook/deleteEphemeralMessage";
-import { postMessage } from "@/src/discord/interactions/webhook/postMessage";
-import { deleteMessage } from "@/src/discord/interactions/webhook/deleteMessage";
+import { deleteEphemeralMessage } from "@/src/discord/rest/webhooks/deleteEphemeralMessage";
+import { postMessage } from "@/src/discord/rest/webhooks/postMessage";
+import { deleteMessage } from "@/src/discord/rest/webhooks/deleteMessage";
 import { getParameter, getValidatedParameter } from "@/src/util/ssm";
 import { ensureEnvironmentVariable } from "@/src/discord/interactions/utils/validateInteractions";
 
