@@ -20,7 +20,7 @@ import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersB
 import { type RankingCommand, RankingCommandSchema } from "./schema";
 import { createRankingFields } from "./createRankingFields";
 import { createMakePublicButton } from "@/src/discord/interactions/components/makePublicButton";
-import { countMessagesByUser } from "@/src/discord/utils/messageCounts";
+import { countMessagesByUser } from "@/src/discord/stats/messageCounts";
 import { createDateString } from "@/src/discord/utils/date";
 import { createEmojiString, getGameEmojis } from "@/src/discord/utils/emoji";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";

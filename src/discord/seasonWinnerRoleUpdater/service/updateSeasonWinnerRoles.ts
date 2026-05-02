@@ -1,13 +1,14 @@
 import logger from "@logger";
 import { getGuildsWithSeasonWinnerRole } from "@/src/repository/guild/getGuildsWithSeasonWinnerRole";
 import { toSeasonDateRange } from "@/src/util/season";
-import { syncGuildSeasonWinnerRole } from "./syncGuildSeasonWinnerRole";
+import { updateSeasonWinnerRolesInGuild } from "./updateSeasonWinnerRolesInGuild";
 import type { REST } from "@/src/layers/discord/nodejs/discord";
 
 /**
- * Synchronizes season-winner roles for all configured guilds for one season.
+ * Updates season winner roles in all guilds.
+ * New winners get the role and the undeserving lose the role.
  */
-export const syncSeasonWinnerRoles = async ({
+export const updateSeasonWinnerRoles = async ({
   rest,
   tableName,
   seasonKey,
@@ -21,7 +22,7 @@ export const syncSeasonWinnerRoles = async ({
     tableName,
   });
 
-  logger.info(
+  logger.debug(
     {
       seasonKey,
       configuredGuilds: configuredGuilds.length,
@@ -31,7 +32,7 @@ export const syncSeasonWinnerRoles = async ({
 
   const guildResults = await Promise.allSettled(
     configuredGuilds.map((guild) =>
-      syncGuildSeasonWinnerRole({
+      updateSeasonWinnerRolesInGuild({
         rest,
         tableName,
         guildId: guild.id,
@@ -55,4 +56,8 @@ export const syncSeasonWinnerRoles = async ({
       `Season winner role sync failed for ${failedGuilds.length} guild(s): ${errors.join(" | ")}`,
     );
   }
+
+  console.info(
+    `Season winner roles were successfully updated for ${guildResults.length} guild(s).`,
+  );
 };

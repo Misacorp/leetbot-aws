@@ -5,16 +5,17 @@ import {
   getGuildRole,
   removeRoleFromGuildMember,
 } from "@/src/discord/rest/guild/roles";
-import { resolveSeasonWinnerUserIds } from "./resolveSeasonWinnerUserIds";
-import { countMessagesByUser } from "@/src/discord/utils/messageCounts";
+import { countMessagesByUser } from "@/src/discord/stats/messageCounts";
+import { getTopUserIdsFromSortedMessageCounts } from "./getTopUserIdsFromSortedMessageCounts";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 import { MessageTypes } from "@/src/types";
 import type { REST } from "@/src/layers/discord/nodejs/discord";
 
 /**
- * Reconciles a single guild's winner role to the resolved season winners.
+ * Synchronizes the state of "season winner" roles in a single guild.
+ * Adds the role to new winners and removes it from the undeserving.
  */
-export const syncGuildSeasonWinnerRole = async ({
+export const updateSeasonWinnerRolesInGuild = async ({
   rest,
   tableName,
   guildId,
@@ -53,22 +54,20 @@ export const syncGuildSeasonWinnerRole = async ({
     }),
   ]);
 
-  const winnerIds = resolveSeasonWinnerUserIds(messageCounts);
+  const winnerIds = getTopUserIdsFromSortedMessageCounts(messageCounts);
   const currentRoleHolderIds = guildMembers
     .filter((member) => member.roles.includes(seasonWinnerRoleId))
     .map((member) => member.user?.id)
     .filter((userId): userId is string => Boolean(userId));
 
-  const currentRoleHolderIdSet = new Set(currentRoleHolderIds);
-  const winnerIdSet = new Set(winnerIds);
   const usersToAdd = winnerIds.filter(
-    (winnerId) => !currentRoleHolderIdSet.has(winnerId),
+    (winnerId) => !currentRoleHolderIds.includes(winnerId),
   );
   const usersToRemove = currentRoleHolderIds.filter(
-    (currentRoleHolderId) => !winnerIdSet.has(currentRoleHolderId),
+    (currentRoleHolderId) => !winnerIds.includes(currentRoleHolderId),
   );
 
-  logger.info(
+  logger.debug(
     {
       guildId,
       seasonKey,

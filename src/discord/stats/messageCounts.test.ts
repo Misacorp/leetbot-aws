@@ -1,5 +1,5 @@
 import type { Message } from "@/src/repository/message/types";
-import { countMessagesByUser } from "@/src/discord/utils/messageCounts";
+import { countMessagesByUser } from "@/src/discord/stats/messageCounts";
 import { MessageTypes } from "@/src/types";
 
 const createMessage = (id: string, userId: string): Message => ({

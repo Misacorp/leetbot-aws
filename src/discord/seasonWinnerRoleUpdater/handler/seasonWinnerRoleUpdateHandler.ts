@@ -3,7 +3,7 @@ import { REST } from "/opt/nodejs/discord";
 import { getLastCompletedSeasonKey } from "@/src/util/season";
 import { getValidatedParameter } from "src/util/ssm";
 import { parseAndValidateRequestPayloads } from "./validateRequest";
-import { syncSeasonWinnerRoles } from "../service/syncSeasonWinnerRoles";
+import { updateSeasonWinnerRoles } from "../service/updateSeasonWinnerRoles";
 import type { SeasonWinnerRoleUpdateRequest } from "../types";
 
 declare global {
@@ -30,7 +30,7 @@ export const handler = async (
 
   const results = await Promise.allSettled(
     payloads.map((payload) =>
-      syncSeasonWinnerRoles({
+      updateSeasonWinnerRoles({
         seasonKey: payload.seasonKey ?? getLastCompletedSeasonKey(),
         rest,
         tableName: process.env.TABLE_NAME,
