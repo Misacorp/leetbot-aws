@@ -5,7 +5,7 @@ import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
-import { isCustomDiscordEmoji } from "@/src/discord/discordUtils";
+import { isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
 
 interface FailedLeetHandlerProps {
   message: DiscordMessage;
