@@ -2,7 +2,12 @@
  * Helpers for Discord emoji operations shared across bot flows.
  */
 import { Emoji, Guild } from "@/src/repository/guild/types";
-import { findEmoji } from "@/src/util/emoji";
+
+/**
+ * Finds an emoji from a guild by name.
+ */
+export const findEmoji = (guild: Guild, name: string): Emoji | undefined =>
+  guild.emojis.find((emoji) => emoji.name === name);
 
 /**
  * Detects if a given input matches the string representation of a custom Discord emoji.
