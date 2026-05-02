@@ -1,57 +1,75 @@
-import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
 import { CfnSchedule } from "aws-cdk-lib/aws-scheduler";
 import * as iam from "aws-cdk-lib/aws-iam";
-import type { IFunction } from "aws-cdk-lib/aws-lambda";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import { Construct } from "constructs";
 
-interface Props {
-  readonly target: IFunction;
+export interface EventSchedulerProps {
+  readonly description: string;
   readonly scheduleExpression: string;
   readonly scheduleExpressionTimezone: string;
+  readonly targetArn: string;
+  readonly targetAction: string;
+  readonly targetInput?: string;
+  readonly maximumRetryAttempts?: number;
+  readonly maxEventAge?: cdk.Duration;
+  readonly deadLetterQueue?: sqs.IQueue;
 }
 
 /**
- * Schedules a CloudWatch event that runs the target Lambda function.
+ * Shared EventBridge Scheduler construct.
+ * Creates the scheduler role and schedule resource for a single target.
  */
 export class EventScheduler extends Construct {
-  private readonly role: iam.Role;
-
-  constructor(scope: Construct, id: string, props: Props) {
+  constructor(scope: Construct, id: string, props: EventSchedulerProps) {
     super(scope, id);
 
-    // Role for the event scheduler
-    this.role = new iam.Role(this, "EventSchedulerRole", {
+    const role = new iam.Role(this, "EventSchedulerRole", {
       assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
     });
 
-    // Create a policy that allows invoking the target Lambda function
-    const invokeLambdaPolicy = new iam.Policy(this, "InvokeLambdaPolicy", {
-      document: new iam.PolicyDocument({
-        statements: [
-          new iam.PolicyStatement({
-            actions: ["lambda:InvokeFunction"],
-            resources: [props.target.functionArn],
-            effect: iam.Effect.ALLOW,
-          }),
-        ],
+    role.attachInlinePolicy(
+      new iam.Policy(this, "TargetPolicy", {
+        document: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: [props.targetAction],
+              resources: [props.targetArn],
+              effect: iam.Effect.ALLOW,
+            }),
+          ],
+        }),
       }),
-    });
+    );
 
-    // Attach the policy to the role
-    this.role.attachInlinePolicy(invokeLambdaPolicy);
+    if (props.deadLetterQueue) {
+      props.deadLetterQueue.grantSendMessages(role);
+    }
 
-    // Define the schedule we want
-    new CfnSchedule(this, "LeetSchedule", {
+    new CfnSchedule(this, "Schedule", {
       flexibleTimeWindow: {
         mode: "OFF",
       },
       scheduleExpression: props.scheduleExpression,
       scheduleExpressionTimezone: props.scheduleExpressionTimezone,
       target: {
-        arn: props.target.functionArn,
-        roleArn: this.role.roleArn,
+        arn: props.targetArn,
+        roleArn: role.roleArn,
+        input: props.targetInput,
+        deadLetterConfig: props.deadLetterQueue
+          ? {
+              arn: props.deadLetterQueue.queueArn,
+            }
+          : undefined,
+        retryPolicy:
+          props.maximumRetryAttempts || props.maxEventAge
+            ? {
+                maximumRetryAttempts: props.maximumRetryAttempts,
+                maximumEventAgeInSeconds: props.maxEventAge?.toSeconds(),
+              }
+            : undefined,
       },
-      description:
-        "CloudWatch event rule scheduled for 13:36.000 each day in Finnish time",
+      description: props.description,
     });
   }
 }

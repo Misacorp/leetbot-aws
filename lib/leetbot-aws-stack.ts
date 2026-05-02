@@ -1,13 +1,16 @@
+import * as cdk from "aws-cdk-lib";
 import { Stack, type StackProps, Tags } from "aws-cdk-lib";
 import { type Construct } from "constructs";
 import { LambdaLayers } from "./constructs/Discord/LambdaLayers";
 import { DiscordBot } from "@/lib/constructs/Discord/DiscordBot/DiscordBot";
-import { EventScheduler } from "./constructs/EventScheduler";
 import { Table } from "./constructs/Table";
 import { DiscordCommandHandler } from "@/lib/constructs/Discord/DiscordCommandHandler/DiscordCommandHandler";
 import { DiscordParameters } from "@/lib/constructs/Discord/DiscordParameters";
 import { CacheTable } from "@/lib/constructs/CacheTable";
 import { DiscordAlarmNotifications } from "@/lib/constructs/DiscordAlarmNotifications";
+import { LambdaEventScheduler } from "@/lib/constructs/LambdaEventScheduler";
+import { SnsEventScheduler } from "@/lib/constructs/SnsEventScheduler";
+import { SeasonEnd } from "@/lib/constructs/Discord/SeasonEnd/SeasonEnd";
 
 /**
  * Main CloudFormation stack
@@ -17,9 +20,11 @@ export class LeetbotAwsStack extends Stack {
   private readonly table: Table;
   private readonly cacheTable: CacheTable;
   private readonly discordBot: DiscordBot;
+  private readonly seasonEnd: SeasonEnd;
   private readonly discordCommandHandler: DiscordCommandHandler;
   private readonly discordAlarmNotifications: DiscordAlarmNotifications;
-  private readonly scheduler: EventScheduler;
+  private readonly discordWatcherScheduler: LambdaEventScheduler;
+  private readonly seasonEndScheduler: SnsEventScheduler;
   private readonly discordParameters: DiscordParameters;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -51,12 +56,46 @@ export class LeetbotAwsStack extends Stack {
       parameters: this.discordParameters,
     });
 
-    this.scheduler = new EventScheduler(this, "EventScheduler", {
-      target: this.discordBot.discordWatcher,
-      // Run every day at 13:36 Helsinki time
-      scheduleExpression: "cron(35 13 * * ? *)",
-      scheduleExpressionTimezone: "Europe/Helsinki",
+    this.seasonEnd = new SeasonEnd(this, "SeasonEnd", {
+      layers: this.lambdaLayers,
+      table: this.table,
+      environment: deploymentEnvironment,
+      parameters: this.discordParameters,
     });
+
+    this.discordWatcherScheduler = new LambdaEventScheduler(
+      this,
+      "DiscordWatcherScheduler",
+      {
+        description:
+          "Runs the Discord watcher every day at 13:35 Helsinki time.",
+        // Run every day at 13:35 Helsinki time
+        scheduleExpression: "cron(35 13 * * ? *)",
+        scheduleExpressionTimezone: "Europe/Helsinki",
+        target: this.discordBot.discordWatcher,
+      },
+    );
+
+    this.seasonEndScheduler = new SnsEventScheduler(
+      this,
+      "SeasonEndScheduler",
+      {
+        description:
+          "Publishes season-end effects every month at 13:40 Helsinki time on the last day of the month.",
+        scheduleExpression: "cron(40 13 L * ? *)",
+        scheduleExpressionTimezone: "Europe/Helsinki",
+        target: this.seasonEnd.seasonEndTopic,
+        targetInput: JSON.stringify({
+          source: "season-end-scheduler",
+          action: "sync-season-winner-role",
+        }),
+        environment: deploymentEnvironment,
+        maximumRetryAttempts: 2,
+        maxEventAge: cdk.Duration.hours(1),
+        deadLetterQueueAlarmDescription:
+          "Season end scheduler DLQ has undelivered schedule events.",
+      },
+    );
 
     this.discordCommandHandler = new DiscordCommandHandler(
       this,
@@ -83,13 +122,18 @@ export class LeetbotAwsStack extends Stack {
     [
       this.discordBot.messageEvaluationSubscription.subscriptionAlarm,
       this.discordBot.messageEvaluationSubscription.lambdaFailureAlarm,
+      this.seasonEnd.seasonWinnerRoleUpdateSubscription.subscriptionAlarm,
+      this.seasonEnd.seasonWinnerRoleUpdateSubscription.lambdaFailureAlarm,
       this.discordCommandHandler.commandProcessingSubscription
         .subscriptionAlarm,
       this.discordCommandHandler.commandProcessingSubscription
         .lambdaFailureAlarm,
       this.discordCommandHandler.metrics.dlqAlarm,
+      this.seasonEndScheduler.deadLetterQueueAlarm,
     ].forEach((alarm) => {
-      this.discordAlarmNotifications.registerAlarm(alarm);
+      if (alarm) {
+        this.discordAlarmNotifications.registerAlarm(alarm);
+      }
     });
   }
 
