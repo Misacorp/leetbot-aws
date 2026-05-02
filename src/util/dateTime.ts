@@ -8,7 +8,7 @@ import { toZonedTime, format, fromZonedTime } from "/opt/nodejs/date-fns";
 
 export { toZonedTime };
 
-const DEFAULT_TIMEZONE = "Europe/Helsinki";
+export const DEFAULT_TIMEZONE = "Europe/Helsinki";
 
 /**
  * Converts any date representation into a Date object

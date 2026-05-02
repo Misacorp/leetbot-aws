@@ -42,7 +42,7 @@ export class SeasonEnd extends Construct {
       {
         ...getDefaultLambdaConfig(),
         entry:
-          "src/discord/seasonWinnerRoleUpdater/seasonWinnerRoleUpdateHandler.ts",
+          "src/discord/seasonWinnerRoleUpdater/handler/seasonWinnerRoleUpdateHandler.ts",
         handler: "handler",
         timeout: cdk.Duration.seconds(60),
         logGroup: createLogGroup(
