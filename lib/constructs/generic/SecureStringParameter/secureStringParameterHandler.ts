@@ -37,7 +37,7 @@ export const handler = async (
   context: Context,
 ): Promise<void> => {
   // Do not wait for the Node event loop to drain after the response is sent.
-  // This helps the invocation exit promptly after replying to CloudFormation.
+  // This helps the handler exit promptly after replying to CloudFormation.
   context.callbackWaitsForEmptyEventLoop = false;
 
   const properties = event.ResourceProperties as unknown as ResourceProperties;
