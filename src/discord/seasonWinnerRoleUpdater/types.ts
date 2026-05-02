@@ -1,12 +1,5 @@
-import type { REST } from "/opt/nodejs/discord";
-
-export interface SeasonWinnerRoleUpdateParams {
+export interface SeasonWinnerRoleUpdateRequest {
   action?: string;
   seasonKey?: string;
   source?: string;
-}
-
-export interface SeasonWinnerRoleSyncContext {
-  rest: REST;
-  tableName: string;
 }

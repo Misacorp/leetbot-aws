@@ -1,4 +1,4 @@
-import type { UserMessageCount } from "@/src/discord/utils/messageCounts";
+import type { UserMessageCount } from "src/discord/utils/messageCounts";
 
 /**
  * Returns all user ids tied for the highest message count.

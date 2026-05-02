@@ -1,34 +1,21 @@
 import logger from "@logger";
-import {
-  toSeasonDateRange,
-  isValidSeasonKey,
-  getLastCompletedSeasonKey,
-} from "@/src/util/season";
 import { getGuildsWithSeasonWinnerRole } from "@/src/repository/guild/getGuildsWithSeasonWinnerRole";
-import { validateRequestAction } from "../handler/validateRequestAction";
+import { toSeasonDateRange } from "@/src/util/season";
 import { syncGuildSeasonWinnerRole } from "./syncGuildSeasonWinnerRole";
-import type {
-  SeasonWinnerRoleSyncContext,
-  SeasonWinnerRoleUpdateParams,
-} from "../types";
+import type { REST } from "@/src/layers/discord/nodejs/discord";
 
 /**
- * Handles one normalized season-winner sync handler.
+ * Synchronizes season-winner roles for all configured guilds for one season.
  */
-export const syncSeasonWinnerRolesForInvocation = async ({
-  request,
+export const syncSeasonWinnerRoles = async ({
   rest,
   tableName,
-}: SeasonWinnerRoleSyncContext & {
-  request: SeasonWinnerRoleUpdateParams;
+  seasonKey,
+}: {
+  rest: REST;
+  tableName: string;
+  seasonKey: string;
 }): Promise<void> => {
-  validateRequestAction(request);
-
-  const seasonKey = request.seasonKey ?? getLastCompletedSeasonKey();
-  if (!isValidSeasonKey(seasonKey)) {
-    throw new Error(`Invalid season key: ${seasonKey}`);
-  }
-
   const { startDate, endDate } = toSeasonDateRange(seasonKey);
   const configuredGuilds = await getGuildsWithSeasonWinnerRole({
     tableName,
@@ -36,7 +23,6 @@ export const syncSeasonWinnerRolesForInvocation = async ({
 
   logger.info(
     {
-      source: request.source ?? "manual",
       seasonKey,
       configuredGuilds: configuredGuilds.length,
     },

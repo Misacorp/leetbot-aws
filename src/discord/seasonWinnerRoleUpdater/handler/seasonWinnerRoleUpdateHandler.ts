@@ -1,9 +1,10 @@
 import type { SNSEvent } from "aws-lambda";
 import { REST } from "/opt/nodejs/discord";
+import { getLastCompletedSeasonKey } from "@/src/util/season";
 import { getValidatedParameter } from "src/util/ssm";
-import { normalizeRequestPayloads } from "./normalizeRequestPayloads";
-import { syncSeasonWinnerRolesForInvocation } from "../sync/syncSeasonWinnerRolesForInvocation";
-import type { SeasonWinnerRoleUpdateParams } from "../types";
+import { parseAndValidateRequestPayloads } from "./validateRequest";
+import { syncSeasonWinnerRoles } from "../service/syncSeasonWinnerRoles";
+import type { SeasonWinnerRoleUpdateRequest } from "../types";
 
 declare global {
   namespace NodeJS {
@@ -14,27 +15,30 @@ declare global {
   }
 }
 
+/**
+ * Handler for assigning roles to players who won the given "leet season".
+ */
 export const handler = async (
-  event: SNSEvent | SeasonWinnerRoleUpdateParams,
+  event: SNSEvent | SeasonWinnerRoleUpdateRequest,
 ): Promise<void> => {
-  const requests = normalizeRequestPayloads(event);
+  const payloads = parseAndValidateRequestPayloads(event);
   const token = await getValidatedParameter(
     process.env.TOKEN_PARAMETER_NAME,
     true,
   );
   const rest = new REST().setToken(token);
 
-  const requestResults = await Promise.allSettled(
-    requests.map((request) =>
-      syncSeasonWinnerRolesForInvocation({
-        request,
+  const results = await Promise.allSettled(
+    payloads.map((payload) =>
+      syncSeasonWinnerRoles({
+        seasonKey: payload.seasonKey ?? getLastCompletedSeasonKey(),
         rest,
         tableName: process.env.TABLE_NAME,
       }),
     ),
   );
 
-  const failedRequests = requestResults.filter(
+  const failedRequests = results.filter(
     (result) => result.status === "rejected",
   );
 

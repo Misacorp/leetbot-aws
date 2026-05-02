@@ -5,9 +5,11 @@ import {
   getGuildRole,
   removeRoleFromGuildMember,
 } from "@/src/discord/rest/guild/roles";
-import { getGuildLeetMessageCounts } from "../season/getGuildLeetMessageCounts";
-import { resolveSeasonWinnerUserIds } from "../season/resolveSeasonWinnerUserIds";
-import type { SeasonWinnerRoleSyncContext } from "../types";
+import { resolveSeasonWinnerUserIds } from "./resolveSeasonWinnerUserIds";
+import { countMessagesByUser } from "@/src/discord/utils/messageCounts";
+import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
+import { MessageTypes } from "@/src/types";
+import type { REST } from "@/src/layers/discord/nodejs/discord";
 
 /**
  * Reconciles a single guild's winner role to the resolved season winners.
@@ -20,7 +22,9 @@ export const syncGuildSeasonWinnerRole = async ({
   startDate,
   endDate,
   seasonKey,
-}: SeasonWinnerRoleSyncContext & {
+}: {
+  rest: REST;
+  tableName: string;
   guildId: string;
   seasonWinnerRoleId: string;
   startDate: Date;
@@ -34,12 +38,15 @@ export const syncGuildSeasonWinnerRole = async ({
   });
 
   const [messageCounts, guildMembers] = await Promise.all([
-    getGuildLeetMessageCounts({
-      tableName,
-      guildId,
-      startDate,
-      endDate,
-    }),
+    countMessagesByUser(
+      await getGuildMessages({
+        tableName,
+        guildId,
+        type: MessageTypes.LEET,
+        startDate,
+        endDate,
+      }),
+    ),
     getAllGuildMembers({
       rest,
       guildId,
