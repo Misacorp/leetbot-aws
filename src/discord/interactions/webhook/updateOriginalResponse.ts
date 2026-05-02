@@ -6,7 +6,7 @@ import {
   MessageFlags,
   type RESTPatchAPIWebhookWithTokenMessageJSONBody,
 } from "discord-api-types/v10";
-import { combineMessageFlags } from "@/src/discord/interactions/webhook/common";
+import { combineMessageFlags } from "@/src/discord/rest/webhooks/common";
 
 export interface UpdateOriginalResponseArgs {
   interaction: Pick<APIInteraction, "id" | "token" | "application_id">;
