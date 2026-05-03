@@ -2,8 +2,11 @@ import logger from "@logger";
 import type { RESTPatchAPIWebhookWithTokenMessageJSONBody } from "discord-api-types/v10";
 
 interface EditDiscordMessageArgs {
+  // The Discord bot's application id
   applicationId: string;
+  // Token from the original message, authorizing us to perform actions on that message
   token: string;
+  // ID of the original message. Defaults to "@original".
   messageId: string;
   payload: RESTPatchAPIWebhookWithTokenMessageJSONBody;
 }

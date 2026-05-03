@@ -34,7 +34,7 @@ export const postMessage = async (args: PostMessageArgs): Promise<void> => {
   if (ephemeral) {
     flags = combineMessageFlags(flags, MessageFlags.Ephemeral);
   } else if (flags !== undefined) {
-    flags &= ~MessageFlags.Ephemeral;
+    flags &= ~MessageFlags.Ephemeral; // strip ephemeral if present
   }
 
   const finalPayload: RESTPostAPIWebhookWithTokenJSONBody = {

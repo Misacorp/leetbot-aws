@@ -1,8 +1,11 @@
 import logger from "@logger";
 
 interface DeleteDiscordMessageArgs {
+  // The Discord bot's application id
   applicationId: string;
+  // Token from the original message, authorizing us to perform actions on that message
   token: string;
+  // ID of the original message. Defaults to "@original".
   messageId?: string;
 }
 
