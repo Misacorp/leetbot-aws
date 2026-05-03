@@ -43,6 +43,8 @@ cdk.out
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
+.idea/**/awsToolkit.xml
+.idea/**/db-forest-config.xml
 
 # File-based project format
 *.iws

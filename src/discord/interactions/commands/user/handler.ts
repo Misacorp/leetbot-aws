@@ -15,16 +15,13 @@ import {
   ensureEnvironmentVariable,
 } from "@/src/discord/interactions/utils/validateInteractions";
 import {
-  createDateString,
-  getEmojiStrings,
-  getGameEmojis,
-} from "@/src/discord/discordUtils";
-import {
   calculateLongestStreak,
   formatStreakMessage,
 } from "@/src/discord/interactions/utils/streak";
 import { getFastestMessages } from "@/src/discord/interactions/utils/speed";
 import { createMakePublicButton } from "@/src/discord/interactions/components/makePublicButton";
+import { createDateString } from "@/src/discord/utils/date";
+import { getEmojiStrings, getGameEmojis } from "@/src/discord/utils/emoji";
 
 /**
  * Handles the Discord interaction (slash command) to get user info

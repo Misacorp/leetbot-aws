@@ -1,6 +1,6 @@
 import type { Message } from "@/src/repository/message/types";
+import { createDateString } from "@/src/discord/utils/date";
 import { getDatePrefix, setTimeToLeet } from "@/src/util/dateTime";
-import { createDateString } from "@/src/discord/discordUtils";
 
 /**
  * Extracts unique message dates in YYYY-MM-DD format from messages

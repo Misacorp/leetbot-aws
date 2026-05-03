@@ -1,11 +1,10 @@
 import baseLogger from "@logger";
 import { isLeet } from "@/src/util/dateTime";
-import { findEmoji } from "@/src/util/emoji";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
-import { isCustomDiscordEmoji } from "@/src/discord/discordUtils";
+import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
 
 interface LeetHandlerProps {
   message: DiscordMessage;

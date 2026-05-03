@@ -1,5 +1,5 @@
 import { Message, MessageDbo } from "./types";
-import { getDatePrefix } from "@/src/util/dateTime";
+import { getDatePrefix, getEndOfDayPrefix } from "@/src/util/dateTime";
 import { MessageType } from "@/src/types";
 import { queryAll } from "@/src/repository/queryAll";
 
@@ -13,14 +13,16 @@ export const getGuildMessages = async ({
   tableName: string;
   guildId: string;
   type: MessageType;
+  // Start-of-day
   startDate: Date;
+  // End-of-day
   endDate: Date;
 }): Promise<Message[]> => {
   const pk: MessageDbo["pk1"] = `guild#${guildId}#messageType#${type}`;
 
   // Format date as YYYY-MM-DD
   const skFrom = `createdAt#${getDatePrefix(startDate)}`;
-  const skTo = `createdAt#${getDatePrefix(endDate)}`;
+  const skTo = `createdAt#${getEndOfDayPrefix(endDate)}`;
 
   return queryAll<Message>({
     TableName: tableName,

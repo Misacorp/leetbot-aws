@@ -1,18 +1,15 @@
 import logger from "@logger";
 
+interface DeleteEphemeralMessageArgs {
+  applicationId: string;
+  token: string;
+  messageId?: string;
+}
+
 /**
  * Deletes an ephemeral message created via an interaction.
  * Works only within 15 minutes of the interaction and only via the interaction token.
  */
-interface DeleteEphemeralMessageArgs {
-  // Discord bot application ID
-  applicationId: string;
-  // Interaction token
-  token: string;
-  // Defaults to "@original"
-  messageId?: string;
-}
-
 export const deleteEphemeralMessage = async ({
   applicationId,
   token,

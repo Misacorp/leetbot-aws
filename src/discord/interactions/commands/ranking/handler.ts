@@ -13,20 +13,17 @@ import {
   getDateRange,
   getWindowDisplayText,
 } from "@/src/discord/interactions/utils/dateWindow";
-import type { Message } from "@/src/repository/message/types";
-import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 import type { User } from "@/src/repository/user/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { getGuildUserById } from "@/src/repository/user/getGuildUserById";
 import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersByGuildId";
 import { type RankingCommand, RankingCommandSchema } from "./schema";
 import { createRankingFields } from "./createRankingFields";
-import {
-  createDateString,
-  createEmojiString,
-  getGameEmojis,
-} from "@/src/discord/discordUtils";
 import { createMakePublicButton } from "@/src/discord/interactions/components/makePublicButton";
+import { countAndSortMessagesByUser } from "@/src/discord/stats/messageCounts";
+import { createDateString } from "@/src/discord/utils/date";
+import { createEmojiString, getGameEmojis } from "@/src/discord/utils/emoji";
+import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 
 /**
  * Handles the Discord interaction (slash command) for ranking.
@@ -79,7 +76,6 @@ export async function handleRankingCommand(
       type: messageType,
       startDate,
       endDate,
-      // TODO: A narrow projection expression would optimize this query - maybe even COUNT
     }),
     getGuildMembersByGuildId({
       tableName,
@@ -110,27 +106,19 @@ export async function handleRankingCommand(
     return;
   }
 
-  // Sort messages by user
-  const messagesByUser: Map<Message["userId"], Message[]> =
-    guildMessages.reduce((acc, message) => {
-      const existing = acc.get(message.userId) ?? [];
-      acc.set(message.userId, [...existing, message]);
-      return acc;
-    }, new Map<Message["userId"], Message[]>());
-
   // Map user objects to user ids.
   // This allows us to access usernames, avatar urls, etc.
   const userMap: Map<User["id"], User> = new Map(
     guildMembers.map((u) => [u.id, u]),
   );
 
-  const rankings = [...messagesByUser.entries()]
-    .sort(([, a], [, b]) => b.length - a.length)
-    .map(([userId, messages]) => {
+  const rankings = countAndSortMessagesByUser(guildMessages).map(
+    ({ userId, messageCount }) => {
       const user = userMap.get(userId);
       const username = user?.displayName ?? user?.username ?? "Unknown user";
-      return { name: username, id: userId, messageCount: messages.length };
-    });
+      return { name: username, id: userId, messageCount };
+    },
+  );
 
   const windowText = getWindowDisplayText(window);
 

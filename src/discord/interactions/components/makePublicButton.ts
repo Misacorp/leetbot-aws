@@ -5,7 +5,7 @@ import {
   ButtonStyle,
   ComponentType,
 } from "discord-api-types/v10";
-import { editMessage } from "@/src/discord/interactions/webhook/editMessage";
+import { editMessage } from "@/src/discord/rest/webhooks/editMessage";
 import { saveToCache } from "@/src/util/cache";
 
 export interface MakePublicButtonInfo {

@@ -3,7 +3,7 @@ import {
   MessageFlags,
 } from "discord-api-types/v10";
 import logger from "@logger";
-import { combineMessageFlags } from "@/src/discord/interactions/webhook/common";
+import { combineMessageFlags } from "./common";
 
 interface PostMessageArgsWithToken {
   applicationId: string;
@@ -30,7 +30,6 @@ type PostMessageArgs = PostMessageArgsWithToken | PostMessageArgsWithBotToken;
 export const postMessage = async (args: PostMessageArgs): Promise<void> => {
   const { applicationId, payload, ephemeral = false } = args;
 
-  // Always normalize flags based on ephemeral arg
   let flags = payload.flags;
   if (ephemeral) {
     flags = combineMessageFlags(flags, MessageFlags.Ephemeral);

@@ -2,7 +2,6 @@ import * as cdk from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import {
@@ -29,7 +28,7 @@ interface Props {
  * Uses the Discord API to log into a server and read all messages posted.
  */
 export class DiscordBot extends Construct {
-  public readonly discordWatcher: lambda.IFunction;
+  public readonly discordWatcher: NodejsFunction;
   public readonly messageEvaluationSubscription: SnsLambdaSubscriptionWithFailureHandling;
 
   /**
