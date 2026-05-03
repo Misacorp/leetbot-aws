@@ -46,6 +46,22 @@ export class EventScheduler extends Construct {
       props.deadLetterQueue.grantSendMessages(role);
     }
 
+    let deadLetterConfig: CfnSchedule.DeadLetterConfigProperty | undefined =
+      undefined;
+    if (props.deadLetterQueue) {
+      deadLetterConfig = {
+        arn: props.deadLetterQueue.queueArn,
+      };
+    }
+
+    let retryPolicy: CfnSchedule.RetryPolicyProperty | undefined = undefined;
+    if (props.maximumRetryAttempts || props.maxEventAge) {
+      retryPolicy = {
+        maximumRetryAttempts: props.maximumRetryAttempts,
+        maximumEventAgeInSeconds: props.maxEventAge?.toSeconds(),
+      };
+    }
+
     new CfnSchedule(this, "Schedule", {
       flexibleTimeWindow: {
         mode: "OFF",
@@ -56,18 +72,8 @@ export class EventScheduler extends Construct {
         arn: props.targetArn,
         roleArn: role.roleArn,
         input: props.targetInput,
-        deadLetterConfig: props.deadLetterQueue
-          ? {
-              arn: props.deadLetterQueue.queueArn,
-            }
-          : undefined,
-        retryPolicy:
-          props.maximumRetryAttempts || props.maxEventAge
-            ? {
-                maximumRetryAttempts: props.maximumRetryAttempts,
-                maximumEventAgeInSeconds: props.maxEventAge?.toSeconds(),
-              }
-            : undefined,
+        deadLetterConfig,
+        retryPolicy,
       },
       description: props.description,
     });
