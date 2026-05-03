@@ -5,7 +5,7 @@ import {
   getGuildRole,
   removeRoleFromGuildMember,
 } from "@/src/discord/rest/guild/roles";
-import { countMessagesByUser } from "@/src/discord/stats/messageCounts";
+import { countAndSortMessagesByUser } from "@/src/discord/stats/messageCounts";
 import { getTopUserIdsFromSortedMessageCounts } from "./getTopUserIdsFromSortedMessageCounts";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 import { MessageTypes } from "@/src/types";
@@ -39,7 +39,7 @@ export const updateSeasonWinnerRolesInGuild = async ({
   });
 
   const [messageCounts, guildMembers] = await Promise.all([
-    countMessagesByUser(
+    countAndSortMessagesByUser(
       await getGuildMessages({
         tableName,
         guildId,

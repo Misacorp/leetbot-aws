@@ -8,7 +8,7 @@ export interface UserMessageCount {
 /**
  * Groups messages by user id and returns counts in descending order.
  */
-export const countMessagesByUser = (
+export const countAndSortMessagesByUser = (
   messages: Message[],
 ): UserMessageCount[] => {
   const messageCountsByUser = messages.reduce((counts, message) => {

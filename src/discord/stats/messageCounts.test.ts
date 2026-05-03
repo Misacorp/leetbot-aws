@@ -1,5 +1,5 @@
 import type { Message } from "@/src/repository/message/types";
-import { countMessagesByUser } from "@/src/discord/stats/messageCounts";
+import { countAndSortMessagesByUser } from "@/src/discord/stats/messageCounts";
 import { MessageTypes } from "@/src/types";
 
 const createMessage = (id: string, userId: string): Message => ({
@@ -11,9 +11,9 @@ const createMessage = (id: string, userId: string): Message => ({
 });
 
 describe("messageCounts", () => {
-  describe("countMessagesByUser", () => {
+  describe("countAndSortMessagesByUser", () => {
     it("counts messages per user and sorts descending", () => {
-      const counts = countMessagesByUser([
+      const counts = countAndSortMessagesByUser([
         createMessage("1", "user-b"),
         createMessage("2", "user-a"),
         createMessage("3", "user-a"),
@@ -30,7 +30,7 @@ describe("messageCounts", () => {
     });
 
     it("breaks ties deterministically by user id", () => {
-      const counts = countMessagesByUser([
+      const counts = countAndSortMessagesByUser([
         createMessage("1", "user-b"),
         createMessage("2", "user-a"),
       ]);

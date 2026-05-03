@@ -20,7 +20,7 @@ import { getGuildMembersByGuildId } from "@/src/repository/user/getGuildMembersB
 import { type RankingCommand, RankingCommandSchema } from "./schema";
 import { createRankingFields } from "./createRankingFields";
 import { createMakePublicButton } from "@/src/discord/interactions/components/makePublicButton";
-import { countMessagesByUser } from "@/src/discord/stats/messageCounts";
+import { countAndSortMessagesByUser } from "@/src/discord/stats/messageCounts";
 import { createDateString } from "@/src/discord/utils/date";
 import { createEmojiString, getGameEmojis } from "@/src/discord/utils/emoji";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
@@ -112,7 +112,7 @@ export async function handleRankingCommand(
     guildMembers.map((u) => [u.id, u]),
   );
 
-  const rankings = countMessagesByUser(guildMessages).map(
+  const rankings = countAndSortMessagesByUser(guildMessages).map(
     ({ userId, messageCount }) => {
       const user = userMap.get(userId);
       const username = user?.displayName ?? user?.username ?? "Unknown user";
