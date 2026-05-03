@@ -71,6 +71,7 @@ export class SeasonEnd extends Construct {
           TABLE_NAME: props.table.tableName,
           TOKEN_PARAMETER_NAME: props.parameters.botToken.parameterName,
           LOG_LEVEL: getLogLevel(props.environment),
+          DRY_RUN: props.environment === "prd" ? "false" : "true",
         },
         reservedConcurrentExecutions: 1,
         description:

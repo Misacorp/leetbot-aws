@@ -23,6 +23,7 @@ export const updateSeasonWinnerRolesInGuild = async ({
   startDate,
   endDate,
   seasonKey,
+  dryRun = true,
 }: {
   rest: REST;
   tableName: string;
@@ -31,6 +32,7 @@ export const updateSeasonWinnerRolesInGuild = async ({
   startDate: Date;
   endDate: Date;
   seasonKey: string;
+  dryRun?: boolean;
 }): Promise<void> => {
   await getGuildRole({
     rest,
@@ -77,6 +79,11 @@ export const updateSeasonWinnerRolesInGuild = async ({
     },
     "Synchronizing season winner role",
   );
+
+  if (dryRun) {
+    logger.info("Exiting before applying role updates (dry run).");
+    return;
+  }
 
   const roleUpdateResults = await Promise.allSettled([
     ...usersToAdd.map((userId) =>

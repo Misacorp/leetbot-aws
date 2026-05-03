@@ -11,9 +11,12 @@ declare global {
     interface ProcessEnv {
       TABLE_NAME: string;
       TOKEN_PARAMETER_NAME: string;
+      DRY_RUN: string;
     }
   }
 }
+
+const isDryRun = process.env.DRY_RUN !== "false";
 
 /**
  * Handler for assigning roles to players who won the given "leet season".
@@ -34,6 +37,7 @@ export const handler = async (
         seasonKey: payload.seasonKey ?? getLastCompletedSeasonKey(),
         rest,
         tableName: process.env.TABLE_NAME,
+        dryRun: isDryRun,
       }),
     ),
   );

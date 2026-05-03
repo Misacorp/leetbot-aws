@@ -12,10 +12,12 @@ export const updateSeasonWinnerRoles = async ({
   rest,
   tableName,
   seasonKey,
+  dryRun = true,
 }: {
   rest: REST;
   tableName: string;
   seasonKey: string;
+  dryRun?: boolean;
 }): Promise<void> => {
   const { startDate, endDate } = toSeasonDateRange(seasonKey);
   const configuredGuilds = await getGuildsWithSeasonWinnerRole({
@@ -40,6 +42,7 @@ export const updateSeasonWinnerRoles = async ({
         startDate,
         endDate,
         seasonKey,
+        dryRun,
       }),
     ),
   );
