@@ -39,18 +39,17 @@ export const leetHandler = async ({
     `Processing LEET from ${message.author.id} created at ${message.createdTimestamp}`,
   );
 
-  // Find LEET emoji
   const leetEmoji = findEmoji(guild.emojis, "leet");
-  if (!leetEmoji) {
-    throw new Error("Could not find 'leet' emoji");
-  }
 
   // Check message content
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "leetHandler extracted message content:");
 
   if (
-    !(content === "leet" || isCustomDiscordEmoji(content, leetEmoji.identifier))
+    !(
+      content === "leet" ||
+      (leetEmoji && isCustomDiscordEmoji(content, leetEmoji.identifier))
+    )
   ) {
     logger.debug(
       "Message content does not warrant processing the LEET handler any further. Exiting leet handler…",
@@ -112,7 +111,7 @@ export const leetHandler = async ({
 
   await publishReaction({
     messageId: message.id,
-    emoji: leetEmoji.identifier,
+    emoji: findEmoji(applicationEmojis, "leet")?.identifier ?? "✅",
     channelId: message.channelId,
     topicArn,
   });

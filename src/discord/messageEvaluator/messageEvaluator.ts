@@ -83,6 +83,7 @@ export const handler = async (event: SNSEvent) => {
       leebHandler({
         message,
         guild,
+        applicationEmojis,
         tableName,
         topicArn,
         alwaysAllowLeeb: event?.alwaysAllowLeeb,
@@ -91,6 +92,7 @@ export const handler = async (event: SNSEvent) => {
       failedLeetHandler({
         message,
         guild,
+        applicationEmojis,
         tableName,
         topicArn,
         alwaysAllowFailedLeet: event?.alwaysAllowFailedLeet,
