@@ -1,15 +1,20 @@
 import baseLogger from "@logger";
 import { isLeet } from "@/src/util/dateTime";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
-import { Guild } from "@/src/repository/guild/types";
+import { Emoji, Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
-import { getMultiLeetEmoji, getTodayLeetCount } from "./multiLeet";
+import {
+  getMultiLeetFallback,
+  getMultiLeetName,
+  getTodayLeetCount,
+} from "./multiLeet";
 
 interface LeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
+  applicationEmojis: Emoji[];
   tableName: string;
   topicArn: string;
   alwaysAllowLeet?: boolean;
@@ -24,6 +29,7 @@ const logger = baseLogger.child({ function: "leetHandler" });
 export const leetHandler = async ({
   message,
   guild,
+  applicationEmojis,
   tableName,
   topicArn,
   alwaysAllowLeet = false,
@@ -34,7 +40,7 @@ export const leetHandler = async ({
   );
 
   // Find LEET emoji
-  const leetEmoji = findEmoji(guild, "leet");
+  const leetEmoji = findEmoji(guild.emojis, "leet");
   if (!leetEmoji) {
     throw new Error("Could not find 'leet' emoji");
   }
@@ -117,13 +123,18 @@ export const leetHandler = async ({
     timestamp: message.createdTimestamp,
   });
 
-  const multiEmoji = getMultiLeetEmoji(todayCount);
-  if (multiEmoji) {
-    await publishReaction({
-      messageId: message.id,
-      emoji: multiEmoji,
-      channelId: message.channelId,
-      topicArn,
-    });
+  const multiLeetName = getMultiLeetName(todayCount);
+  if (multiLeetName) {
+    const multiEmoji =
+      findEmoji(applicationEmojis, multiLeetName)?.identifier ??
+      getMultiLeetFallback(todayCount);
+    if (multiEmoji) {
+      await publishReaction({
+        messageId: message.id,
+        emoji: multiEmoji,
+        channelId: message.channelId,
+        topicArn,
+      });
+    }
   }
 };

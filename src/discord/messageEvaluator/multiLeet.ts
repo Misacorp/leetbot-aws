@@ -1,7 +1,29 @@
 import { MessageTypes } from "@/src/types";
 import { getGuildMessages } from "@/src/repository/message/getGuildMessages";
 
-const MULTI_LEET_EMOJIS: Record<number, string> = {
+const MULTI_LEET_NAMES: Record<number, string> = {
+  2: "double_leet",
+  3: "triple_leet",
+  4: "overleet",
+  5: "leettacular",
+  6: "leetrocity",
+  7: "leetamanjaro",
+  8: "leetastrophe",
+  9: "leetpocalypse",
+};
+
+const MULTI_LEET_MAX_NAME = "leetionaire";
+
+/**
+ * Returns the application emoji name for the given leet count.
+ * Returns undefined for counts below 2 (no multi-leet).
+ */
+export const getMultiLeetName = (count: number): string | undefined => {
+  if (count < 2) return undefined;
+  return MULTI_LEET_NAMES[count] ?? MULTI_LEET_MAX_NAME;
+};
+
+const MULTI_LEET_FALLBACKS: Record<number, string> = {
   2: "👀",
   3: "😮",
   4: "🤯",
@@ -12,11 +34,14 @@ const MULTI_LEET_EMOJIS: Record<number, string> = {
   9: "🌟",
 };
 
-const MULTI_LEET_MAX_EMOJI = "💎";
+const MULTI_LEET_MAX_FALLBACK = "💎";
 
-export const getMultiLeetEmoji = (count: number): string | undefined => {
+/**
+ * Returns a Unicode emoji fallback for the given leet count.
+ */
+export const getMultiLeetFallback = (count: number): string | undefined => {
   if (count < 2) return undefined;
-  return MULTI_LEET_EMOJIS[count] ?? MULTI_LEET_MAX_EMOJI;
+  return MULTI_LEET_FALLBACKS[count] ?? MULTI_LEET_MAX_FALLBACK;
 };
 
 /**

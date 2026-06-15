@@ -34,9 +34,9 @@ export const failedLeetHandler = async ({
   );
 
   // Find emojis
-  const leetEmoji = findEmoji(guild, "leet");
-  const leebEmoji = findEmoji(guild, "leeb");
-  const failedLeetEmoji = findEmoji(guild, "failed_leet");
+  const leetEmoji = findEmoji(guild.emojis, "leet");
+  const leebEmoji = findEmoji(guild.emojis, "leeb");
+  const failedLeetEmoji = findEmoji(guild.emojis, "failed_leet");
   if (!leetEmoji || !leebEmoji || !failedLeetEmoji) {
     throw new Error("Could not find game emojis");
   }

@@ -2,6 +2,7 @@ import logger from "@logger";
 import { type Client } from "/opt/nodejs/discord";
 import type { Emoji, Guild } from "@/src/repository/guild/types";
 import { upsertGuild } from "@/src/repository/guild/upsertGuild";
+import { upsertApplicationConfig } from "@/src/repository/applicationConfig/upsertApplicationConfig";
 import type { SQSPoller } from "./sqsPoller";
 
 const GUILD_ID = "215386000132669440";
@@ -41,9 +42,26 @@ export const onClientReady = async ({
     emojis,
   };
 
-  logger.info("Saving guild information to database…");
+  logger.info("Gathering application emojis…");
+  const appEmojiCollection = await client.application.emojis.fetch();
+  const applicationEmojis: Emoji[] = Array.from(appEmojiCollection).map(
+    ([_, emoji]) => ({
+      name: emoji.name,
+      id: emoji.id,
+      identifier: emoji.identifier,
+      imageUrl: emoji.imageURL(),
+    }),
+  );
+
+  logger.info("Saving guild and application config to database…");
   logger.debug({ guild });
-  await upsertGuild({ tableName, guild });
+  await Promise.all([
+    upsertGuild({ tableName, guild }),
+    upsertApplicationConfig({
+      tableName,
+      config: { emojis: applicationEmojis },
+    }),
+  ]);
 
   if (sqsPoller) {
     logger.info("Starting SQS polling…");

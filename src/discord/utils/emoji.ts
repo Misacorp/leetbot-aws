@@ -4,10 +4,10 @@
 import { Emoji, Guild } from "@/src/repository/guild/types";
 
 /**
- * Finds an emoji from a guild by name.
+ * Finds an emoji by name from a list of emojis.
  */
-export const findEmoji = (guild: Guild, name: string): Emoji | undefined =>
-  guild.emojis.find((emoji) => emoji.name === name);
+export const findEmoji = (emojis: Emoji[], name: string): Emoji | undefined =>
+  emojis.find((emoji) => emoji.name === name);
 
 /**
  * Detects if a given input matches the string representation of a custom Discord emoji.
@@ -31,9 +31,11 @@ export const createEmojiString = (
  * Gets all the leet-game-related emojis.
  */
 export const getGameEmojis = (guild: Guild | null) => {
-  const leet = guild ? findEmoji(guild, "leet") : undefined;
-  const leeb = guild ? findEmoji(guild, "leeb") : undefined;
-  const failed_leet = guild ? findEmoji(guild, "failed_leet") : undefined;
+  const leet = guild ? findEmoji(guild.emojis, "leet") : undefined;
+  const leeb = guild ? findEmoji(guild.emojis, "leeb") : undefined;
+  const failed_leet = guild
+    ? findEmoji(guild.emojis, "failed_leet")
+    : undefined;
 
   return { leet, leeb, failed_leet };
 };

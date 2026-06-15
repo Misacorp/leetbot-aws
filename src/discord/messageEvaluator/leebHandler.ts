@@ -33,7 +33,7 @@ export const leebHandler = async ({
   );
 
   // Find LEEB emoji
-  const leebEmoji = findEmoji(guild, "leeb");
+  const leebEmoji = findEmoji(guild.emojis, "leeb");
   if (!leebEmoji) {
     throw new Error("Could not find 'leeb' emoji");
   }
