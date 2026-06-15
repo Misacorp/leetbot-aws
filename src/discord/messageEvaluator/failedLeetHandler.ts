@@ -1,7 +1,7 @@
 import baseLogger from "@logger";
 import { isLeeb } from "@/src/util/dateTime";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
-import { Guild } from "@/src/repository/guild/types";
+import { Emoji, Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
@@ -9,6 +9,7 @@ import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
 interface FailedLeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
+  applicationEmojis: Emoji[];
   tableName: string;
   topicArn: string;
   alwaysAllowFailedLeet?: boolean;
@@ -24,6 +25,7 @@ const logger = baseLogger.child({ function: "failedLeetHandler" });
 export const failedLeetHandler = async ({
   message,
   guild,
+  applicationEmojis,
   tableName,
   topicArn,
   alwaysAllowFailedLeet = false,
@@ -33,20 +35,17 @@ export const failedLeetHandler = async ({
     `Processing FAILED_LEET from ${message.author.id} created at ${message.createdTimestamp}`,
   );
 
-  // Find emojis
-  const leetEmoji = findEmoji(guild, "leet");
-  const leebEmoji = findEmoji(guild, "leeb");
-  const failedLeetEmoji = findEmoji(guild, "failed_leet");
-  if (!leetEmoji || !leebEmoji || !failedLeetEmoji) {
-    throw new Error("Could not find game emojis");
-  }
+  const leetEmoji = findEmoji(guild.emojis, "leet");
 
   // Check message content
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "failedLeetHandler extracted message content:");
 
   if (
-    !(content === "leet" || isCustomDiscordEmoji(content, leetEmoji.identifier))
+    !(
+      content === "leet" ||
+      (leetEmoji && isCustomDiscordEmoji(content, leetEmoji.identifier))
+    )
   ) {
     logger.debug(
       "Message content does not contain 'leet'. Exiting failed leet handler…",
@@ -100,7 +99,7 @@ export const failedLeetHandler = async ({
 
   await publishReaction({
     messageId: message.id,
-    emoji: failedLeetEmoji.identifier,
+    emoji: findEmoji(applicationEmojis, "failed_leet")?.identifier ?? "✅",
     channelId: message.channelId,
     topicArn,
   });

@@ -2,6 +2,7 @@ import logger from "@logger";
 import type { SNSEvent } from "aws-lambda";
 import type { DiscordBotOutPayload } from "@/src/types";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
+import { getApplicationConfig } from "@/src/repository/applicationConfig/getApplicationConfig";
 import { leetHandler } from "./leetHandler";
 import { leebHandler } from "./leebHandler";
 import { failedLeetHandler } from "@/src/discord/messageEvaluator/failedLeetHandler";
@@ -52,17 +53,20 @@ export const handler = async (event: SNSEvent) => {
       return;
     }
 
-    logger.debug("Getting guild information from DynamoDB…");
-    const guild = await getGuildById({
-      id: message.guild.id,
-      tableName: process.env.TABLE_NAME,
-    });
+    logger.debug("Getting guild and application config from DynamoDB…");
+    const [guild, applicationConfig] = await Promise.all([
+      getGuildById({ id: message.guild.id, tableName: process.env.TABLE_NAME }),
+      getApplicationConfig({ tableName: process.env.TABLE_NAME }),
+    ]);
     logger.debug({ guild }, "Guild retrieved:");
+    logger.debug({ applicationConfig }, "Application config retrieved:");
 
     if (!guild) {
       logger.warn(`No guild with id ${message.guild.id} found. Exiting…`);
       return;
     }
+
+    const applicationEmojis = applicationConfig?.emojis ?? [];
 
     // Pass the message to each handler that would be interested in processing it.
     // Handlers can be mutually exclusive, or they can have overlapping functionality.
@@ -70,6 +74,7 @@ export const handler = async (event: SNSEvent) => {
       leetHandler({
         message,
         guild,
+        applicationEmojis,
         tableName,
         topicArn,
         alwaysAllowLeet: event?.alwaysAllowLeet,
@@ -78,6 +83,7 @@ export const handler = async (event: SNSEvent) => {
       leebHandler({
         message,
         guild,
+        applicationEmojis,
         tableName,
         topicArn,
         alwaysAllowLeeb: event?.alwaysAllowLeeb,
@@ -86,6 +92,7 @@ export const handler = async (event: SNSEvent) => {
       failedLeetHandler({
         message,
         guild,
+        applicationEmojis,
         tableName,
         topicArn,
         alwaysAllowFailedLeet: event?.alwaysAllowFailedLeet,

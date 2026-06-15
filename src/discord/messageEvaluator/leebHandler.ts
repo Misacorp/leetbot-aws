@@ -1,7 +1,7 @@
 import baseLogger from "@logger";
 import { isLeeb } from "@/src/util/dateTime";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
-import { Guild } from "@/src/repository/guild/types";
+import { Emoji, Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
@@ -9,6 +9,7 @@ import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
 interface LeebHandlerProps {
   message: DiscordMessage;
   guild: Guild;
+  applicationEmojis: Emoji[];
   tableName: string;
   topicArn: string;
   alwaysAllowLeeb?: boolean;
@@ -23,6 +24,7 @@ const logger = baseLogger.child({ function: "leebHandler" });
 export const leebHandler = async ({
   message,
   guild,
+  applicationEmojis,
   tableName,
   topicArn,
   alwaysAllowLeeb = false,
@@ -32,18 +34,17 @@ export const leebHandler = async ({
     `Processing LEEB from ${message.author.id} created at ${message.createdTimestamp}`,
   );
 
-  // Find LEEB emoji
-  const leebEmoji = findEmoji(guild, "leeb");
-  if (!leebEmoji) {
-    throw new Error("Could not find 'leeb' emoji");
-  }
+  const leebEmoji = findEmoji(guild.emojis, "leeb");
 
   // Check message content
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "leebHandler extracted message content:");
 
   if (
-    !(content === "leeb" || isCustomDiscordEmoji(content, leebEmoji.identifier))
+    !(
+      content === "leeb" ||
+      (leebEmoji && isCustomDiscordEmoji(content, leebEmoji.identifier))
+    )
   ) {
     logger.debug(
       "Message content does not warrant processing the LEEB handler any further. Exiting leeb handler…",
@@ -106,7 +107,7 @@ export const leebHandler = async ({
 
   await publishReaction({
     messageId: message.id,
-    emoji: leebEmoji.identifier,
+    emoji: findEmoji(applicationEmojis, "leeb")?.identifier ?? "✅",
     channelId: message.channelId,
     topicArn,
   });

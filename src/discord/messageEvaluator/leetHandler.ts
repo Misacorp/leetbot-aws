@@ -1,14 +1,20 @@
 import baseLogger from "@logger";
 import { isLeet } from "@/src/util/dateTime";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
-import { Guild } from "@/src/repository/guild/types";
+import { Emoji, Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
+import {
+  getMultiLeetFallback,
+  getMultiLeetName,
+  getTodayLeetCount,
+} from "./multiLeet";
 
 interface LeetHandlerProps {
   message: DiscordMessage;
   guild: Guild;
+  applicationEmojis: Emoji[];
   tableName: string;
   topicArn: string;
   alwaysAllowLeet?: boolean;
@@ -23,6 +29,7 @@ const logger = baseLogger.child({ function: "leetHandler" });
 export const leetHandler = async ({
   message,
   guild,
+  applicationEmojis,
   tableName,
   topicArn,
   alwaysAllowLeet = false,
@@ -32,18 +39,17 @@ export const leetHandler = async ({
     `Processing LEET from ${message.author.id} created at ${message.createdTimestamp}`,
   );
 
-  // Find LEET emoji
-  const leetEmoji = findEmoji(guild, "leet");
-  if (!leetEmoji) {
-    throw new Error("Could not find 'leet' emoji");
-  }
+  const leetEmoji = findEmoji(guild.emojis, "leet");
 
   // Check message content
   const content = message.content.trim().toLowerCase();
   logger.debug({ content }, "leetHandler extracted message content:");
 
   if (
-    !(content === "leet" || isCustomDiscordEmoji(content, leetEmoji.identifier))
+    !(
+      content === "leet" ||
+      (leetEmoji && isCustomDiscordEmoji(content, leetEmoji.identifier))
+    )
   ) {
     logger.debug(
       "Message content does not warrant processing the LEET handler any further. Exiting leet handler…",
@@ -105,8 +111,29 @@ export const leetHandler = async ({
 
   await publishReaction({
     messageId: message.id,
-    emoji: leetEmoji.identifier,
+    emoji: findEmoji(applicationEmojis, "leet")?.identifier ?? "✅",
     channelId: message.channelId,
     topicArn,
   });
+
+  const todayCount = await getTodayLeetCount({
+    guildId: guild.id,
+    tableName,
+    timestamp: message.createdTimestamp,
+  });
+
+  const multiLeetName = getMultiLeetName(todayCount);
+  if (multiLeetName) {
+    const multiEmoji =
+      findEmoji(applicationEmojis, multiLeetName)?.identifier ??
+      getMultiLeetFallback(todayCount);
+    if (multiEmoji) {
+      await publishReaction({
+        messageId: message.id,
+        emoji: multiEmoji,
+        channelId: message.channelId,
+        topicArn,
+      });
+    }
+  }
 };
