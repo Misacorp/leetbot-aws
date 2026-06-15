@@ -5,6 +5,7 @@ import { Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
 import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
+import { getMultiLeetEmoji, getTodayLeetCount } from "./multiLeet";
 
 interface LeetHandlerProps {
   message: DiscordMessage;
@@ -109,4 +110,20 @@ export const leetHandler = async ({
     channelId: message.channelId,
     topicArn,
   });
+
+  const todayCount = await getTodayLeetCount({
+    guildId: guild.id,
+    tableName,
+    timestamp: message.createdTimestamp,
+  });
+
+  const multiEmoji = getMultiLeetEmoji(todayCount);
+  if (multiEmoji) {
+    await publishReaction({
+      messageId: message.id,
+      emoji: multiEmoji,
+      channelId: message.channelId,
+      topicArn,
+    });
+  }
 };
