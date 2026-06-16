@@ -173,8 +173,6 @@ export class DiscordBot extends Construct {
           environment: props.environment,
           topic: this.discordBotOutTopic,
           target: messageEvaluator,
-          subscriptionDlqAlarmDescription:
-            "Message evaluation subscription DLQ has undelivered SNS messages.",
           lambdaFailureAlarmDescription:
             "Message evaluation Lambda has failed async invocations.",
         },

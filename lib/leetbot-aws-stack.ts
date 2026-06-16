@@ -90,12 +90,8 @@ export class LeetbotAwsStack extends Stack {
 
     // Register alarms from various constructs to be sent to Discord for monitoring
     [
-      this.discordBot.messageEvaluationSubscription.subscriptionAlarm,
       this.discordBot.messageEvaluationSubscription.lambdaFailureAlarm,
-      this.seasonEnd.seasonWinnerRoleUpdateSubscription.subscriptionAlarm,
       this.seasonEnd.seasonWinnerRoleUpdateSubscription.lambdaFailureAlarm,
-      this.discordCommandHandler.commandProcessingSubscription
-        .subscriptionAlarm,
       this.discordCommandHandler.commandProcessingSubscription
         .lambdaFailureAlarm,
       this.discordCommandHandler.metrics.dlqAlarm,

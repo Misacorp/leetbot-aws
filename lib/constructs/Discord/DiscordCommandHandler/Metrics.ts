@@ -78,6 +78,7 @@ export class Metrics extends Construct {
       threshold: 1,
       evaluationPeriods: 1,
       alarmDescription: "Metrics queue DLQ has failed messages.",
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
     // SNS -> SQS -> Lambda

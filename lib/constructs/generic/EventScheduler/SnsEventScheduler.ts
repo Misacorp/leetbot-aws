@@ -43,6 +43,7 @@ export class SnsEventScheduler extends Construct {
           threshold: 1,
           evaluationPeriods: 1,
           alarmDescription: props.deadLetterQueueAlarmDescription,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         },
       );
     }

@@ -135,8 +135,6 @@ export class DiscordCommandHandler extends Construct {
           environment: props.environment,
           topic: this.commandProcessingTopic,
           target: this.slashCommandWorker,
-          subscriptionDlqAlarmDescription:
-            "Command processing subscription DLQ has undelivered SNS messages.",
           lambdaFailureAlarmDescription:
             "Command processing Lambda has failed async invocations.",
         },

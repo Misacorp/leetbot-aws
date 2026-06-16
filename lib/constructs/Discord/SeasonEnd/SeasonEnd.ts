@@ -95,8 +95,6 @@ export class SeasonEnd extends Construct {
           environment: props.environment,
           topic: this.seasonEndTopic,
           target: this.seasonWinnerRoleUpdater,
-          subscriptionDlqAlarmDescription:
-            "Season winner role update subscription DLQ has undelivered SNS messages.",
           lambdaFailureAlarmDescription:
             "Season winner role update Lambda has failed async invocations.",
         },

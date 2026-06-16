@@ -14,7 +14,6 @@ interface Props {
   readonly target: lambda.Function;
   readonly retryAttempts?: number;
   readonly queueRetentionPeriod?: cdk.Duration;
-  readonly subscriptionDlqAlarmDescription: string;
   readonly lambdaFailureAlarmDescription: string;
 }
 
@@ -27,7 +26,6 @@ interface Props {
 export class SnsLambdaSubscriptionWithFailureHandling extends Construct {
   public readonly subscriptionDlq: sqs.Queue;
   public readonly lambdaDlq: sqs.Queue;
-  public readonly subscriptionAlarm: cloudwatch.Alarm;
   public readonly lambdaFailureAlarm: cloudwatch.Alarm;
 
   constructor(scope: Construct, id: string, props: Props) {
@@ -39,13 +37,6 @@ export class SnsLambdaSubscriptionWithFailureHandling extends Construct {
     this.subscriptionDlq = new sqs.Queue(this, "SubscriptionDlq", {
       removalPolicy: getRemovalPolicy(props.environment),
       retentionPeriod: queueRetentionPeriod,
-    });
-
-    this.subscriptionAlarm = new cloudwatch.Alarm(this, "SnsDlqAlarm", {
-      metric: this.subscriptionDlq.metricApproximateNumberOfMessagesVisible(),
-      threshold: 1,
-      evaluationPeriods: 1,
-      alarmDescription: props.subscriptionDlqAlarmDescription,
     });
 
     props.topic.addSubscription(
@@ -64,6 +55,7 @@ export class SnsLambdaSubscriptionWithFailureHandling extends Construct {
       threshold: 1,
       evaluationPeriods: 1,
       alarmDescription: props.lambdaFailureAlarmDescription,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
     props.target.configureAsyncInvoke({
