@@ -3,7 +3,7 @@ import { isLeet } from "@/src/util/dateTime";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Emoji, Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
-import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
+import { createReactionPublisher } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
 import {
   getMultiLeetFallback,
@@ -17,6 +17,7 @@ interface LeetHandlerProps {
   applicationEmojis: Emoji[];
   tableName: string;
   topicArn: string;
+  reactionsEnabled: boolean;
   alwaysAllowLeet?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -32,12 +33,20 @@ export const leetHandler = async ({
   applicationEmojis,
   tableName,
   topicArn,
+  reactionsEnabled,
   alwaysAllowLeet = false,
   skipUniquenessCheck = false,
 }: LeetHandlerProps) => {
   logger.info(
     `Processing LEET from ${message.author.id} created at ${message.createdTimestamp}`,
   );
+
+  const react = createReactionPublisher({
+    messageId: message.id,
+    channelId: message.channelId,
+    topicArn,
+    enabled: reactionsEnabled,
+  });
 
   const leetEmoji = findEmoji(guild.emojis, "leet");
 
@@ -65,14 +74,7 @@ export const leetHandler = async ({
       logger.info("This is a test event where LEET is always allowed.");
     } else {
       logger.info("❌ Not allowed.");
-
-      await publishReaction({
-        messageId: message.id,
-        emoji: "🤡",
-        channelId: message.channelId,
-        topicArn,
-      });
-
+      await react("🤡");
       return;
     }
   }
@@ -89,14 +91,7 @@ export const leetHandler = async ({
     })
   ) {
     logger.info(`❌️The user has already posted a game message today.`);
-
-    await publishReaction({
-      messageId: message.id,
-      emoji: "😡",
-      channelId: message.channelId,
-      topicArn,
-    });
-
+    await react("😡");
     return;
   }
 
@@ -109,12 +104,7 @@ export const leetHandler = async ({
     tableName,
   });
 
-  await publishReaction({
-    messageId: message.id,
-    emoji: findEmoji(applicationEmojis, "leet")?.identifier ?? "✅",
-    channelId: message.channelId,
-    topicArn,
-  });
+  await react(findEmoji(applicationEmojis, "leet")?.identifier ?? "✅");
 
   const todayCount = await getTodayLeetCount({
     guildId: guild.id,
@@ -128,12 +118,7 @@ export const leetHandler = async ({
       findEmoji(applicationEmojis, multiLeetName)?.identifier ??
       getMultiLeetFallback(todayCount);
     if (multiEmoji) {
-      await publishReaction({
-        messageId: message.id,
-        emoji: multiEmoji,
-        channelId: message.channelId,
-        topicArn,
-      });
+      await react(multiEmoji);
     }
   }
 };

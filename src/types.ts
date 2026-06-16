@@ -16,6 +16,8 @@ export interface TestEvent {
   alwaysAllowFailedLeet?: boolean;
   // Do not check if the user has already posted a message today?
   skipUniquenessCheck?: boolean;
+  // Override whether the bot publishes reactions?
+  enableReactions?: boolean;
 }
 
 /**

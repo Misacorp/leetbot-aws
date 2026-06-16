@@ -9,6 +9,7 @@ import {
   getDefaultLambdaConfig,
   getLogLevel,
   getMinify,
+  getReactionsEnabled,
   getRemovalPolicy,
 } from "@/src/util/infra";
 import { SnsLambdaSubscriptionWithFailureHandling } from "@/lib/constructs/SnsLambdaSubscriptionWithFailureHandling";
@@ -157,6 +158,7 @@ export class DiscordBot extends Construct {
         MESSAGE_EVALUATOR_OUT_TOPIC_ARN:
           this.messageEvaluationOutTopic.topicArn,
         LOG_LEVEL: getLogLevel(props.environment),
+        REACTIONS_ENABLED: getReactionsEnabled(props.environment),
       },
       description:
         "Determines which Discord messages are interesting for the 'leet game', and processes them further.",

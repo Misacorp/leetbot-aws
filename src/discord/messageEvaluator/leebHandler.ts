@@ -3,7 +3,7 @@ import { isLeeb } from "@/src/util/dateTime";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Emoji, Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
-import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
+import { createReactionPublisher } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
 
 interface LeebHandlerProps {
@@ -12,6 +12,7 @@ interface LeebHandlerProps {
   applicationEmojis: Emoji[];
   tableName: string;
   topicArn: string;
+  reactionsEnabled: boolean;
   alwaysAllowLeeb?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -27,12 +28,20 @@ export const leebHandler = async ({
   applicationEmojis,
   tableName,
   topicArn,
+  reactionsEnabled,
   alwaysAllowLeeb = false,
   skipUniquenessCheck = false,
 }: LeebHandlerProps) => {
   logger.info(
     `Processing LEEB from ${message.author.id} created at ${message.createdTimestamp}`,
   );
+
+  const react = createReactionPublisher({
+    messageId: message.id,
+    channelId: message.channelId,
+    topicArn,
+    enabled: reactionsEnabled,
+  });
 
   const leebEmoji = findEmoji(guild.emojis, "leeb");
 
@@ -60,14 +69,7 @@ export const leebHandler = async ({
       logger.info("This is a test event where LEEB is always allowed.");
     } else {
       logger.info("❌ Not allowed.");
-
-      await publishReaction({
-        messageId: message.id,
-        emoji: "🤡",
-        channelId: message.channelId,
-        topicArn,
-      });
-
+      await react("🤡");
       return;
     }
   }
@@ -84,20 +86,12 @@ export const leebHandler = async ({
     })
   ) {
     logger.info(`❌️The user has already posted a game message today.`);
-
-    await publishReaction({
-      messageId: message.id,
-      emoji: "😡",
-      channelId: message.channelId,
-      topicArn,
-    });
-
+    await react("😡");
     return;
   }
 
   logger.debug("Saving message to the database…");
 
-  // Save message and user information
   await saveMessageAndUser({
     message,
     guild,
@@ -105,10 +99,5 @@ export const leebHandler = async ({
     tableName,
   });
 
-  await publishReaction({
-    messageId: message.id,
-    emoji: findEmoji(applicationEmojis, "leeb")?.identifier ?? "✅",
-    channelId: message.channelId,
-    topicArn,
-  });
+  await react(findEmoji(applicationEmojis, "leeb")?.identifier ?? "✅");
 };

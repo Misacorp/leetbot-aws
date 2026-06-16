@@ -43,6 +43,7 @@ export const isTestEvent = (
     "alwaysAllowLeet" in event ||
     "alwaysAllowLeeb" in event ||
     "alwaysAllowFailedLeet" in event ||
-    "skipUniquenessCheck" in event
+    "skipUniquenessCheck" in event ||
+    "enableReactions" in event
   );
 };

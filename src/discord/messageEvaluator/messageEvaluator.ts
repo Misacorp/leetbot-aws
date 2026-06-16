@@ -13,6 +13,7 @@ declare global {
     interface ProcessEnv {
       TABLE_NAME: string;
       MESSAGE_EVALUATOR_OUT_TOPIC_ARN: string;
+      REACTIONS_ENABLED: string;
     }
   }
 }
@@ -44,6 +45,13 @@ export const handler = async (event: SNSEvent) => {
 
   await runSequentially(payloads, async (payload) => {
     const { message, event } = payload;
+
+    // Disabled in dev by default, so the dev and prod bots don't both react to
+    // the same messages. Override per-invocation via TestEvent.enableReactions.
+    const reactionsEnabled =
+      event?.enableReactions !== undefined
+        ? event.enableReactions
+        : process.env.REACTIONS_ENABLED !== "false";
 
     logger.debug({ message }, "Received this Discord message");
     logger.debug({ event }, "Received this event");
@@ -77,6 +85,7 @@ export const handler = async (event: SNSEvent) => {
         applicationEmojis,
         tableName,
         topicArn,
+        reactionsEnabled,
         alwaysAllowLeet: event?.alwaysAllowLeet,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),
@@ -86,6 +95,7 @@ export const handler = async (event: SNSEvent) => {
         applicationEmojis,
         tableName,
         topicArn,
+        reactionsEnabled,
         alwaysAllowLeeb: event?.alwaysAllowLeeb,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),
@@ -95,6 +105,7 @@ export const handler = async (event: SNSEvent) => {
         applicationEmojis,
         tableName,
         topicArn,
+        reactionsEnabled,
         alwaysAllowFailedLeet: event?.alwaysAllowFailedLeet,
         skipUniquenessCheck: event?.skipUniquenessCheck,
       }),

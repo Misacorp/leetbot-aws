@@ -3,7 +3,7 @@ import { isLeeb } from "@/src/util/dateTime";
 import { type DiscordMessage, MessageTypes } from "@/src/types";
 import { Emoji, Guild } from "@/src/repository/guild/types";
 import { hasAlreadyPostedOnDate, saveMessageAndUser } from "./util";
-import { publishReaction } from "@/src/discord/messageEvaluator/publishReaction";
+import { createReactionPublisher } from "@/src/discord/messageEvaluator/publishReaction";
 import { findEmoji, isCustomDiscordEmoji } from "@/src/discord/utils/emoji";
 
 interface FailedLeetHandlerProps {
@@ -12,6 +12,7 @@ interface FailedLeetHandlerProps {
   applicationEmojis: Emoji[];
   tableName: string;
   topicArn: string;
+  reactionsEnabled: boolean;
   alwaysAllowFailedLeet?: boolean;
   skipUniquenessCheck?: boolean;
 }
@@ -28,12 +29,20 @@ export const failedLeetHandler = async ({
   applicationEmojis,
   tableName,
   topicArn,
+  reactionsEnabled,
   alwaysAllowFailedLeet = false,
   skipUniquenessCheck = false,
 }: FailedLeetHandlerProps) => {
   logger.info(
     `Processing FAILED_LEET from ${message.author.id} created at ${message.createdTimestamp}`,
   );
+
+  const react = createReactionPublisher({
+    messageId: message.id,
+    channelId: message.channelId,
+    topicArn,
+    enabled: reactionsEnabled,
+  });
 
   const leetEmoji = findEmoji(guild.emojis, "leet");
 
@@ -77,14 +86,7 @@ export const failedLeetHandler = async ({
     })
   ) {
     logger.info(`❌️The user has already posted a game message today.`);
-
-    await publishReaction({
-      messageId: message.id,
-      emoji: "😡",
-      channelId: message.channelId,
-      topicArn,
-    });
-
+    await react("😡");
     return;
   }
 
@@ -97,10 +99,5 @@ export const failedLeetHandler = async ({
     messageType: MessageTypes.FAILED_LEET,
   });
 
-  await publishReaction({
-    messageId: message.id,
-    emoji: findEmoji(applicationEmojis, "failed_leet")?.identifier ?? "✅",
-    channelId: message.channelId,
-    topicArn,
-  });
+  await react(findEmoji(applicationEmojis, "failed_leet")?.identifier ?? "✅");
 };

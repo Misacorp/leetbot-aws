@@ -15,6 +15,9 @@ export const getMinify = (environment: string | undefined) => {
 export const getLogLevel = (environment: string = "dev") =>
   environment === "dev" ? "DEBUG" : "INFO";
 
+export const getReactionsEnabled = (environment: string = "dev") =>
+  environment === "prd" ? "true" : "false";
+
 export const getRemovalPolicy = (
   environment: string = "dev",
 ): cdk.RemovalPolicy => {
