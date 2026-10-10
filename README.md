@@ -65,6 +65,21 @@ This script sets the AWS Systems Manager Parameter Store `SecureString` value fo
 The deployed stack creates the parameter shell, but the real bot token value is
 still written separately with this script after deployment.
 
+### Create a Leet API key
+
+The read-only Leet API (used by the Leet Creatures game) checks a bearer key. This script generates a random key,
+stores only its SHA-256 hash in the `/leetbot/<environment>/api/consumer-key-hashes` SecureString parameter, and prints
+the key once. At most two keys can exist at a time (for rotation). Pass `--replace-oldest` to drop the oldest one.
+
+```shell
+./scripts/createApiKey.sh <environment> <aws_profile> [--replace-oldest]
+
+# Example:
+# ./scripts/createApiKey.sh dev leetbot-dev
+```
+
+The API URL is the `LeetApiUrl` output of the stack. Until a key has been created the API answers 503.
+
 ### Start Discord Bot
 
 This script starts the Discord bot by invoking the Discord Watcher Lambda function. You can supply test event parameters

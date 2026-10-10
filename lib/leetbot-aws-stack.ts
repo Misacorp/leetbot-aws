@@ -9,6 +9,7 @@ import { CacheTable } from "@/lib/constructs/CacheTable";
 import { DiscordAlarmNotifications } from "@/lib/constructs/DiscordAlarmNotifications";
 import { LambdaEventScheduler } from "@/lib/constructs/generic/EventScheduler/LambdaEventScheduler";
 import { SeasonEnd } from "@/lib/constructs/Discord/SeasonEnd/SeasonEnd";
+import { LeetApi } from "@/lib/constructs/LeetApi";
 
 /**
  * Main CloudFormation stack
@@ -22,6 +23,7 @@ export class LeetbotAwsStack extends Stack {
   private readonly discordCommandHandler: DiscordCommandHandler;
   private readonly discordAlarmNotifications: DiscordAlarmNotifications;
   private readonly discordParameters: DiscordParameters;
+  private readonly leetApi: LeetApi;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -78,6 +80,12 @@ export class LeetbotAwsStack extends Stack {
         cacheTable: this.cacheTable,
       },
     );
+
+    this.leetApi = new LeetApi(this, "LeetApi", {
+      layers: this.lambdaLayers,
+      table: this.table,
+      environment: deploymentEnvironment,
+    });
 
     this.discordAlarmNotifications = new DiscordAlarmNotifications(
       this,
