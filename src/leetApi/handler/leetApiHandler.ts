@@ -4,13 +4,13 @@ import type {
 } from "aws-lambda";
 import logger from "@logger";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
+import { DEFAULT_TIMEZONE } from "@/src/util/dateTime";
 import { getFinalisedLeetDays } from "../service/getFinalisedLeetDays";
-import {
-  isValidGuildId,
-  validateDaysQuery,
-} from "../service/validateDaysQuery";
 import { authenticateRequest } from "./authenticateRequest";
+import { buildDaysResponse } from "./buildDaysResponse";
+import { createServiceInput } from "./createServiceInput";
 import { jsonResponse } from "./jsonResponse";
+import { isValidGuildId, validateDaysQuery } from "./validateDaysQuery";
 
 declare global {
   namespace NodeJS {
@@ -90,11 +90,26 @@ const handleGetDays = async (
     return jsonResponse(404, { error: "guild_not_found" });
   }
 
-  const response = await getFinalisedLeetDays({
+  // The guild's timezone will come from the guild record once it is
+  // configurable per guild. Until then every guild uses the default.
+  const timezone = DEFAULT_TIMEZONE;
+
+  const { days, hasMore } = await getFinalisedLeetDays({
     tableName: process.env.TABLE_NAME,
     guildId,
-    query: query.value,
+    ...createServiceInput(query.value),
+    timezone,
+    now: new Date(),
   });
 
-  return jsonResponse(200, response);
+  return jsonResponse(
+    200,
+    buildDaysResponse({
+      guildId,
+      timezone,
+      days,
+      hasMore,
+      after: query.value.after,
+    }),
+  );
 };

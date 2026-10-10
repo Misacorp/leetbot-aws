@@ -1,5 +1,5 @@
 import type { LeetDaysQuery, ValidationResult } from "../types";
-import { isValidCalendarDate } from "./calendarDates";
+import { isValidCalendarDate } from "@/src/util/calendarDates";
 import { decodeDaysCursor } from "./daysCursor";
 
 export const DEFAULT_DAYS_LIMIT = 31;

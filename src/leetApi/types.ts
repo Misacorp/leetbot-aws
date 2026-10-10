@@ -8,18 +8,20 @@ export interface LeetDayParticipant {
 }
 
 /**
- * A finalised leet day: a Helsinki calendar date with at least one leet.
+ * A finalised leet day: a guild-local calendar date with at least one leet.
  */
 export interface LeetDay {
   // `<guildId>:<YYYY-MM-DD>`
   id: string;
-  // Helsinki calendar date, YYYY-MM-DD
+  // Guild-local calendar date, YYYY-MM-DD (see `timezone` of the response)
   date: string;
   participants: LeetDayParticipant[];
 }
 
 export interface LeetDaysResponse {
   guildId: string;
+  // IANA timezone name that the `date` of each day is a calendar date in
+  timezone: string;
   days: LeetDay[];
   nextCursor: string | null;
   hasMore: boolean;

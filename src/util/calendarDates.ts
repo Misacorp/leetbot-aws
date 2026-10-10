@@ -30,7 +30,7 @@ export const isValidCalendarDate = (value: string): boolean => {
 
 /**
  * Adds (or subtracts) whole calendar days to a YYYY-MM-DD date.
- * Pure calendar arithmetic, so it is not affected by DST.
+ * Pure calendar arithmetic, so it is not affected by DST or timezones.
  */
 export const addCalendarDays = (date: string, days: number): string => {
   const match = DATE_PATTERN.exec(date);

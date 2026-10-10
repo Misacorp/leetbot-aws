@@ -4,7 +4,7 @@ import {
   type ApiKeyVerdict,
   extractBearerToken,
   verifyApiKey,
-} from "../service/verifyApiKey";
+} from "../auth/verifyApiKey";
 
 /**
  * Checks the bearer key of a request against the hashes in Parameter Store.

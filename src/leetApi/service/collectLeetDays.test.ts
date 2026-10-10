@@ -1,9 +1,8 @@
-import { collectLeetDays, type LeetMessageLike } from "./collectLeetDays";
-import { buildDaysResponse } from "./buildDaysResponse";
-import { decodeDaysCursor } from "./daysCursor";
-import { planDaysQuery } from "./planDaysQuery";
+import { type LeetMessageLike, collectLeetDays } from "./collectLeetDays";
 
 const GUILD_ID = "123456789012345678";
+const HELSINKI = "Europe/Helsinki";
+const NEW_YORK = "America/New_York";
 
 // Winter time (EET, UTC+2): 13:37 Helsinki is 11:37Z
 const winterLeet = (date: string, userId: string, seconds = "00") => ({
@@ -27,11 +26,12 @@ const collect = (
     startDate: "2000-01-01",
     lastDate: "2999-12-31",
     limit: 31,
+    timezone: HELSINKI,
     ...overrides,
   });
 
 describe("collectLeetDays", () => {
-  it("groups leets by Helsinki date, oldest first, with ids", async () => {
+  it("groups leets by guild-local date, oldest first, with ids", async () => {
     const result = await collect([
       winterLeet("2026-01-14", "a"),
       winterLeet("2026-01-15", "b"),
@@ -150,6 +150,65 @@ describe("collectLeetDays", () => {
     expect(result.hasMore).toBe(false);
   });
 
+  describe("another timezone (America/New_York)", () => {
+    // Winter (EST, UTC-5): 13:37 New York is 18:37Z
+    const winterNewYork = (date: string, userId: string) => ({
+      userId,
+      createdAt: `${date}T18:37:00.000Z`,
+    });
+    // Summer (EDT, UTC-4): 13:37 New York is 17:37Z
+    const summerNewYork = (date: string, userId: string) => ({
+      userId,
+      createdAt: `${date}T17:37:00.000Z`,
+    });
+
+    it("applies the 13:37 window in the given timezone, not Helsinki", async () => {
+      const messages = [
+        winterNewYork("2026-01-15", "a"),
+        // A Helsinki 13:37 is not a New York 13:37
+        winterLeet("2026-01-15", "helsinki"),
+      ];
+
+      const newYork = await collect(messages, { timezone: NEW_YORK });
+      expect(newYork.days).toHaveLength(1);
+      expect(newYork.days[0].participants.map((p) => p.userId)).toEqual(["a"]);
+
+      const helsinki = await collect(messages, { timezone: HELSINKI });
+      expect(helsinki.days[0].participants.map((p) => p.userId)).toEqual([
+        "helsinki",
+      ]);
+    });
+
+    it("follows the New York DST switches (2026-03-08, 2026-11-01)", async () => {
+      const result = await collect(
+        [
+          winterNewYork("2026-03-07", "a"),
+          summerNewYork("2026-03-08", "a"),
+          summerNewYork("2026-10-31", "a"),
+          winterNewYork("2026-11-01", "a"),
+          // Wrong offset on the switch days
+          winterNewYork("2026-03-08", "b"),
+          summerNewYork("2026-11-01", "b"),
+          // Helsinki's switch days are ordinary days in New York
+          winterNewYork("2026-03-29", "c"),
+          summerNewYork("2026-03-29", "d"),
+        ],
+        { timezone: NEW_YORK },
+      );
+
+      expect(result.days.map((day) => day.date)).toEqual([
+        "2026-03-07",
+        "2026-03-08",
+        "2026-03-29",
+        "2026-10-31",
+        "2026-11-01",
+      ]);
+      expect(
+        result.days.map((day) => day.participants.map((p) => p.userId)),
+      ).toEqual([["a"], ["a"], ["d"], ["a"], ["a"]]);
+    });
+  });
+
   describe("paging", () => {
     const fiveDays = [
       winterLeet("2026-01-01", "a"),
@@ -202,118 +261,5 @@ describe("collectLeetDays", () => {
       // Two messages for day one, then the first message of day two
       expect(consumed).toBe(3);
     });
-
-    it("pages through everything using cursors", async () => {
-      const seen: string[] = [];
-      let after: string | undefined;
-      let guard = 0;
-
-      for (;;) {
-        const plan = planDaysQuery({ after }, "2999-12-31");
-        const result = await collect(fiveDays, {
-          limit: 2,
-          startDate: plan!.startDate,
-          lastDate: plan!.lastDate,
-        });
-        const page = buildDaysResponse({
-          guildId: GUILD_ID,
-          days: result.days,
-          hasMore: result.hasMore,
-          after,
-        });
-        seen.push(...page.days.map((day) => day.date));
-
-        if (!page.hasMore) {
-          break;
-        }
-        after = decodeDaysCursor(page.nextCursor!)!;
-        guard += 1;
-        expect(guard).toBeLessThan(10);
-      }
-
-      expect(seen).toEqual([
-        "2026-01-01",
-        "2026-01-02",
-        "2026-01-03",
-        "2026-01-04",
-        "2026-01-05",
-      ]);
-    });
-  });
-});
-
-describe("planDaysQuery", () => {
-  it("starts at the beginning when neither after nor since is given", () => {
-    expect(planDaysQuery({}, "2026-03-01")).toEqual({
-      startDate: "2000-01-01",
-      lastDate: "2026-03-01",
-    });
-  });
-
-  it("starts at since (inclusive)", () => {
-    expect(planDaysQuery({ since: "2026-02-01" }, "2026-03-01")).toEqual({
-      startDate: "2026-02-01",
-      lastDate: "2026-03-01",
-    });
-  });
-
-  it("starts the day after the cursor", () => {
-    expect(planDaysQuery({ after: "2026-02-28" }, "2026-03-05")).toEqual({
-      startDate: "2026-03-01",
-      lastDate: "2026-03-05",
-    });
-  });
-
-  it("uses the later of since and the day after the cursor", () => {
-    expect(
-      planDaysQuery({ after: "2026-02-10", since: "2026-02-20" }, "2026-03-01")
-        ?.startDate,
-    ).toBe("2026-02-20");
-    expect(
-      planDaysQuery({ after: "2026-02-25", since: "2026-02-20" }, "2026-03-01")
-        ?.startDate,
-    ).toBe("2026-02-26");
-  });
-
-  it("returns null when the range starts after the latest finalised date", () => {
-    expect(planDaysQuery({ after: "2026-03-01" }, "2026-03-01")).toBeNull();
-    expect(planDaysQuery({ since: "2026-03-02" }, "2026-03-01")).toBeNull();
-  });
-});
-
-describe("buildDaysResponse", () => {
-  const day = (date: string) => ({
-    id: `${GUILD_ID}:${date}`,
-    date,
-    participants: [],
-  });
-
-  it("returns the last returned date as the cursor, even with no more days", () => {
-    const response = buildDaysResponse({
-      guildId: GUILD_ID,
-      days: [day("2026-01-01"), day("2026-01-02")],
-      hasMore: false,
-    });
-
-    expect(decodeDaysCursor(response.nextCursor!)).toBe("2026-01-02");
-    expect(response.hasMore).toBe(false);
-  });
-
-  it("is null when nothing was returned and no cursor was given", () => {
-    expect(
-      buildDaysResponse({ guildId: GUILD_ID, days: [], hasMore: false })
-        .nextCursor,
-    ).toBeNull();
-  });
-
-  it("echoes the given cursor date when nothing new was returned", () => {
-    const response = buildDaysResponse({
-      guildId: GUILD_ID,
-      days: [],
-      hasMore: false,
-      after: "2026-01-05",
-    });
-
-    expect(decodeDaysCursor(response.nextCursor!)).toBe("2026-01-05");
   });
 });

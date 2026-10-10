@@ -11,18 +11,20 @@ export interface CollectLeetDaysInput {
   // Messages in ascending createdAt order, as the database returns them
   messages: AsyncIterable<LeetMessageLike> | Iterable<LeetMessageLike>;
   guildId: string;
-  // First Helsinki date to include
+  // First guild-local date to include
   startDate: string;
-  // Last Helsinki date to include (the latest finalised date)
+  // Last guild-local date to include (the latest finalised date)
   lastDate: string;
   limit: number;
+  // IANA timezone that decides the 13:37 window and the guild-local dates
+  timezone: string;
 }
 
 /**
  * Groups leet messages into days.
  *
- * - Keeps only real leets (13:37 Helsinki). Test flags can write others.
- * - Groups by Helsinki date and keeps each player's earliest leet per day.
+ * - Keeps only real leets (13:37 in the timezone). Test flags can write others.
+ * - Groups by guild-local date and keeps each player's earliest leet per day.
  * - Collects at most `limit` days. Reading stops as soon as a further day is
  *   seen, so a day is never split across pages and `hasMore` is exact.
  */
@@ -32,17 +34,18 @@ export const collectLeetDays = async ({
   startDate,
   lastDate,
   limit,
+  timezone,
 }: CollectLeetDaysInput): Promise<{ days: LeetDay[]; hasMore: boolean }> => {
   const participantsByDate = new Map<string, Map<string, LeetDayParticipant>>();
   let hasMore = false;
 
   for await (const message of messages) {
     const epoch = Date.parse(message.createdAt);
-    if (Number.isNaN(epoch) || !isLeet(epoch)) {
+    if (Number.isNaN(epoch) || !isLeet(epoch, timezone)) {
       continue;
     }
 
-    const date = getDatePrefix(epoch);
+    const date = getDatePrefix(epoch, timezone);
     if (date < startDate || date > lastDate) {
       continue;
     }

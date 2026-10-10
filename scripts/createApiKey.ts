@@ -13,7 +13,7 @@ import {
   SSMClient,
 } from "@aws-sdk/client-ssm";
 import { PLACEHOLDER_PARAM_VALUE } from "@/src/util/constants";
-import { hashApiKey, parseKeyHashes } from "@/src/leetApi/service/verifyApiKey";
+import { hashApiKey, parseKeyHashes } from "@/src/leetApi/auth/verifyApiKey";
 
 const MAX_KEY_HASHES = 2;
 

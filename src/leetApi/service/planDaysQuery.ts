@@ -1,31 +1,18 @@
-import type { LeetDaysQuery } from "../types";
-import { addCalendarDays } from "./calendarDates";
-
 // Earlier than any real leet
 const EARLIEST_DATE = "2000-01-01";
 
 /**
- * Works out which Helsinki dates a query needs to read.
- * Returns null when the range is empty.
+ * Works out which guild-local dates a request needs to read.
+ * `startDate` is the first date to include; without it reading starts at the
+ * beginning. Returns null when the range is empty.
  */
 export const planDaysQuery = (
-  query: Pick<LeetDaysQuery, "after" | "since">,
+  startDate: string | undefined,
   latestFinalisedDate: string,
 ): { startDate: string; lastDate: string } | null => {
-  const candidates: string[] = [];
-  if (query.since) {
-    candidates.push(query.since);
-  }
-  if (query.after) {
-    candidates.push(addCalendarDays(query.after, 1));
-  }
+  const firstDate = startDate ?? EARLIEST_DATE;
 
-  const startDate =
-    candidates.length > 0
-      ? [...candidates].sort()[candidates.length - 1]
-      : EARLIEST_DATE;
-
-  return startDate > latestFinalisedDate
+  return firstDate > latestFinalisedDate
     ? null
-    : { startDate, lastDate: latestFinalisedDate };
+    : { startDate: firstDate, lastDate: latestFinalisedDate };
 };
