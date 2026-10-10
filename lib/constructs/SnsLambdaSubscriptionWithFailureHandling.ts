@@ -8,25 +8,29 @@ import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { getRemovalPolicy } from "@/src/util/infra";
 
-interface Props {
+type AlarmProps =
+  | { readonly alarm?: true; readonly lambdaFailureAlarmDescription: string }
+  | { readonly alarm: false; readonly lambdaFailureAlarmDescription?: never };
+
+type Props = AlarmProps & {
   readonly environment: string;
   readonly topic: sns.ITopic;
   readonly target: lambda.Function;
   readonly retryAttempts?: number;
   readonly queueRetentionPeriod?: cdk.Duration;
-  readonly lambdaFailureAlarmDescription: string;
-}
+};
 
 /**
  * Direct SNS -> Lambda subscription with failure handling on both sides.
  *
- * Creates DLQs for SNS delivery failures Lambda failures.
- * Includes CloudWatch alarms for both queues.
+ * Creates DLQs for SNS delivery failures and Lambda failures.
+ * Includes a CloudWatch alarm on the Lambda DLQ by default.
+ * Pass `alarm: false` to omit the alarm for non-critical paths.
  */
 export class SnsLambdaSubscriptionWithFailureHandling extends Construct {
   public readonly subscriptionDlq: sqs.Queue;
   public readonly lambdaDlq: sqs.Queue;
-  public readonly lambdaFailureAlarm: cloudwatch.Alarm;
+  public readonly lambdaFailureAlarm: cloudwatch.Alarm | undefined;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -50,13 +54,15 @@ export class SnsLambdaSubscriptionWithFailureHandling extends Construct {
       retentionPeriod: queueRetentionPeriod,
     });
 
-    this.lambdaFailureAlarm = new cloudwatch.Alarm(this, "LambdaDlqAlarm", {
-      metric: this.lambdaDlq.metricApproximateNumberOfMessagesVisible(),
-      threshold: 1,
-      evaluationPeriods: 1,
-      alarmDescription: props.lambdaFailureAlarmDescription,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
+    if (props.alarm !== false) {
+      this.lambdaFailureAlarm = new cloudwatch.Alarm(this, "LambdaDlqAlarm", {
+        metric: this.lambdaDlq.metricApproximateNumberOfMessagesVisible(),
+        threshold: 1,
+        evaluationPeriods: 1,
+        alarmDescription: props.lambdaFailureAlarmDescription,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+    }
 
     props.target.configureAsyncInvoke({
       onFailure: new destinations.SqsDestination(this.lambdaDlq),

@@ -29,6 +29,8 @@ export class SeasonEnd extends Construct {
   public readonly seasonEndTopic: sns.ITopic;
   public readonly seasonWinnerRoleUpdater: lambda.Function;
   public readonly seasonWinnerRoleUpdateSubscription: SnsLambdaSubscriptionWithFailureHandling;
+  public readonly seasonRecap: lambda.Function;
+  public readonly seasonRecapSubscription: SnsLambdaSubscriptionWithFailureHandling;
   public readonly scheduler: SnsEventScheduler;
 
   constructor(scope: Construct, id: string, props: Props) {
@@ -99,6 +101,41 @@ export class SeasonEnd extends Construct {
             "Season winner role update Lambda has failed async invocations.",
         },
       );
+
+    this.seasonRecap = new NodejsFunction(this, "SeasonRecap", {
+      ...getDefaultLambdaConfig(),
+      entry: "src/discord/seasonRecap/seasonRecapHandler.ts",
+      handler: "handler",
+      timeout: cdk.Duration.seconds(60),
+      logGroup: createLogGroup(this, "SeasonRecapLogGroup", props.environment),
+      bundling: {
+        minify: getMinify(props.environment),
+        externalModules: ["@aws-sdk/*", "date-fns", "date-fns-tz", "pino"],
+      },
+      layers: [props.layers.dateFnsLayer, props.layers.pinoLayer],
+      environment: {
+        TABLE_NAME: props.table.tableName,
+        TOKEN_PARAMETER_NAME: props.parameters.botToken.parameterName,
+        LOG_LEVEL: getLogLevel(props.environment),
+        DRY_RUN: props.environment === "prd" ? "false" : "true",
+      },
+      reservedConcurrentExecutions: 1,
+      description: "Posts a multi-leet season recap to each guild's recap channel.",
+    });
+
+    props.table.grantReadData(this.seasonRecap);
+    props.parameters.botToken.grantRead(this.seasonRecap);
+
+    this.seasonRecapSubscription = new SnsLambdaSubscriptionWithFailureHandling(
+      this,
+      "SeasonRecapSubscription",
+      {
+        alarm: false,
+        environment: props.environment,
+        topic: this.seasonEndTopic,
+        target: this.seasonRecap,
+      },
+    );
 
     this.scheduler = new SnsEventScheduler(this, "SeasonEndScheduler", {
       description:

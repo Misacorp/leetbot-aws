@@ -11,6 +11,7 @@ type PatchableGuildField =
   | "iconUrl"
   | "emojis"
   | "seasonWinnerRoleId"
+  | "recapChannelId"
   | "pk2"
   | "sk2";
 

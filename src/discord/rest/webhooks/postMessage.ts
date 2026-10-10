@@ -13,7 +13,6 @@ interface PostMessageArgsWithToken {
 }
 
 interface PostMessageArgsWithBotToken {
-  applicationId: string;
   botToken: string;
   channelId: string;
   payload: RESTPostAPIWebhookWithTokenJSONBody;
@@ -28,7 +27,7 @@ type PostMessageArgs = PostMessageArgsWithToken | PostMessageArgsWithBotToken;
  * When using a `token` from a previous interaction, the message will be linked to the previous interaction.
  */
 export const postMessage = async (args: PostMessageArgs): Promise<void> => {
-  const { applicationId, payload, ephemeral = false } = args;
+  const { payload, ephemeral = false } = args;
 
   let flags = payload.flags;
   if (ephemeral) {
@@ -48,7 +47,7 @@ export const postMessage = async (args: PostMessageArgs): Promise<void> => {
   };
 
   if ("token" in args) {
-    webhookUrl = `https://discord.com/api/v10/webhooks/${applicationId}/${args.token}`;
+    webhookUrl = `https://discord.com/api/v10/webhooks/${args.applicationId}/${args.token}`;
   } else {
     webhookUrl = `https://discord.com/api/v10/channels/${args.channelId}/messages`;
     headers.Authorization = `Bot ${args.botToken}`;

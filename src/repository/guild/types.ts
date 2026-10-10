@@ -13,6 +13,7 @@ export interface Guild {
   iconUrl: string | null;
   emojis: Emoji[];
   seasonWinnerRoleId?: string;
+  recapChannelId?: string;
 }
 
 export type GuildKey = `guild#${Guild["id"]}`;

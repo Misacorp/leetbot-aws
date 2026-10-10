@@ -84,7 +84,6 @@ export const makePublicHandler = async ({
   };
 
   await postMessage({
-    applicationId,
     botToken,
     channelId: interaction.channel.id,
     payload,
