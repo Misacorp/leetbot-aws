@@ -1,5 +1,5 @@
-import { collectLeetDays } from "../service/collectLeetDays";
-import { planDaysQuery } from "../service/planDaysQuery";
+import { collectLeetDays } from "@/src/leetDays/collectLeetDays";
+import { resolveDateRange } from "@/src/leetDays/resolveDateRange";
 import { buildDaysResponse } from "./buildDaysResponse";
 import { createServiceInput } from "./createServiceInput";
 import { decodeDaysCursor } from "./daysCursor";
@@ -77,15 +77,15 @@ describe("buildDaysResponse", () => {
     let guard = 0;
 
     for (;;) {
-      const { startDate, limit } = createServiceInput({ after, limit: 2 });
-      const plan = planDaysQuery(startDate, "2999-12-31");
+      const { fromDate, limit } = createServiceInput({ after, limit: 2 });
+      const range = resolveDateRange(fromDate, "2999-12-31");
       // Pages depend on the previous cursor, so they must run in order
       // eslint-disable-next-line no-await-in-loop
       const result = await collectLeetDays({
         messages,
         guildId: GUILD_ID,
-        startDate: plan!.startDate,
-        lastDate: plan!.lastDate,
+        fromDate: range!.fromDate,
+        toDate: range!.toDate,
         limit,
         timezone: TIMEZONE,
       });

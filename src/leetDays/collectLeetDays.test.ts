@@ -23,8 +23,8 @@ const collect = (
   collectLeetDays({
     messages,
     guildId: GUILD_ID,
-    startDate: "2000-01-01",
-    lastDate: "2999-12-31",
+    fromDate: "2000-01-01",
+    toDate: "2999-12-31",
     limit: 31,
     timezone: HELSINKI,
     ...overrides,
@@ -140,7 +140,7 @@ describe("collectLeetDays", () => {
         winterLeet("2026-01-11", "a"),
         winterLeet("2026-01-12", "a"),
       ],
-      { startDate: "2026-01-10", lastDate: "2026-01-11" },
+      { fromDate: "2026-01-10", toDate: "2026-01-11" },
     );
 
     expect(result.days.map((day) => day.date)).toEqual([

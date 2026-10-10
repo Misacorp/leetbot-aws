@@ -5,7 +5,7 @@ import type {
 import logger from "@logger";
 import { getGuildById } from "@/src/repository/guild/getGuildById";
 import { DEFAULT_TIMEZONE } from "@/src/util/dateTime";
-import { getFinalisedLeetDays } from "../service/getFinalisedLeetDays";
+import { getFinalisedLeetDays } from "@/src/leetDays/getFinalisedLeetDays";
 import { authenticateRequest } from "./authenticateRequest";
 import { buildDaysResponse } from "./buildDaysResponse";
 import { createServiceInput } from "./createServiceInput";

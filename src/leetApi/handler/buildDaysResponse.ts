@@ -1,8 +1,9 @@
-import type { LeetDay, LeetDaysResponse } from "../types";
+import type { LeetDay } from "@/src/leetDays/types";
+import type { LeetDaysResponse } from "../types";
 import { encodeDaysCursor } from "./daysCursor";
 
 /**
- * Builds the response body for the leet days endpoint from the service result.
+ * Builds the response body for the leet days endpoint from the leet days.
  *
  * `nextCursor` is the last returned date, even when nothing more is waiting,
  * so the client can resume later. With no new days, `after` is echoed back.

@@ -1,5 +1,5 @@
 import { getDatePrefix, isLeet } from "@/src/util/dateTime";
-import type { LeetDay, LeetDayParticipant } from "../types";
+import type { LeetDayParticipant, LeetDays } from "./types";
 
 export interface LeetMessageLike {
   userId: string;
@@ -11,11 +11,12 @@ export interface CollectLeetDaysInput {
   // Messages in ascending createdAt order, as the database returns them
   messages: AsyncIterable<LeetMessageLike> | Iterable<LeetMessageLike>;
   guildId: string;
-  // First guild-local date to include
-  startDate: string;
-  // Last guild-local date to include (the latest finalised date)
-  lastDate: string;
-  limit: number;
+  // First guild-local date to include (YYYY-MM-DD). Default: no lower bound
+  fromDate?: string;
+  // Last guild-local date to include (YYYY-MM-DD). Default: no upper bound
+  toDate?: string;
+  // Maximum number of days to collect. Default: no limit
+  limit?: number;
   // IANA timezone that decides the 13:37 window and the guild-local dates
   timezone: string;
 }
@@ -31,11 +32,11 @@ export interface CollectLeetDaysInput {
 export const collectLeetDays = async ({
   messages,
   guildId,
-  startDate,
-  lastDate,
-  limit,
+  fromDate,
+  toDate,
+  limit = Number.POSITIVE_INFINITY,
   timezone,
-}: CollectLeetDaysInput): Promise<{ days: LeetDay[]; hasMore: boolean }> => {
+}: CollectLeetDaysInput): Promise<LeetDays> => {
   const participantsByDate = new Map<string, Map<string, LeetDayParticipant>>();
   let hasMore = false;
 
@@ -46,7 +47,10 @@ export const collectLeetDays = async ({
     }
 
     const date = getDatePrefix(epoch, timezone);
-    if (date < startDate || date > lastDate) {
+    if (
+      (fromDate !== undefined && date < fromDate) ||
+      (toDate !== undefined && date > toDate)
+    ) {
       continue;
     }
 
